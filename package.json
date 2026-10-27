@@ -1,0 +1,32 @@
+{
+	"name": "sketch-agent-bridge",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"license": "GPL-3.0-only",
+	"packageManager": "pnpm@12.15.0",
+	"engines": {
+		"node": ">=24"
+	},
+	"scripts": {
+		"build": "esbuild server/src/index.ts --bundle --platform=node --format=esm --target=node24 --outfile=server/dist/server.js",
+		"typecheck": "tsc --noEmit",
+		"test": "node --test 'server/test/**/*.test.ts'",
+		"lint": "eslint . && prettier --check .",
+		"format": "prettier --write ."
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "1.32.1",
+		"zod": "4.6.7"
+	},
+	"devDependencies": {
+		"@eslint/js": "10.0.1",
+		"@types/node": "26.6.5",
+		"esbuild": "0.28.2",
+		"eslint": "10.13.0",
+		"globals": "17.13.0",
+		"prettier": "3.9.10",
+		"typescript": "6.0.3",
+		"typescript-eslint": "8.71.2"
+	}
+}

@@ -1,0 +1,4 @@
+node_modules
+server/dist
+pnpm-lock.yaml
+LICENSE

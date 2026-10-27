@@ -1,0 +1,10 @@
+services:
+    dev:
+        build: .
+        volumes:
+            - .:/repo
+            - node_modules:/repo/node_modules
+        working_dir: /repo
+
+volumes:
+    node_modules:
