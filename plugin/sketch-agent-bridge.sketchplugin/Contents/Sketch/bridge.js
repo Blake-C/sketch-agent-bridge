@@ -1,6 +1,6 @@
 const { isInsideBridgeDir, standardize, writeText } = require('./files.js')
 
-const ops = Object.assign({}, require('./ops/read.js'), require('./ops/tokens.js'))
+const ops = Object.assign({}, require('./ops/read.js'), require('./ops/tokens.js'), require('./ops/write.js'))
 
 function readRequest(context) {
 	const raw = context.request || (context.context && context.context.request)
