@@ -1,6 +1,6 @@
 # Sketch Agent Bridge
 
-Sketch Agent Bridge connects Sketch 88.1 to AI agents such as Claude Code. Sketch 88.1 runs locally without a subscription and has no AI features, so this project adds a plugin and a local MCP server that let an agent read designs from the open Sketch document and make edits back into it.
+Sketch Agent Bridge connects Sketch 88.1 to AI agents such as Claude Code. Sketch 88.1 runs locally without a subscription and has no AI features, so this project adds a plugin and a local MCP server that let an agent read designs from the open Sketch document and edit it.
 
 ## What it does
 
@@ -16,14 +16,18 @@ For agents without MCP support, the plugin menu command **Plugins > Agent Bridge
 
 ## How it works
 
-The MCP server runs `sketchtool run`, the command-line tool that ships inside Sketch, to call a command in the plugin. The plugin runs inside Sketch, does the work, and writes its reply and exports to `~/.sketch-agent-bridge/`.
+The MCP server runs `sketchtool run`, the command-line tool that comes with Sketch, to call a command in the plugin. The plugin runs the command inside Sketch and writes its reply and exports to `~/.sketch-agent-bridge/`.
+
+## Setup
+
+Build the server in Docker, connect it to an agent, and optionally link the plugin into Sketch for the menu command. The steps are in [docs/install.md](docs/install.md), and the request and reply format is in [docs/protocol.md](docs/protocol.md).
 
 ## Safety
 
 - New layers go on a page named "Agent Drafts" unless the agent names another parent.
 - Before the first edit in a session, the server copies the `.sketch` file to `~/.sketch-agent-bridge/backups/`.
 - The agent can only delete layers it created, unless it passes `force: true`.
-- Everything stays on the Mac. Nothing is sent to a network service by the bridge.
+- The bridge sends nothing to a network service, and the files it writes stay on the Mac.
 
 ## License
 
