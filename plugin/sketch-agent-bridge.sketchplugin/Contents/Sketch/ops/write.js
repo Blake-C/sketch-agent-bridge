@@ -184,7 +184,9 @@ function updateLayer(args, request) {
 	if (args.frame) setFrame(layer, args.frame)
 	if (args.text !== undefined) {
 		if (layer.type !== 'Text') throw new Error('Only text layers have text')
+		const customName = layer.name !== layer.text ? layer.name : undefined
 		layer.text = args.text
+		if (customName !== undefined && args.name === undefined) layer.name = customName
 	}
 	if (args.name !== undefined) layer.name = args.name
 	if (args.cornerRadius !== undefined) setCornerRadius(layer, args.cornerRadius)

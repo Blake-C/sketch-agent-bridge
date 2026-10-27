@@ -56,6 +56,8 @@ Every op takes an optional `documentId`. Without it, the op uses the front docum
 - Before the first write op on a document in a server session, the server runs `status` to find the document's file and copies it to `~/.sketch-agent-bridge/backups/<name>-<timestamp>.sketch`. The copy is of the file on disk, so edits made in Sketch since the last save are not in it.
 - Colors are a hex string (`#rrggbb` or `#rrggbbaa`) or `{ "swatch": "<name or id>" }`. A swatch color stays linked to the swatch.
 - Layers created by a write op get the layer setting `createdByAgent`, which `deleteLayer` checks unless `force` is true.
+- Each write op is one step in Sketch's undo history, so Cmd+Z in Sketch undoes the whole op.
+- Changing a text layer's text keeps its name when the name was set to something other than the old text.
 - `createLayer`, `createArtboard`, `updateLayer`, and `applySharedStyle` return the layer's spec and a 1x PNG of its artboard.
 
 ## Layer spec
