@@ -1,0 +1,5 @@
+.claude/settings.local.json
+**/.claude/.cc-writes/
+.DS_Store
+.env
+node_modules
