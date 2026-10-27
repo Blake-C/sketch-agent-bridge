@@ -3,6 +3,7 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 const cocoaGlobals = {
+	framework: 'readonly',
 	MSColor: 'readonly',
 	NSFileManager: 'readonly',
 	NSHomeDirectory: 'readonly',

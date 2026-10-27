@@ -166,10 +166,10 @@ function createLayer(args, request) {
 			frame.width || master.frame.width,
 			frame.height || master.frame.height
 		)
-		if (args.name) layer.name = args.name
 	} else {
 		throw new Error('Unknown layer kind: ' + args.kind)
 	}
+	if (args.name) layer.name = args.name
 
 	if (args.sharedStyle) linkSharedStyle(document, layer, args.sharedStyle)
 	applyStyle(document, layer, args.style, args.textStyle)
@@ -180,13 +180,13 @@ function createLayer(args, request) {
 function updateLayer(args, request) {
 	const document = editableDocument(args)
 	const layer = findLayer(document, args.id)
-	if (args.name !== undefined) layer.name = args.name
 	if (args.hidden !== undefined) layer.hidden = args.hidden
 	if (args.frame) setFrame(layer, args.frame)
 	if (args.text !== undefined) {
 		if (layer.type !== 'Text') throw new Error('Only text layers have text')
 		layer.text = args.text
 	}
+	if (args.name !== undefined) layer.name = args.name
 	if (args.cornerRadius !== undefined) setCornerRadius(layer, args.cornerRadius)
 	if (args.overrides) {
 		if (layer.type !== 'SymbolInstance') throw new Error('Only symbol instances have overrides')
