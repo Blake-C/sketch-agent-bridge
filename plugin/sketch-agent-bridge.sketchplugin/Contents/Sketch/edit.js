@@ -3,7 +3,7 @@ const Settings = require('sketch/settings')
 const { resolveDocument, findLayer } = require('./document.js')
 const { layerSpec, swatchNames, frameSpec } = require('./spec.js')
 const { exportLayers } = require('./export.js')
-const { applyStyle, loadImage } = require('./style.js')
+const { applyStyle, loadImage, nativeColor, isColorValue } = require('./style.js')
 const { findLocalOrImport } = require('./libraries.js')
 
 const DRAFTS_PAGE = 'Agent Drafts'
@@ -141,6 +141,8 @@ function findSymbolMaster(document, key) {
 function overrideValue(document, override, value) {
 	if (override.property === 'symbolID') return findSymbolMaster(document, value).symbolId
 	if (override.property === 'image') return loadImage(value)
+	if (override.property === 'fillColor') return nativeColor(document, value)
+	if (typeof value !== 'string') throw new Error('Only fillColor overrides take a swatch')
 	return value
 }
 
@@ -149,6 +151,16 @@ function isLocked(instance, override) {
 	const master = instance.master
 	const masterOverride = master && master.overrides.find(item => item.id === override.id)
 	return Boolean(masterOverride) && masterOverride.editable === false
+}
+
+// A layer can have several overrides, such as a nested symbol's locked symbolID and its fillColor, so a color value picks fillColor and other values prefer content overrides that are not locked.
+function pickOverride(instance, candidates, value) {
+	if (isColorValue(value)) {
+		const color = candidates.find(item => item.property === 'fillColor')
+		if (color) return color
+	}
+	const content = candidates.filter(item => !STYLE_OVERRIDES.includes(item.property) && item.property !== 'fillColor')
+	return content.find(item => !isLocked(instance, item)) || content[0] || candidates[0]
 }
 
 function setOverrides(document, instance, changes) {
@@ -162,7 +174,7 @@ function setOverrides(document, instance, changes) {
 					item.affectedLayer.name === change.layer &&
 					(!change.property || item.property === change.property))
 		)
-		const override = candidates.find(item => !STYLE_OVERRIDES.includes(item.property)) || candidates[0]
+		const override = pickOverride(instance, candidates, change.value)
 		if (!override) throw new Error('No override matches ' + (change.id || change.layer))
 		if (isLocked(instance, override)) {
 			const name = override.affectedLayer ? override.affectedLayer.name : override.id

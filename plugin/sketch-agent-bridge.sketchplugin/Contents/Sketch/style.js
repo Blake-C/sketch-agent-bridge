@@ -67,6 +67,36 @@ function resolveColor(document, value) {
 	throw new Error('A color must be a hex string or { "swatch": "<name>" }')
 }
 
+function hexToMSColor(hex) {
+	const match = /^#?([0-9a-f]{6})([0-9a-f]{2})?$/i.exec(hex)
+	if (!match) throw new Error('Colors must be #rrggbb or #rrggbbaa')
+	const value = parseInt(match[1], 16)
+	const alpha = match[2] ? parseInt(match[2], 16) / 255 : 1
+	return MSColor.colorWithRed_green_blue_alpha(
+		((value >> 16) & 255) / 255,
+		((value >> 8) & 255) / 255,
+		(value & 255) / 255,
+		alpha
+	)
+}
+
+function nativeColor(document, value) {
+	return typeof value === 'string' ? hexToMSColor(value) : resolveColor(document, value)
+}
+
+function isColorValue(value) {
+	return (typeof value === 'string' && /^#[0-9a-f]{6}([0-9a-f]{2})?$/i.test(value)) || Boolean(value && value.swatch)
+}
+
+function hexFromNative(color) {
+	return (
+		'#' +
+		[color.red(), color.green(), color.blue(), color.alpha()]
+			.map(channel => ('0' + Math.round(Number(channel) * 255).toString(16)).slice(-2))
+			.join('')
+	)
+}
+
 function fillFromInput(document, value) {
 	if (value && value.gradient) {
 		const gradient = value.gradient
@@ -163,4 +193,15 @@ function applyStyle(document, layer, style, textStyle) {
 	}
 }
 
-module.exports = { applyStyle, resolveColor, allSwatches, fromSketchAlignment, findByIdOrName, loadImage }
+module.exports = {
+	applyStyle,
+	resolveColor,
+	hexToMSColor,
+	nativeColor,
+	isColorValue,
+	hexFromNative,
+	allSwatches,
+	fromSketchAlignment,
+	findByIdOrName,
+	loadImage,
+}

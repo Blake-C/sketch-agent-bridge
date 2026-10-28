@@ -1,6 +1,6 @@
 const sketch = require('sketch')
 const { findLayer, findPage } = require('../document.js')
-const { applyStyle } = require('../style.js')
+const { applyStyle, hexToMSColor } = require('../style.js')
 const {
 	editableDocument,
 	draftsPage,
@@ -77,19 +77,6 @@ function applySharedStyle(args, request) {
 	const layer = findLayer(document, args.id)
 	linkSharedStyle(document, layer, args.sharedStyle)
 	return result(document, layer, args, request)
-}
-
-function hexToMSColor(hex) {
-	const match = /^#?([0-9a-f]{6})([0-9a-f]{2})?$/i.exec(hex)
-	if (!match) throw new Error('Swatch colors must be #rrggbb or #rrggbbaa')
-	const value = parseInt(match[1], 16)
-	const alpha = match[2] ? parseInt(match[2], 16) / 255 : 1
-	return MSColor.colorWithRed_green_blue_alpha(
-		((value >> 16) & 255) / 255,
-		((value >> 8) & 255) / 255,
-		(value & 255) / 255,
-		alpha
-	)
 }
 
 function upsertSwatch(args) {

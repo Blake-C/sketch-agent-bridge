@@ -156,10 +156,14 @@ export const overrides = z
 			id: z.string().optional().describe('Override id. Use this or layer.'),
 			layer: z.string().optional().describe('Name of the layer inside the symbol.'),
 			property: z
-				.enum(['stringValue', 'symbolID', 'image', 'layerStyle', 'textStyle'])
+				.enum(['stringValue', 'symbolID', 'image', 'layerStyle', 'textStyle', 'fillColor'])
 				.optional()
 				.describe('Needed only when one layer has several overridable properties.'),
-			value: z.string().describe('Text, a symbol name for symbolID, or an absolute image path for image.'),
+			value: z
+				.union([z.string(), z.object({ swatch: z.string() })])
+				.describe(
+					'Text, a symbol name for symbolID, an absolute image path for image, or a hex color or { "swatch": "<name>" } for fillColor. A color value picks the fillColor override when matching by layer name.'
+				),
 		})
 	)
 	.describe('Overrides on a symbol instance, matched by override id or by layer name.')

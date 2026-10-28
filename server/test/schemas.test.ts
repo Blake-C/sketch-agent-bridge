@@ -84,3 +84,14 @@ test('export presets take known formats and sizes', () => {
 	assert.equal(node({ exportFormats: [{ fileFormat: 'bmp' }] }).success, false)
 	assert.equal(node({ exportFormats: [{ fileFormat: 'png', size: 'large' }] }).success, false)
 })
+
+test('overrides take a hex color or swatch for fillColor', () => {
+	const overrides = [
+		{ layer: 'Accent Color', value: '#ff3b30' },
+		{ layer: 'Accent Color', property: 'fillColor', value: { swatch: 'System Colors/systemGreen - Light' } },
+		{ id: 'A_stringValue', value: 'Week' },
+	]
+	assert.ok(node({ kind: 'symbol', overrides }).success)
+	assert.equal(node({ kind: 'symbol', overrides: [{ layer: 'X', value: { color: '#fff' } }] }).success, false)
+	assert.equal(node({ kind: 'symbol', overrides: [{ layer: 'X', property: 'fill', value: '#fff' }] }).success, false)
+})

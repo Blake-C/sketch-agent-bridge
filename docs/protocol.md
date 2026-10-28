@@ -163,7 +163,7 @@ Sketch 88.1 writes text alignment with the raw values AppKit uses on Intel Macs.
 
 `createSymbol` makes a new symbol master on the Symbols page from the given layers. By default it moves the layers into the master and puts an instance where they were. With `replace` set to false, it copies the layers into the master and leaves the originals in place. Its reply lists the overrides the symbol exposes, by layer name and property.
 
-Overrides are set with a list of `{ "layer": "<layer name inside the symbol>", "value": "..." }`, or `{ "id": "<override id>", "value": "..." }`. A text layer has both a `stringValue` and a `textStyle` override, and matching by layer name picks `stringValue` unless `property` says otherwise. The value is text for `stringValue`, a symbol name for `symbolID`, and an absolute image path for `image`. The plugin refuses an override that the symbol master marks as not editable, which `symbols` with `includeOverrides` reports as `editable: false`.
+Overrides are set with a list of `{ "layer": "<layer name inside the symbol>", "value": "..." }`, or `{ "id": "<override id>", "value": "..." }`. A text layer has both a `stringValue` and a `textStyle` override, and matching by layer name picks `stringValue` unless `property` says otherwise. The value is text for `stringValue`, a symbol name for `symbolID`, an absolute image path for `image`, and a hex color or `{ "swatch": "<name>" }` for `fillColor`. A swatch stays linked, and it can come from an enabled library. When one layer has several overrides, such as the locked `symbolID` and the `fillColor` of the accent color layer in Apple's iOS switch, a color value picks `fillColor`, and any other value picks a content override that is not locked. The plugin refuses an override that the symbol master marks as not editable, which `symbols` with `includeOverrides` reports as `editable: false`.
 
 `detach` replaces an instance with a group of its layers and keeps the instance's overrides. With `recursively`, nested instances are detached too. It refuses an instance without the `createdByAgent` setting unless `force` is true, and the new group gets the setting when the instance had it.
 
@@ -195,7 +195,7 @@ Each layer has `id`, `name`, `type`, and `frame`. These keys appear only when th
 - `text`, `textStyle`, and `fixedWidth` for text layers, where `alignment` is left out when it is `left` and `verticalAlignment` is left out when it is `top`
 - `style` with `opacity`, `fills`, `borders`, `borderOptions`, `shadows`, `innerShadows`, `blur`, and `blendingMode`. A color linked to a swatch also has `swatch`, a gradient fill has `gradient` and `stops`, and an image fill is `{ "image": true }`. `borderOptions` and `blendingMode` appear only when they differ from Sketch's defaults.
 - `sharedStyle` with the shared style name
-- `symbol`, `symbolId`, and `overrides` for symbol instances, where `overrides` lists only overrides changed from the default
+- `symbol`, `symbolId`, and `overrides` for symbol instances, where `overrides` lists only overrides changed from the default, and a `fillColor` value is `{ "color": "#rrggbbaa" }` with `swatch` when it is linked to one
 - `flow` with `target`, `targetName`, and `animation`, where `target` is `back` for a back link
 - `flowStartPoint` for artboards
 - `exportFormats` with `fileFormat`, `size`, and `prefix` or `suffix` when set

@@ -1,5 +1,5 @@
 const sketch = require('sketch')
-const { fromSketchAlignment, allSwatches } = require('./style.js')
+const { fromSketchAlignment, allSwatches, hexFromNative } = require('./style.js')
 
 const DEFAULT_DEPTH = 8
 const MAX_NODES = 2000
@@ -130,14 +130,20 @@ function cornerRadius(layer) {
 	return radii.every(radius => radius === radii[0]) ? radii[0] : radii
 }
 
-function overridesSpec(layer) {
+function colorOverrideValue(override, swatches) {
+	const color = override.sketchObject.currentValue()
+	const swatchId = color.swatchID ? color.swatchID() : null
+	return compact({ color: hexFromNative(color), swatch: swatchId ? swatches[String(swatchId)] : undefined })
+}
+
+function overridesSpec(layer, swatches) {
 	return (layer.overrides || [])
 		.filter(override => !override.isDefault && typeof override.value !== 'object')
 		.map(override => ({
 			id: override.id,
 			property: override.property,
 			layer: override.affectedLayer ? override.affectedLayer.name : undefined,
-			value: override.value,
+			value: override.property === 'fillColor' ? colorOverrideValue(override, swatches) : override.value,
 		}))
 }
 
@@ -205,7 +211,7 @@ function layerSpec(layer, options) {
 			sharedStyle: node.sharedStyle ? node.sharedStyle.name : undefined,
 			symbol: node.type === 'SymbolInstance' && node.master ? node.master.name : undefined,
 			symbolId: node.type === 'SymbolInstance' || node.type === 'SymbolMaster' ? node.symbolId : undefined,
-			overrides: node.type === 'SymbolInstance' ? overridesSpec(node) : undefined,
+			overrides: node.type === 'SymbolInstance' ? overridesSpec(node, swatches) : undefined,
 			flow: flowSpec(node.flow),
 			flowStartPoint: node.type === 'Artboard' && node.flowStartPoint ? true : undefined,
 			exportFormats: exportFormatsSpec(node.exportFormats),

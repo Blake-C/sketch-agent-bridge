@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Added a `list_libraries` tool with `search`, `kind`, and `limit` filters, and symbols, shared styles, and swatches from enabled libraries are imported when a write op names them.
 - Added prototype links, flow start points, and export presets to `update_layer` and layer nodes.
 - Added a `detach_symbol` tool and a `reveal_layer` tool.
+- Added `fillColor` overrides, set with a hex color or a swatch.
 
 ### Fixed
 
