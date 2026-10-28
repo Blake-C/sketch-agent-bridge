@@ -10,6 +10,7 @@ const CREATED_KEY = 'createdByAgent'
 const ARTBOARD_GAP = 100
 const VERBOSE_DEPTH = 3
 const CONTAINER_TYPES = ['Artboard', 'Group', 'SymbolMaster', 'Page']
+const STYLE_OVERRIDES = ['textStyle', 'layerStyle']
 
 function editableDocument(args) {
 	const document = resolveDocument(args)
@@ -84,7 +85,7 @@ function overrideValue(document, override, value) {
 function setOverrides(document, instance, changes) {
 	if (instance.type !== 'SymbolInstance') throw new Error('Only symbol instances have overrides')
 	changes.forEach(change => {
-		const override = instance.overrides.find(
+		const candidates = instance.overrides.filter(
 			item =>
 				(change.id && item.id === change.id) ||
 				(!change.id &&
@@ -92,6 +93,7 @@ function setOverrides(document, instance, changes) {
 					item.affectedLayer.name === change.layer &&
 					(!change.property || item.property === change.property))
 		)
+		const override = candidates.find(item => !STYLE_OVERRIDES.includes(item.property)) || candidates[0]
 		if (!override) throw new Error('No override matches ' + (change.id || change.layer))
 		instance.setOverrideValue(override, overrideValue(document, override, change.value))
 	})
