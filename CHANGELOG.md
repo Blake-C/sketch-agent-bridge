@@ -23,6 +23,9 @@ All notable changes to this project will be documented in this file.
 
 - Fixed center and right text alignment being swapped on Apple Silicon Macs.
 - Fixed renders after an override change showing the instance's previous overrides.
+- Fixed artboard fills not drawing, by setting the artboard's background color.
+- Fixed overrides set by layer name sometimes picking the text style instead of the text.
+- Fixed `fetch_images` errors returning the whole Unsplash response.
 
 ## [0.1.0] - 2026-10-27
 

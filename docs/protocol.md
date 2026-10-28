@@ -92,6 +92,8 @@ A color is a hex string (`#rrggbb` or `#rrggbbaa`) or `{ "swatch": "<name or id>
 
 Images can be PNG, JPEG, GIF, TIFF, WebP, HEIC, or BMP files.
 
+An artboard takes a single color fill, which the plugin writes to the artboard's background color, because Sketch draws an artboard's background color and ignores style fills on it. Gradients and images go on a rectangle inside the artboard.
+
 ### Text alignment
 
 Sketch 88.1 writes text alignment with the raw values AppKit uses on Intel Macs. On Apple Silicon, AppKit's raw values for center and right are swapped, so a layer set to `center` through Sketch's API renders right-aligned. The plugin swaps `center` and `right` on both write and read when `NSTextAlignmentCenter` is 1, which makes the alignment in requests and specs match what renders.
@@ -100,7 +102,7 @@ Sketch 88.1 writes text alignment with the raw values AppKit uses on Intel Macs.
 
 `createSymbol` makes a new symbol master on the Symbols page from the given layers. By default it moves the layers into the master and puts an instance where they were. With `replace` set to false, it copies the layers into the master and leaves the originals in place. Its reply lists the overrides the symbol exposes, by layer name and property.
 
-Overrides are set with a list of `{ "layer": "<layer name inside the symbol>", "value": "..." }`, or `{ "id": "<override id>", "value": "..." }`. Add `property` when one layer has more than one override. The value is text for `stringValue`, a symbol name for `symbolID`, and an absolute image path for `image`.
+Overrides are set with a list of `{ "layer": "<layer name inside the symbol>", "value": "..." }`, or `{ "id": "<override id>", "value": "..." }`. A text layer has both a `stringValue` and a `textStyle` override, and matching by layer name picks `stringValue` unless `property` says otherwise. The value is text for `stringValue`, a symbol name for `symbolID`, and an absolute image path for `image`.
 
 Variants of one component are separate masters with slash names, such as `Feature Row/Left` and `Feature Row/Right`. `updateLayer` with `symbol` swaps an instance between them.
 

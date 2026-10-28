@@ -37,3 +37,15 @@ Two attempts did not change the render:
 - Calling `invalidateAffectedSymbolInstances()` on the document data as well.
 
 The plugin now skips the render when an update changes overrides, and returns the id of the layer to render in a `render` field. Swapping an instance to another symbol rendered correctly in the same run, so a swap alone does not skip the render. The server then runs the `export` op in a second plugin run, which shows the new values.
+
+## Artboard fills did not draw
+
+Date: 2026-10-27, Sketch 88.1.
+
+Artboards built with a white fill exported with a transparent background, and a yellow test fill did not show either, in the same plugin run or in a later export. The layer spec still listed the fill, because Sketch stores it in the artboard's style. Sketch draws an artboard's background from a separate background color property, so the plugin now writes an artboard's color fill to that property.
+
+## get_images fails on some Unsplash responses
+
+Date: 2026-10-27.
+
+Two of eight `fetch_images` calls failed with "Could not extract image URLs from Unsplash response (HTTP 200)". In both responses the photographer's bio held a literal newline, and `jq` rejects a string with a raw control character, so `get_images` found no URLs. Retrying with a different query worked. The fix belongs in `get_images` in the system setup repo. The bridge now returns only the first line of the error so the full response does not land in the agent's context.
