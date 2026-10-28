@@ -1,3 +1,5 @@
+const { fromSketchAlignment } = require('./style.js')
+
 const DEFAULT_DEPTH = 8
 const MAX_NODES = 2000
 
@@ -42,7 +44,7 @@ function fillSpec(fill, swatches) {
 			stops: fill.gradient.stops.map(stop => ({ position: stop.position, color: stop.color })),
 		})
 	}
-	if (fill.fillType === 'Pattern') return { pattern: true }
+	if (fill.fillType === 'Pattern') return { image: true }
 	return compact({ color: fill.color, swatch: linkedSwatch(fill, swatches) })
 }
 
@@ -89,8 +91,8 @@ function textStyleSpec(style) {
 		lineHeight: style.lineHeight,
 		kerning: style.kerning,
 		paragraphSpacing: style.paragraphSpacing || undefined,
-		alignment: style.alignment,
-		verticalAlignment: style.verticalAlignment,
+		alignment: fromSketchAlignment(style.alignment) !== 'left' ? fromSketchAlignment(style.alignment) : undefined,
+		verticalAlignment: style.verticalAlignment !== 'top' ? style.verticalAlignment : undefined,
 		textColor: style.textColor,
 		textTransform: style.textTransform !== 'none' ? style.textTransform : undefined,
 		textUnderline: style.textUnderline || undefined,
