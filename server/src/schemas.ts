@@ -113,6 +113,23 @@ export const render = {
 	verbose: z.boolean().optional().describe('Return the full layer spec instead of id, name, type, and frame.'),
 }
 
+export const layout = {
+	smartLayout: z
+		.enum(['LeftToRight', 'HorizontallyCenter', 'RightToLeft', 'TopToBottom', 'VerticallyCenter', 'BottomToTop'])
+		.nullable()
+		.optional()
+		.describe(
+			'Smart layout for a group or symbol master, so it resizes around its content. null turns it off. A symbol instance resizes when its overrides change.'
+		),
+	rotation: z.number().optional().describe('Rotation in degrees.'),
+	flipHorizontal: z.boolean().optional(),
+	flipVertical: z.boolean().optional(),
+}
+
+export const order = z
+	.union([z.enum(['front', 'back', 'forward', 'backward']), z.number().int().min(0)])
+	.describe('Move the layer within its parent: front, back, forward, backward, or an index where 0 is the back.')
+
 const layerFields = {
 	kind: z.enum(['artboard', 'rectangle', 'oval', 'text', 'group', 'symbol', 'svg', 'image']),
 	name: z.string().optional(),
@@ -127,6 +144,7 @@ const layerFields = {
 	style,
 	textStyle,
 	hidden: z.boolean().optional(),
+	...layout,
 }
 
 export const layerInput = z.object(layerFields)

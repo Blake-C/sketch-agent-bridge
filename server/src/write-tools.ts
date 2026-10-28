@@ -3,7 +3,19 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import { z } from 'zod'
 import type { Backups } from './backup.ts'
 import { errorResult, replyResult } from './content.ts'
-import { buildNode, documentId, frame, hex, layerInput, overrides, render, style, textStyle } from './schemas.ts'
+import {
+	buildNode,
+	documentId,
+	frame,
+	hex,
+	layerInput,
+	layout,
+	order,
+	overrides,
+	render,
+	style,
+	textStyle,
+} from './schemas.ts'
 import { BridgeError, type SketchBridge } from './sketch.ts'
 
 const statusSchema = z.object({
@@ -114,7 +126,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Update layer',
 			description:
-				'Changes an existing layer: name, visibility, frame, text, corner radius, which symbol an instance uses, symbol overrides, style, and text style.',
+				'Changes an existing layer: name, visibility, frame, text, corner radius, which symbol an instance uses, symbol overrides, style, text style, smart layout, rotation, flips, and stacking order.',
 			inputSchema: {
 				documentId,
 				id: z.string(),
@@ -127,6 +139,8 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 				overrides: overrides.optional(),
 				style,
 				textStyle,
+				...layout,
+				order: order.optional(),
 				...render,
 			},
 			annotations: destructive,
@@ -160,6 +174,27 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 			annotations: destructive,
 		},
 		write('ungroupLayer')
+	)
+
+	server.registerTool(
+		'duplicate_layer',
+		{
+			title: 'Duplicate layers',
+			description:
+				'Copies layers, placing each copy above its original in the same parent, moved by offset. Duplicate an artboard with an offset so the copy does not cover it.',
+			inputSchema: {
+				documentId,
+				ids: z.array(z.string()).min(1).max(50),
+				offset: z
+					.object({ x: z.number().optional(), y: z.number().optional() })
+					.optional()
+					.describe('How far to move each copy from its original. Default 0, 0.'),
+				name: z.string().optional().describe('Name for the copies. Defaults to the original names.'),
+				...render,
+			},
+			annotations: additive,
+		},
+		write('duplicate')
 	)
 
 	server.registerTool(

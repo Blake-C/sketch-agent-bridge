@@ -11,6 +11,8 @@ const ARTBOARD_GAP = 100
 const VERBOSE_DEPTH = 3
 const CONTAINER_TYPES = ['Artboard', 'Group', 'SymbolMaster', 'Page']
 const STYLE_OVERRIDES = ['textStyle', 'layerStyle']
+const SMART_LAYOUT_TYPES = ['Group', 'SymbolMaster']
+const ORDER_MOVES = { front: 'moveToFront', back: 'moveToBack', forward: 'moveForward', backward: 'moveBackward' }
 
 function editableDocument(args) {
 	const document = resolveDocument(args)
@@ -64,6 +66,26 @@ function setCornerRadius(layer, radius) {
 	})
 }
 
+function setSmartLayout(layer, name) {
+	if (!SMART_LAYOUT_TYPES.includes(layer.type))
+		throw new Error('Smart layout only applies to groups and symbol masters')
+	if (name !== null && !sketch.SmartLayout[name]) throw new Error('Unknown smart layout: ' + name)
+	layer.smartLayout = name === null ? null : sketch.SmartLayout[name]
+}
+
+function setOrder(layer, order) {
+	if (typeof order === 'number') layer.index = order
+	else if (ORDER_MOVES[order]) layer[ORDER_MOVES[order]]()
+	else throw new Error('Unknown order: ' + order)
+}
+
+function applyLayout(layer, input) {
+	if (input.smartLayout !== undefined) setSmartLayout(layer, input.smartLayout)
+	if (input.rotation !== undefined) layer.transform.rotation = input.rotation
+	if (input.flipHorizontal !== undefined) layer.transform.flippedHorizontally = input.flipHorizontal
+	if (input.flipVertical !== undefined) layer.transform.flippedVertically = input.flipVertical
+}
+
 function linkSharedStyle(document, layer, key) {
 	const list = layer.type === 'Text' ? document.sharedTextStyles : document.sharedLayerStyles
 	const shared = findByIdOrName(list, key, layer.type === 'Text' ? 'text style' : 'layer style')
@@ -97,6 +119,7 @@ function setOverrides(document, instance, changes) {
 		if (!override) throw new Error('No override matches ' + (change.id || change.layer))
 		instance.setOverrideValue(override, overrideValue(document, override, change.value))
 	})
+	if (instance.master && instance.master.smartLayout) instance.resizeWithSmartLayout()
 }
 
 function svgWithSize(svg, width, height) {
@@ -156,6 +179,7 @@ function createNode(document, parent, node) {
 		if (node.name) layer.name = node.name
 		if (node.sharedStyle) linkSharedStyle(document, layer, node.sharedStyle)
 		applyStyle(document, layer, node.style, node.textStyle)
+		applyLayout(layer, node)
 		if (node.overrides) setOverrides(document, layer, node.overrides)
 		if (node.hidden) layer.hidden = true
 	} catch (error) {
@@ -210,6 +234,8 @@ module.exports = {
 	wasCreatedByAgent,
 	setFrame,
 	setCornerRadius,
+	setOrder,
+	applyLayout,
 	linkSharedStyle,
 	findSymbolMaster,
 	setOverrides,

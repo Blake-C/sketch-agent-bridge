@@ -8,6 +8,8 @@ const {
 	wasCreatedByAgent,
 	setFrame,
 	setCornerRadius,
+	setOrder,
+	applyLayout,
 	linkSharedStyle,
 	findSymbolMaster,
 	setOverrides,
@@ -57,6 +59,8 @@ function updateLayer(args, request) {
 	}
 	if (args.overrides) setOverrides(document, layer, args.overrides)
 	applyStyle(document, layer, args.style, args.textStyle)
+	applyLayout(layer, args)
+	if (args.order !== undefined) setOrder(layer, args.order)
 	return args.overrides !== undefined ? deferredResult(document, layer, args) : result(document, layer, args, request)
 }
 

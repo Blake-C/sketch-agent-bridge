@@ -1,3 +1,4 @@
+const sketch = require('sketch')
 const { fromSketchAlignment } = require('./style.js')
 
 const DEFAULT_DEPTH = 8
@@ -118,6 +119,16 @@ function overridesSpec(layer) {
 		}))
 }
 
+function smartLayoutName(layer) {
+	const layout = layer.smartLayout
+	if (!layout) return undefined
+	return Object.keys(sketch.SmartLayout).find(
+		name =>
+			sketch.SmartLayout[name].axis === layout.axis &&
+			sketch.SmartLayout[name].layoutAnchor === layout.layoutAnchor
+	)
+}
+
 function frameSpec(frame) {
 	return { x: frame.x, y: frame.y, width: frame.width, height: frame.height }
 }
@@ -140,6 +151,9 @@ function layerSpec(layer, options) {
 			hidden: node.hidden || undefined,
 			locked: node.locked || undefined,
 			rotation: node.transform && node.transform.rotation ? node.transform.rotation : undefined,
+			flippedHorizontally: node.transform && node.transform.flippedHorizontally ? true : undefined,
+			flippedVertically: node.transform && node.transform.flippedVertically ? true : undefined,
+			smartLayout: node.type === 'Group' || node.type === 'SymbolMaster' ? smartLayoutName(node) : undefined,
 			shapeType: node.type === 'ShapePath' ? node.shapeType : undefined,
 			cornerRadius: cornerRadius(node),
 			text: isText ? node.text : undefined,
@@ -168,4 +182,4 @@ function layerSpec(layer, options) {
 	return spec
 }
 
-module.exports = { layerSpec, styleSpec, textStyleSpec, swatchNames, swatchId, frameSpec }
+module.exports = { layerSpec, styleSpec, textStyleSpec, swatchNames, swatchId, frameSpec, smartLayoutName }

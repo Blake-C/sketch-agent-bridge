@@ -33,26 +33,27 @@ A successful reply can also carry `"render": { "ids": [...], "scale": 1 }`. The 
 
 Every op takes an optional `documentId`. Without it, the op uses the front document.
 
-| Op                  | MCP tool              | Args                                                                                                 |
-| ------------------- | --------------------- | ---------------------------------------------------------------------------------------------------- |
-| `status`            | `sketch_status`       | none                                                                                                 |
-| `pages`             | `list_pages`          | none                                                                                                 |
-| `artboards`         | `list_artboards`      | `pageId`                                                                                             |
-| `layer`             | `get_layer`           | `id`, `depth`, `includeHidden`                                                                       |
-| `selection`         | `get_selection`       | `depth`, `includeHidden`, `scale`, `svg`, `export`                                                   |
-| `export`            | `export_layers`       | `ids`, `formats`, `scale`                                                                            |
-| `tokens`            | `get_design_tokens`   | none                                                                                                 |
-| `build`             | `build_layers`        | `parentId`, `nodes`                                                                                  |
-| `createArtboard`    | `create_artboard`     | `pageId`, `name`, `x`, `y`, `width`, `height`, `style`                                               |
-| `createLayer`       | `create_layer`        | `parentId` and one layer node                                                                        |
-| `updateLayer`       | `update_layer`        | `id`, `name`, `hidden`, `frame`, `text`, `cornerRadius`, `symbol`, `overrides`, `style`, `textStyle` |
-| `groupLayers`       | `group_layers`        | `ids`, `name`                                                                                        |
-| `ungroupLayer`      | `ungroup_layer`       | `id`                                                                                                 |
-| `createSymbol`      | `create_symbol`       | `ids`, `name`, `replace`                                                                             |
-| `applySharedStyle`  | `apply_shared_style`  | `id`, `sharedStyle`                                                                                  |
-| `upsertSwatch`      | `upsert_swatch`       | `name`, `color`                                                                                      |
-| `upsertSharedStyle` | `upsert_shared_style` | `kind`, `name`, `fromLayerId`, `style`, `textStyle`                                                  |
-| `deleteLayer`       | `delete_layer`        | `id` or `ids`, `force`                                                                               |
+| Op                  | MCP tool              | Args                                                                                                                         |
+| ------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `status`            | `sketch_status`       | none                                                                                                                         |
+| `pages`             | `list_pages`          | none                                                                                                                         |
+| `artboards`         | `list_artboards`      | `pageId`                                                                                                                     |
+| `layer`             | `get_layer`           | `id`, `depth`, `includeHidden`                                                                                               |
+| `selection`         | `get_selection`       | `depth`, `includeHidden`, `scale`, `svg`, `export`                                                                           |
+| `export`            | `export_layers`       | `ids`, `formats`, `scale`                                                                                                    |
+| `tokens`            | `get_design_tokens`   | none                                                                                                                         |
+| `build`             | `build_layers`        | `parentId`, `nodes`                                                                                                          |
+| `createArtboard`    | `create_artboard`     | `pageId`, `name`, `x`, `y`, `width`, `height`, `style`                                                                       |
+| `createLayer`       | `create_layer`        | `parentId` and one layer node                                                                                                |
+| `updateLayer`       | `update_layer`        | `id`, `name`, `hidden`, `frame`, `text`, `cornerRadius`, `symbol`, `overrides`, `style`, `textStyle`, layout fields, `order` |
+| `groupLayers`       | `group_layers`        | `ids`, `name`                                                                                                                |
+| `ungroupLayer`      | `ungroup_layer`       | `id`                                                                                                                         |
+| `duplicate`         | `duplicate_layer`     | `ids`, `offset`, `name`                                                                                                      |
+| `createSymbol`      | `create_symbol`       | `ids`, `name`, `replace`                                                                                                     |
+| `applySharedStyle`  | `apply_shared_style`  | `id`, `sharedStyle`                                                                                                          |
+| `upsertSwatch`      | `upsert_swatch`       | `name`, `color`                                                                                                              |
+| `upsertSharedStyle` | `upsert_shared_style` | `kind`, `name`, `fromLayerId`, `style`, `textStyle`                                                                          |
+| `deleteLayer`       | `delete_layer`        | `id` or `ids`, `force`                                                                                                       |
 
 These tools do not call the plugin:
 
@@ -71,6 +72,7 @@ These tools do not call the plugin:
 - `symbol` and `overrides` for `symbol`
 - `children` for `group` and `artboard`
 - `ref`, a label the `build` reply maps to the new layer's id
+- the layout fields `smartLayout` for `group`, and `rotation`, `flipHorizontal`, and `flipVertical` for every kind
 
 The kinds are `artboard`, `rectangle`, `oval`, `text`, `group`, `symbol`, `svg`, and `image`. An artboard node needs a page as its parent. Child frames are relative to their parent, and each group shrinks to fit its children once they are all created. If any node fails, `build` removes everything it created in that call.
 
@@ -98,6 +100,14 @@ An artboard takes a single color fill, which the plugin writes to the artboard's
 
 Sketch 88.1 writes text alignment with the raw values AppKit uses on Intel Macs. On Apple Silicon, AppKit's raw values for center and right are swapped, so a layer set to `center` through Sketch's API renders right-aligned. The plugin swaps `center` and `right` on both write and read when `NSTextAlignmentCenter` is 1, which makes the alignment in requests and specs match what renders.
 
+### Layout and order
+
+`smartLayout` is one of `LeftToRight`, `HorizontallyCenter`, `RightToLeft`, `TopToBottom`, `VerticallyCenter`, or `BottomToTop`, and `null` turns it off. It applies to groups and symbol masters. After `setOverrides` changes an instance whose master has a smart layout, the plugin calls `resizeWithSmartLayout()` on the instance, so the instance grows or shrinks to fit its new override text.
+
+`updateLayer` takes `order`, which is `front`, `back`, `forward`, `backward`, or an index in the parent where 0 is the back.
+
+`duplicate` copies each layer into the same parent, directly above the original, and moves the copy by `offset`. Each copy gets the `createdByAgent` setting.
+
 ### Symbols
 
 `createSymbol` makes a new symbol master on the Symbols page from the given layers. By default it moves the layers into the master and puts an instance where they were. With `replace` set to false, it copies the layers into the master and leaves the originals in place. Its reply lists the overrides the symbol exposes, by layer name and property.
@@ -110,7 +120,7 @@ Variants of one component are separate masters with slash names, such as `Featur
 
 Write replies are sized to keep the agent's context small:
 
-- `createArtboard`, `createLayer`, `updateLayer`, `applySharedStyle`, and `groupLayers` return only `id`, `name`, `type`, and `frame` unless `verbose` is true. `build`, `ungroupLayer`, and `createSymbol` return the same short form for each layer they report on, and they ignore `verbose`.
+- `createArtboard`, `createLayer`, `updateLayer`, `applySharedStyle`, and `groupLayers` return only `id`, `name`, `type`, and `frame` unless `verbose` is true. `build`, `ungroupLayer`, `createSymbol`, and `duplicate` return the same short form for each layer they report on, and they ignore `verbose`.
 - `render` picks what the reply renders as a PNG: `none`, `layer`, or `artboard`. `build` defaults to `artboard` and renders once. The other ops that take `render` default to `layer`. `upsertSwatch`, `upsertSharedStyle`, and `deleteLayer` never render.
 - PNGs render at 1x unless `scale` says otherwise.
 - JSON in replies has no indentation.
@@ -126,7 +136,8 @@ The server runs the function with `/bin/zsh -f -c`, and the search text and size
 Each layer has `id`, `name`, `type`, and `frame`. These keys appear only when they have a value:
 
 - `children`, or `childCount` with `truncated: true` on the root when the depth limit or the 2000-layer limit cut the tree
-- `hidden`, `locked`, `rotation`
+- `hidden`, `locked`, `rotation`, `flippedHorizontally`, `flippedVertically`
+- `smartLayout` for groups and symbol masters
 - `shapeType` and `cornerRadius` for shape paths
 - `text` and `textStyle` for text layers, where `alignment` is left out when it is `left` and `verticalAlignment` is left out when it is `top`
 - `style` with `opacity`, `fills`, `borders`, `shadows`, `innerShadows`, and `blur`, where a color linked to a swatch also has `swatch`, a gradient fill has `gradient` and `stops`, and an image fill is `{ "image": true }`

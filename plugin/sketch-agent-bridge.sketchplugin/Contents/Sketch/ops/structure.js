@@ -5,6 +5,7 @@ const {
 	symbolsPage,
 	rightOfContent,
 	tagCreated,
+	setFrame,
 	summary,
 	renderFiles,
 	result,
@@ -114,4 +115,24 @@ function createSymbol(args, request) {
 	}
 }
 
-module.exports = { groupLayers, ungroupLayer, createSymbol }
+function duplicateLayers(args, request) {
+	const document = editableDocument(args)
+	const ids = args.ids || []
+	if (ids.length === 0) throw new Error('Pass at least one layer id')
+	const layers = ids.map(id => findLayer(document, id))
+	if (layers.some(layer => layer.type === 'Page')) throw new Error('Pages cannot be duplicated')
+	const offset = args.offset || {}
+	const copies = layers.map(layer => {
+		const copy = layer.duplicate()
+		setFrame(copy, { x: layer.frame.x + (offset.x || 0), y: layer.frame.y + (offset.y || 0) })
+		if (args.name) copy.name = args.name
+		tagCreated(copy)
+		return copy
+	})
+	return {
+		result: { duplicated: copies.map(summary) },
+		files: renderFiles(copies[0], args, request),
+	}
+}
+
+module.exports = { groupLayers, ungroupLayer, createSymbol, duplicate: duplicateLayers }

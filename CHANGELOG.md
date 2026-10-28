@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2026-10-27
+
+### Added
+
+- Added Smart Layout on groups and symbol masters, and instances that resize to fit after an override change.
+- Added a `duplicate_layer` tool.
+- Added rotation, flips, and stacking order to `update_layer` and layer nodes.
+
 ## [0.2.0] - 2026-10-27
 
 ### Added
