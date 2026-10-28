@@ -13,7 +13,7 @@ An agent connected to the MCP server can:
 - edit layers, group and ungroup them, and apply shared styles
 - duplicate layers, change their stacking order, rotate and flip them, and set Smart Layout on groups and symbols
 - turn layers into symbols, place instances, set their overrides, and swap them between symbols
-- fill layers with colors, gradients, or images
+- fill layers with colors, gradients, or images, and add inner shadows, blurs, blend modes, dashed borders, and arrowheads
 - add or change swatches and shared styles
 - download random Unsplash photos that match a query, through a local shell function, for use as image layers and fills
 

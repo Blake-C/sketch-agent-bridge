@@ -11,7 +11,10 @@ const TEXT_PROPERTIES = [
 	'paragraphSpacing',
 	'verticalAlignment',
 	'textTransform',
+	'textUnderline',
+	'textStrikethrough',
 ]
+const BORDER_OPTIONS = ['dashPattern', 'lineEnd', 'lineJoin', 'startArrowhead', 'endArrowhead']
 const SWAPPED_ALIGNMENTS = { center: 'right', right: 'center' }
 
 // Sketch 88.1 writes Intel AppKit alignment values, and arm64 AppKit swaps the raw values for center and right.
@@ -85,6 +88,34 @@ function setArtboardBackground(document, artboard, fills) {
 		: { enabled: false }
 }
 
+function shadowFromInput(document, shadow) {
+	return {
+		color: resolveColor(document, shadow.color),
+		x: shadow.x || 0,
+		y: shadow.y || 0,
+		blur: shadow.blur || 0,
+		spread: shadow.spread || 0,
+	}
+}
+
+// Assigning style.borderOptions resets every key left out to its default, so each option is set on its own.
+function setBorderOptions(layer, options) {
+	const target = layer.style.borderOptions
+	BORDER_OPTIONS.forEach(key => {
+		if (options[key] !== undefined) target[key] = options[key]
+	})
+}
+
+function blurFromInput(blur) {
+	if (blur === null) return { enabled: false }
+	return {
+		enabled: true,
+		blurType: blur.type || 'Gaussian',
+		radius: blur.radius === undefined ? 10 : blur.radius,
+		motionAngle: blur.motionAngle || 0,
+	}
+}
+
 function applyStyle(document, layer, style, textStyle) {
 	if (style) {
 		if (style.fills && layer.type === 'Artboard') {
@@ -99,15 +130,13 @@ function applyStyle(document, layer, style, textStyle) {
 				position: border.position || 'Inside',
 			}))
 		}
-		if (style.shadows) {
-			layer.style.shadows = style.shadows.map(shadow => ({
-				color: resolveColor(document, shadow.color),
-				x: shadow.x || 0,
-				y: shadow.y || 0,
-				blur: shadow.blur || 0,
-				spread: shadow.spread || 0,
-			}))
+		if (style.shadows) layer.style.shadows = style.shadows.map(shadow => shadowFromInput(document, shadow))
+		if (style.innerShadows) {
+			layer.style.innerShadows = style.innerShadows.map(shadow => shadowFromInput(document, shadow))
 		}
+		if (style.blur !== undefined) layer.style.blur = blurFromInput(style.blur)
+		if (style.borderOptions) setBorderOptions(layer, style.borderOptions)
+		if (style.blendingMode !== undefined) layer.style.blendingMode = style.blendingMode
 		if (style.opacity !== undefined) layer.style.opacity = style.opacity
 	}
 	if (textStyle) {

@@ -73,6 +73,11 @@ function setSmartLayout(layer, name) {
 	layer.smartLayout = name === null ? null : sketch.SmartLayout[name]
 }
 
+function setFixedWidth(layer, fixed) {
+	if (layer.type !== 'Text') throw new Error('Only text layers have a fixed width')
+	layer.fixedWidth = fixed
+}
+
 function setOrder(layer, order) {
 	if (typeof order === 'number') layer.index = order
 	else if (ORDER_MOVES[order]) layer[ORDER_MOVES[order]]()
@@ -180,6 +185,7 @@ function createNode(document, parent, node) {
 		if (node.sharedStyle) linkSharedStyle(document, layer, node.sharedStyle)
 		applyStyle(document, layer, node.style, node.textStyle)
 		applyLayout(layer, node)
+		if (node.fixedWidth !== undefined) setFixedWidth(layer, node.fixedWidth)
 		if (node.overrides) setOverrides(document, layer, node.overrides)
 		if (node.hidden) layer.hidden = true
 	} catch (error) {
@@ -235,6 +241,7 @@ module.exports = {
 	setFrame,
 	setCornerRadius,
 	setOrder,
+	setFixedWidth,
 	applyLayout,
 	linkSharedStyle,
 	findSymbolMaster,

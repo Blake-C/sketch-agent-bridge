@@ -66,7 +66,7 @@ These tools do not call the plugin:
 
 - `name`, `frame`, `hidden`, `style`, `textStyle`, and `sharedStyle` for every kind
 - `cornerRadius` for `rectangle`
-- `text` for `text`
+- `text` and `fixedWidth` for `text`. A text node with a frame width gets a fixed width unless `fixedWidth` is false.
 - `svg` for `svg`, as SVG markup. The frame width and height are written onto the root `<svg>` tag, so the drawing scales to that size.
 - `image` for `image`, as an absolute path to an image file
 - `symbol` and `overrides` for `symbol`
@@ -95,6 +95,19 @@ A color is a hex string (`#rrggbb` or `#rrggbbaa`) or `{ "swatch": "<name or id>
 Images can be PNG, JPEG, GIF, TIFF, WebP, HEIC, or BMP files.
 
 An artboard takes a single color fill, which the plugin writes to the artboard's background color, because Sketch draws an artboard's background color and ignores style fills on it. Gradients and images go on a rectangle inside the artboard.
+
+### Effects and borders
+
+`style` also takes these keys:
+
+- `innerShadows`, in the same form as `shadows`
+- `blur`, as `{ "type": "Background", "radius": 12 }`, where `type` is `Gaussian`, `Motion`, `Zoom`, or `Background`, and `motionAngle` sets the angle of a `Motion` blur. `null` turns blur off.
+- `blendingMode`, which is one of the names in Sketch's `Style.BlendingMode`, such as `Multiply` or `Screen`
+- `borderOptions`, with `dashPattern`, `lineEnd` (`Butt`, `Round`, `Projecting`), `lineJoin` (`Miter`, `Round`, `Bevel`), `startArrowhead`, and `endArrowhead`. Arrowheads are `None`, `OpenArrow`, `FilledArrow`, `Line`, `OpenCircle`, `FilledCircle`, `OpenSquare`, or `FilledSquare`, and they draw on open paths such as a line from an SVG.
+
+Assigning `style.borderOptions` in Sketch's API resets every key left out to its default, so the plugin sets each key that is given and leaves the others unchanged.
+
+`textStyle` also takes `textUnderline` and `textStrikethrough`, which are `none`, `single`, `double`, or `thick`.
 
 ### Text alignment
 
@@ -139,7 +152,7 @@ Each layer has `id`, `name`, `type`, and `frame`. These keys appear only when th
 - `hidden`, `locked`, `rotation`, `flippedHorizontally`, `flippedVertically`
 - `smartLayout` for groups and symbol masters
 - `shapeType` and `cornerRadius` for shape paths
-- `text` and `textStyle` for text layers, where `alignment` is left out when it is `left` and `verticalAlignment` is left out when it is `top`
-- `style` with `opacity`, `fills`, `borders`, `shadows`, `innerShadows`, and `blur`, where a color linked to a swatch also has `swatch`, a gradient fill has `gradient` and `stops`, and an image fill is `{ "image": true }`
+- `text`, `textStyle`, and `fixedWidth` for text layers, where `alignment` is left out when it is `left` and `verticalAlignment` is left out when it is `top`
+- `style` with `opacity`, `fills`, `borders`, `borderOptions`, `shadows`, `innerShadows`, `blur`, and `blendingMode`. A color linked to a swatch also has `swatch`, a gradient fill has `gradient` and `stops`, and an image fill is `{ "image": true }`. `borderOptions` and `blendingMode` appear only when they differ from Sketch's defaults.
 - `sharedStyle` with the shared style name
 - `symbol`, `symbolId`, and `overrides` for symbol instances, where `overrides` lists only overrides changed from the default

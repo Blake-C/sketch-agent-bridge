@@ -6,6 +6,7 @@ import { errorResult, replyResult } from './content.ts'
 import {
 	buildNode,
 	documentId,
+	fixedWidth,
 	frame,
 	hex,
 	layerInput,
@@ -134,6 +135,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 				hidden: z.boolean().optional(),
 				frame: frame.optional().describe('Only the given keys change.'),
 				text: z.string().optional(),
+				fixedWidth: fixedWidth.optional(),
 				cornerRadius: z.number().min(0).optional(),
 				symbol: z.string().optional().describe('Swap a symbol instance to another master, by name or id.'),
 				overrides: overrides.optional(),

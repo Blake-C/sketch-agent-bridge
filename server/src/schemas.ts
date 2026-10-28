@@ -33,6 +33,46 @@ export const fill = z
 	])
 	.describe('A color, a gradient, or an image fill.')
 
+const shadow = z.object({
+	color,
+	x: z.number().optional(),
+	y: z.number().optional(),
+	blur: z.number().min(0).optional(),
+	spread: z.number().optional(),
+})
+
+const blendingModes = [
+	'Normal',
+	'Darken',
+	'Multiply',
+	'ColorBurn',
+	'Lighten',
+	'Screen',
+	'ColorDodge',
+	'Overlay',
+	'SoftLight',
+	'HardLight',
+	'Difference',
+	'Exclusion',
+	'Hue',
+	'Saturation',
+	'Color',
+	'Luminosity',
+] as const
+
+const arrowhead = z.enum([
+	'None',
+	'OpenArrow',
+	'FilledArrow',
+	'Line',
+	'OpenCircle',
+	'FilledCircle',
+	'OpenSquare',
+	'FilledSquare',
+])
+
+const lineDecoration = z.enum(['none', 'single', 'double', 'thick'])
+
 export const style = z
 	.object({
 		fills: z.array(fill).optional(),
@@ -45,17 +85,32 @@ export const style = z
 				})
 			)
 			.optional(),
-		shadows: z
-			.array(
-				z.object({
-					color,
-					x: z.number().optional(),
-					y: z.number().optional(),
-					blur: z.number().min(0).optional(),
-					spread: z.number().optional(),
-				})
-			)
-			.optional(),
+		shadows: z.array(shadow).optional(),
+		innerShadows: z.array(shadow).optional(),
+		blur: z
+			.object({
+				type: z.enum(['Gaussian', 'Motion', 'Zoom', 'Background']).optional().describe('Default Gaussian.'),
+				radius: z.number().min(0).optional().describe('Default 10.'),
+				motionAngle: z.number().optional().describe('Angle in degrees, for Motion blur.'),
+			})
+			.nullable()
+			.optional()
+			.describe('Layer blur. Background blurs what is behind the layer. null turns blur off.'),
+		blendingMode: z.enum(blendingModes).optional(),
+		borderOptions: z
+			.object({
+				dashPattern: z
+					.array(z.number().min(0))
+					.max(4)
+					.optional()
+					.describe('Dash and gap lengths, such as [4, 2]. An empty list draws a solid line.'),
+				lineEnd: z.enum(['Butt', 'Round', 'Projecting']).optional(),
+				lineJoin: z.enum(['Miter', 'Round', 'Bevel']).optional(),
+				startArrowhead: arrowhead.optional(),
+				endArrowhead: arrowhead.optional(),
+			})
+			.optional()
+			.describe('Dashes, line caps, joins, and arrowheads for every border. Keys left out are unchanged.'),
 		opacity: z.number().min(0).max(1).optional(),
 	})
 	.optional()
@@ -80,6 +135,8 @@ export const textStyle = z
 		verticalAlignment: z.enum(['top', 'center', 'bottom']).optional(),
 		textTransform: z.enum(['none', 'uppercase', 'lowercase']).optional(),
 		textColor: color.optional(),
+		textUnderline: lineDecoration.optional(),
+		textStrikethrough: lineDecoration.optional(),
 	})
 	.optional()
 
@@ -130,10 +187,15 @@ export const order = z
 	.union([z.enum(['front', 'back', 'forward', 'backward']), z.number().int().min(0)])
 	.describe('Move the layer within its parent: front, back, forward, backward, or an index where 0 is the back.')
 
+export const fixedWidth = z
+	.boolean()
+	.describe('For text. true wraps text at the frame width, false makes the layer grow with its text.')
+
 const layerFields = {
 	kind: z.enum(['artboard', 'rectangle', 'oval', 'text', 'group', 'symbol', 'svg', 'image']),
 	name: z.string().optional(),
 	frame: frame.optional().describe('Relative to the parent. Text with a width gets a fixed width.'),
+	fixedWidth: fixedWidth.optional(),
 	cornerRadius: z.number().min(0).optional(),
 	text: z.string().optional(),
 	svg: z.string().optional().describe('SVG markup, for kind "svg". The frame width and height resize it.'),

@@ -34,3 +34,25 @@ test('order takes a named move or a non-negative index', () => {
 	assert.equal(schema.safeParse({ order: -1 }).success, false)
 	assert.equal(schema.safeParse({ order: 1.5 }).success, false)
 })
+
+test('style takes inner shadows, blur, blending, and border options', () => {
+	const result = node({
+		style: {
+			innerShadows: [{ color: '#00000040', y: 2, blur: 4 }],
+			blur: { type: 'Background', radius: 20 },
+			blendingMode: 'Multiply',
+			borderOptions: { dashPattern: [4, 2], lineEnd: 'Round', lineJoin: 'Miter', endArrowhead: 'FilledArrow' },
+		},
+	})
+	assert.ok(result.success)
+	assert.ok(node({ style: { blur: null } }).success)
+	assert.equal(node({ style: { blendingMode: 'multiply' } }).success, false)
+	assert.equal(node({ style: { borderOptions: { lineJoin: 'Mitter' } } }).success, false)
+	assert.equal(node({ style: { blur: { type: 'Box' } } }).success, false)
+})
+
+test('text takes underline, strikethrough, and fixed width', () => {
+	assert.ok(node({ kind: 'text', fixedWidth: false, textStyle: { textUnderline: 'single' } }).success)
+	assert.ok(node({ textStyle: { textStrikethrough: 'none' } }).success)
+	assert.equal(node({ textStyle: { textUnderline: 'wavy' } }).success, false)
+})

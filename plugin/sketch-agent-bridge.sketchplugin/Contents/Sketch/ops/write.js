@@ -9,6 +9,7 @@ const {
 	setFrame,
 	setCornerRadius,
 	setOrder,
+	setFixedWidth,
 	applyLayout,
 	linkSharedStyle,
 	findSymbolMaster,
@@ -60,6 +61,7 @@ function updateLayer(args, request) {
 	if (args.overrides) setOverrides(document, layer, args.overrides)
 	applyStyle(document, layer, args.style, args.textStyle)
 	applyLayout(layer, args)
+	if (args.fixedWidth !== undefined) setFixedWidth(layer, args.fixedWidth)
 	if (args.order !== undefined) setOrder(layer, args.order)
 	return args.overrides !== undefined ? deferredResult(document, layer, args) : result(document, layer, args, request)
 }

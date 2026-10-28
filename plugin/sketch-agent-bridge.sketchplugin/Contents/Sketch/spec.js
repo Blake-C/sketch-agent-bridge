@@ -49,6 +49,26 @@ function fillSpec(fill, swatches) {
 	return compact({ color: fill.color, swatch: linkedSwatch(fill, swatches) })
 }
 
+function blurSpec(blur) {
+	return compact({
+		type: blur.blurType,
+		radius: blur.radius,
+		motionAngle: blur.blurType === 'Motion' ? blur.motionAngle : undefined,
+	})
+}
+
+function borderOptionsSpec(options) {
+	if (!options) return undefined
+	const spec = compact({
+		dashPattern: options.dashPattern,
+		lineEnd: options.lineEnd !== 'Butt' ? options.lineEnd : undefined,
+		lineJoin: options.lineJoin !== 'Miter' ? options.lineJoin : undefined,
+		startArrowhead: options.startArrowhead !== 'None' ? options.startArrowhead : undefined,
+		endArrowhead: options.endArrowhead !== 'None' ? options.endArrowhead : undefined,
+	})
+	return Object.keys(spec).length ? spec : undefined
+}
+
 function styleSpec(style, swatches) {
 	if (!style) return {}
 	const enabled = list => (list || []).filter(item => item.enabled)
@@ -77,7 +97,9 @@ function styleSpec(style, swatches) {
 			blur: shadow.blur,
 			spread: shadow.spread,
 		})),
-		blur: style.blur && style.blur.enabled ? { type: style.blur.blurType, radius: style.blur.radius } : undefined,
+		blur: style.blur && style.blur.enabled ? blurSpec(style.blur) : undefined,
+		blendingMode: style.blendingMode !== 'Normal' ? style.blendingMode : undefined,
+		borderOptions: borderOptionsSpec(style.borderOptions),
 	}
 	return compact(spec)
 }
@@ -158,6 +180,7 @@ function layerSpec(layer, options) {
 			cornerRadius: cornerRadius(node),
 			text: isText ? node.text : undefined,
 			textStyle: isText ? textStyleSpec(node.style) : undefined,
+			fixedWidth: isText && node.fixedWidth ? true : undefined,
 			style: styleSpec(node.style, swatches),
 			sharedStyle: node.sharedStyle ? node.sharedStyle.name : undefined,
 			symbol: node.type === 'SymbolInstance' && node.master ? node.master.name : undefined,
