@@ -6,6 +6,7 @@ const {
 	draftsPage,
 	assertContainer,
 	wasCreatedByAgent,
+	setParent,
 	setFrame,
 	setCornerRadius,
 	setOrder,
@@ -45,7 +46,9 @@ function createLayer(args, request) {
 function updateLayer(args, request) {
 	const document = editableDocument(args)
 	const layer = findLayer(document, args.id)
+	if (args.parentId !== undefined) setParent(document, layer, args.parentId)
 	if (args.hidden !== undefined) layer.hidden = args.hidden
+	if (args.locked !== undefined) layer.locked = args.locked
 	if (args.frame) setFrame(layer, args.frame)
 	if (args.text !== undefined) {
 		if (layer.type !== 'Text') throw new Error('Only text layers have text')

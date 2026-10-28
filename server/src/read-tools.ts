@@ -167,6 +167,21 @@ export function registerReadTools(server: McpServer, bridge: SketchBridge) {
 	)
 
 	server.registerTool(
+		'select_layers',
+		{
+			title: 'Select layers',
+			description:
+				'Selects layers in Sketch, switching to their page. All layers must be on one page. An empty list clears the selection. Changes only the selection and view.',
+			inputSchema: {
+				documentId,
+				ids: z.array(z.string()).max(500).describe('Layer ids. [] clears the selection.'),
+			},
+			annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+		},
+		async args => callOp(bridge, 'select', args)
+	)
+
+	server.registerTool(
 		'export_layers',
 		{
 			title: 'Export layers',

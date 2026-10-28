@@ -52,6 +52,22 @@ function wasCreatedByAgent(layer) {
 	return Boolean(Settings.layerSettingForKey(layer, CREATED_KEY))
 }
 
+function setParent(document, layer, parentId) {
+	const parent = findLayer(document, parentId)
+	assertContainer(parent)
+	if (layer.type === 'Artboard' && parent.type !== 'Page') throw new Error('Artboards can only be moved to a page')
+	for (let node = parent; node && node.type !== 'Document'; node = node.parent) {
+		if (node.id === layer.id) throw new Error('A layer cannot move into itself or one of its children')
+	}
+	const previous = layer.parent
+	const frame = layer.frame.changeBasis({ from: previous, to: parent })
+	layer.parent = parent
+	layer.frame = frame
+	;[previous, parent].forEach(group => {
+		if (group.type === 'Group' && group.layers.length > 0) group.adjustToFit()
+	})
+}
+
 function setFrame(layer, frame) {
 	const next = layer.frame
 	;['x', 'y', 'width', 'height'].forEach(key => {
@@ -301,6 +317,7 @@ module.exports = {
 	assertContainer,
 	tagCreated,
 	wasCreatedByAgent,
+	setParent,
 	setFrame,
 	setCornerRadius,
 	setOrder,

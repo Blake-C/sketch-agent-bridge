@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- Added `parentId` and `locked` to `update_layer`, so a layer can move into another artboard, group, or page and keep its place on the canvas.
+- Added a `select_layers` tool.
+
 ## [0.3.0] - 2026-10-27
 
 ### Added

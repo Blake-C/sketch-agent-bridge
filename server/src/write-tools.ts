@@ -128,12 +128,19 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Update layer',
 			description:
-				'Changes an existing layer: name, visibility, frame, text, corner radius, which symbol an instance uses, symbol overrides, style, text style, smart layout, rotation, flips, stacking order, prototype links, and export presets.',
+				'Changes an existing layer: parent, name, visibility, lock, frame, text, corner radius, which symbol an instance uses, symbol overrides, style, text style, smart layout, rotation, flips, stacking order, prototype links, and export presets.',
 			inputSchema: {
 				documentId,
 				id: z.string(),
+				parentId: z
+					.string()
+					.optional()
+					.describe(
+						'Move the layer into this artboard, group, or page. It keeps its place on the canvas, and frame is then relative to the new parent. Artboards move only between pages.'
+					),
 				name: z.string().optional(),
 				hidden: z.boolean().optional(),
+				locked: z.boolean().optional(),
 				frame: frame.optional().describe('Only the given keys change.'),
 				text: z.string().optional(),
 				fixedWidth: fixedWidth.optional(),

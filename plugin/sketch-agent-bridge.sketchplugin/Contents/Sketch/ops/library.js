@@ -81,4 +81,24 @@ function reveal(args) {
 	}
 }
 
-module.exports = { libraries, detach, reveal }
+function select(args) {
+	const document = resolveDocument(args)
+	const layers = (args.ids || []).map(id => findLayer(document, id))
+	if (layers.some(layer => layer.type === 'Page'))
+		throw new Error('Pages cannot be selected. Use reveal_layer to switch pages.')
+	const pages = layers.map(layer => layer.getParentPage())
+	if (pages.some(page => page.id !== pages[0].id)) throw new Error('All layers must be on the same page')
+	if (pages.length) pages[0].selected = true
+	document.selectedLayers.clear()
+	layers.forEach(layer => {
+		layer.selected = true
+	})
+	return {
+		result: {
+			page: document.selectedPage.name,
+			selected: document.selectedLayers.layers.map(layer => ({ id: layer.id, name: layer.name })),
+		},
+	}
+}
+
+module.exports = { libraries, detach, reveal, select }
