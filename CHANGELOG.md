@@ -16,6 +16,11 @@ All notable changes to this project will be documented in this file.
 - Added prototype links, flow start points, and export presets to `update_layer` and layer nodes.
 - Added a `detach_symbol` tool and a `reveal_layer` tool.
 
+### Fixed
+
+- Fixed agents being able to change overrides that the symbol master marks as not editable.
+- Fixed `build_layers` and `create_layer` renders showing symbol instances before their overrides and Smart Layout resize.
+
 ## [0.2.0] - 2026-10-27
 
 ### Added

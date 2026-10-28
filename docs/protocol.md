@@ -27,7 +27,7 @@ The plugin writes `reply.json` into `replyDir`:
 
 On failure it writes `{ "ok": false, "error": "<message>" }`. Exported files go in `replyDir/exports/<layerId>/`. The server drops any file path outside `replyDir`, and it deletes request folders older than 24 hours.
 
-A successful reply can also carry `"render": { "ids": [...], "scale": 1 }`. The plugin sends it after changing overrides on an existing symbol instance, because an export in the same plugin run still shows the instance's previous overrides. The server then runs the `export` op in a second plugin run and returns that PNG.
+A successful reply can also carry `"render": { "ids": [...], "scale": 1 }`. The plugin sends it from `build`, `createLayer`, and `updateLayer` whenever they set overrides, because an export in the same plugin run still shows the instance's previous overrides and the size it had before Smart Layout resized it. The server then runs the `export` op in a second plugin run and returns that PNG.
 
 ## Ops
 
@@ -155,7 +155,7 @@ Sketch 88.1 writes text alignment with the raw values AppKit uses on Intel Macs.
 
 `createSymbol` makes a new symbol master on the Symbols page from the given layers. By default it moves the layers into the master and puts an instance where they were. With `replace` set to false, it copies the layers into the master and leaves the originals in place. Its reply lists the overrides the symbol exposes, by layer name and property.
 
-Overrides are set with a list of `{ "layer": "<layer name inside the symbol>", "value": "..." }`, or `{ "id": "<override id>", "value": "..." }`. A text layer has both a `stringValue` and a `textStyle` override, and matching by layer name picks `stringValue` unless `property` says otherwise. The value is text for `stringValue`, a symbol name for `symbolID`, and an absolute image path for `image`.
+Overrides are set with a list of `{ "layer": "<layer name inside the symbol>", "value": "..." }`, or `{ "id": "<override id>", "value": "..." }`. A text layer has both a `stringValue` and a `textStyle` override, and matching by layer name picks `stringValue` unless `property` says otherwise. The value is text for `stringValue`, a symbol name for `symbolID`, and an absolute image path for `image`. The plugin refuses an override that the symbol master marks as not editable, which `symbols` with `includeOverrides` reports as `editable: false`.
 
 `detach` replaces an instance with a group of its layers and keeps the instance's overrides. With `recursively`, nested instances are detached too. It refuses an instance without the `createdByAgent` setting unless `force` is true, and the new group gets the setting when the instance had it.
 

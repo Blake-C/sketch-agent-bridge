@@ -36,7 +36,8 @@ function createLayer(args, request) {
 	const document = editableDocument(args)
 	const parent = findLayer(document, args.parentId)
 	assertContainer(parent)
-	return result(document, createNode(document, parent, args), args, request)
+	const layer = createNode(document, parent, args)
+	return args.overrides ? deferredResult(document, layer, args) : result(document, layer, args, request)
 }
 
 function updateLayer(args, request) {

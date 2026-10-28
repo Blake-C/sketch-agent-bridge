@@ -142,6 +142,13 @@ function overrideValue(document, override, value) {
 	return value
 }
 
+function isLocked(instance, override) {
+	if (override.editable === false) return true
+	const master = instance.master
+	const masterOverride = master && master.overrides.find(item => item.id === override.id)
+	return Boolean(masterOverride) && masterOverride.editable === false
+}
+
 function setOverrides(document, instance, changes) {
 	if (instance.type !== 'SymbolInstance') throw new Error('Only symbol instances have overrides')
 	changes.forEach(change => {
@@ -155,6 +162,10 @@ function setOverrides(document, instance, changes) {
 		)
 		const override = candidates.find(item => !STYLE_OVERRIDES.includes(item.property)) || candidates[0]
 		if (!override) throw new Error('No override matches ' + (change.id || change.layer))
+		if (isLocked(instance, override)) {
+			const name = override.affectedLayer ? override.affectedLayer.name : override.id
+			throw new Error('The symbol master does not allow the ' + override.property + ' override on ' + name)
+		}
 		instance.setOverrideValue(override, overrideValue(document, override, change.value))
 	})
 	if (instance.master && instance.master.smartLayout) instance.resizeWithSmartLayout()
@@ -254,13 +265,17 @@ function result(document, layer, args, request) {
 	}
 }
 
-// An export in the same plugin run still shows an instance's previous overrides, so the server renders it in a second run.
-function deferredResult(document, layer, args) {
+// An export in the same plugin run still shows an instance's previous overrides and size, so the server renders it in a second run.
+function renderRequest(layer, args) {
 	const target = renderTarget(layer, args.render || 'layer')
+	return target ? { ids: [target.id], scale: args.scale || 1 } : undefined
+}
+
+function deferredResult(document, layer, args) {
 	return {
 		result: result(document, layer, Object.assign({}, args, { render: 'none' }), null).result,
 		files: [],
-		render: target ? { ids: [target.id], scale: args.scale || 1 } : undefined,
+		render: renderRequest(layer, args),
 	}
 }
 
@@ -284,6 +299,7 @@ module.exports = {
 	createNode,
 	summary,
 	renderFiles,
+	renderRequest,
 	result,
 	deferredResult,
 }
