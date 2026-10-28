@@ -74,9 +74,24 @@ function fillFromInput(document, value) {
 	return { fillType: 'Color', color: resolveColor(document, value) }
 }
 
+// Artboards draw their background color property and ignore style fills.
+function setArtboardBackground(document, artboard, fills) {
+	const colors = fills.filter(fill => typeof fill === 'string' || (fill && fill.swatch))
+	if (colors.length !== fills.length || colors.length > 1) {
+		throw new Error('An artboard takes one color fill. Put gradients and images on a rectangle inside it.')
+	}
+	artboard.background = colors.length
+		? { enabled: true, includedInExport: true, color: resolveColor(document, colors[0]) }
+		: { enabled: false }
+}
+
 function applyStyle(document, layer, style, textStyle) {
 	if (style) {
-		if (style.fills) layer.style.fills = style.fills.map(fill => fillFromInput(document, fill))
+		if (style.fills && layer.type === 'Artboard') {
+			setArtboardBackground(document, layer, style.fills)
+		} else if (style.fills) {
+			layer.style.fills = style.fills.map(fill => fillFromInput(document, fill))
+		}
 		if (style.borders) {
 			layer.style.borders = style.borders.map(border => ({
 				color: resolveColor(document, border.color),
