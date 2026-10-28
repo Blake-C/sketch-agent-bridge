@@ -297,6 +297,40 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 	)
 
 	server.registerTool(
+		'create_page',
+		{
+			title: 'Create page',
+			description: 'Adds a page at the end of the document.',
+			inputSchema: { documentId, name: z.string() },
+			annotations: additive,
+		},
+		write('createPage')
+	)
+
+	server.registerTool(
+		'update_page',
+		{
+			title: 'Update page',
+			description: 'Renames a page. Use reveal_layer with a page id to switch to it.',
+			inputSchema: { documentId, id: z.string(), name: z.string() },
+			annotations: destructive,
+		},
+		write('updatePage')
+	)
+
+	server.registerTool(
+		'delete_page',
+		{
+			title: 'Delete page',
+			description:
+				'Deletes a page and every layer on it. Pages an agent did not create, and the Symbols page, need force: true. The last page cannot be deleted.',
+			inputSchema: { documentId, id: z.string(), force: z.boolean().optional() },
+			annotations: destructive,
+		},
+		write('deletePage')
+	)
+
+	server.registerTool(
 		'delete_layer',
 		{
 			title: 'Delete layers',

@@ -60,6 +60,9 @@ Every op takes an optional `documentId`. Without it, the op uses the front docum
 | `upsertSwatch`      | `upsert_swatch`       | `name`, `color`                                                                                                                                                                                             |
 | `upsertSharedStyle` | `upsert_shared_style` | `kind`, `name`, `fromLayerId`, `style`, `textStyle`                                                                                                                                                         |
 | `deleteLayer`       | `delete_layer`        | `id` or `ids`, `force`                                                                                                                                                                                      |
+| `createPage`        | `create_page`         | `name`                                                                                                                                                                                                      |
+| `updatePage`        | `update_page`         | `id`, `name`                                                                                                                                                                                                |
+| `deletePage`        | `delete_page`         | `id`, `force`                                                                                                                                                                                               |
 
 These tools do not call the plugin:
 
@@ -165,6 +168,10 @@ Sketch 88.1 writes text alignment with the raw values AppKit uses on Intel Macs.
 `flow` is `{ "target": "<artboard id>", "animation": "slideFromLeft" }`, where `target` can also be `"back"` to return to the previous artboard, and `animation` is `none`, `slideFromRight`, `slideFromLeft`, `slideFromBottom`, or `slideFromTop`, with `slideFromRight` as the default. `null` removes the link. `flowStartPoint: true` marks an artboard as a prototype start point.
 
 `exportFormats` replaces a layer's export presets with a list of `{ "fileFormat": "png", "size": "2x", "prefix": "", "suffix": "@2x" }`. `fileFormat` is `png`, `jpg`, `tiff`, `webp`, `gif`, `pdf`, `eps`, or `svg`. `size` is a scale such as `2x`, a width such as `300w`, or a height such as `200h`, and defaults to `1x`. An empty list removes the presets.
+
+### Pages
+
+`createPage` adds a page at the end of the document and gives it the `createdByAgent` setting. `updatePage` renames a page. `deletePage` removes a page and every layer on it. It refuses the last page, the Symbols page unless `force` is true, and a page without the `createdByAgent` setting unless `force` is true. To switch pages, use `reveal` with a page id.
 
 ### Symbols
 

@@ -11,7 +11,8 @@ const ops = Object.assign(
 	require('./ops/build.js'),
 	require('./ops/structure.js'),
 	require('./ops/inventory.js'),
-	require('./ops/library.js')
+	require('./ops/library.js'),
+	require('./ops/pages.js')
 )
 
 function readRequest(context) {
