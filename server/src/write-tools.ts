@@ -3,72 +3,13 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import { z } from 'zod'
 import type { Backups } from './backup.ts'
 import { errorResult, replyResult } from './content.ts'
+import { buildNode, documentId, frame, hex, layerInput, overrides, render, style, textStyle } from './schemas.ts'
 import { BridgeError, type SketchBridge } from './sketch.ts'
 
 const statusSchema = z.object({
 	selectedDocumentId: z.string().nullable(),
 	documents: z.array(z.object({ id: z.string(), name: z.string(), path: z.string().nullable() })),
 })
-
-const hex = z.string().regex(/^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/, 'Use #rrggbb or #rrggbbaa')
-const color = z
-	.union([hex, z.object({ swatch: z.string().describe('Swatch name or id.') })])
-	.describe('A hex color, or { "swatch": "<name>" } to link a swatch from get_design_tokens.')
-const style = z
-	.object({
-		fills: z.array(color).optional(),
-		borders: z
-			.array(
-				z.object({
-					color,
-					thickness: z.number().min(0).optional(),
-					position: z.enum(['Inside', 'Center', 'Outside']).optional(),
-				})
-			)
-			.optional(),
-		shadows: z
-			.array(
-				z.object({
-					color,
-					x: z.number().optional(),
-					y: z.number().optional(),
-					blur: z.number().min(0).optional(),
-					spread: z.number().optional(),
-				})
-			)
-			.optional(),
-		opacity: z.number().min(0).max(1).optional(),
-	})
-	.optional()
-	.describe('Replaces the listed style parts. Parts left out are unchanged.')
-const textStyle = z
-	.object({
-		fontFamily: z.string().optional(),
-		fontSize: z.number().positive().optional(),
-		fontWeight: z
-			.number()
-			.int()
-			.min(0)
-			.max(12)
-			.optional()
-			.describe('Sketch weight scale, 5 is regular, 9 is bold.'),
-		fontStyle: z.enum(['italic']).optional(),
-		lineHeight: z.number().positive().optional(),
-		kerning: z.number().optional(),
-		paragraphSpacing: z.number().optional(),
-		alignment: z.enum(['left', 'right', 'center', 'justified']).optional(),
-		verticalAlignment: z.enum(['top', 'center', 'bottom']).optional(),
-		textTransform: z.enum(['none', 'uppercase', 'lowercase']).optional(),
-		textColor: color.optional(),
-	})
-	.optional()
-const frame = z.object({
-	x: z.number().optional(),
-	y: z.number().optional(),
-	width: z.number().positive().optional(),
-	height: z.number().positive().optional(),
-})
-const documentId = z.string().optional().describe('Document id from sketch_status. Defaults to the front document.')
 
 export async function callWrite(
 	bridge: SketchBridge,
@@ -88,6 +29,14 @@ export async function callWrite(
 		}
 		const backup = await backups.ensure(document.path)
 		const { reply } = await bridge.call(op, { ...args, documentId: document.id })
+		if (reply.ok && reply.render) {
+			const { reply: rendered } = await bridge.call('export', {
+				...reply.render,
+				formats: ['png'],
+				documentId: document.id,
+			})
+			if (rendered.ok) reply.files = rendered.files
+		}
 		const result = await replyResult(reply)
 		if (backup) result.content.unshift({ type: 'text', text: `Backed up ${document.path} to ${backup}` })
 		return result
@@ -102,11 +51,31 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 	const destructive = { readOnlyHint: false, destructiveHint: true, openWorldHint: false }
 
 	server.registerTool(
+		'build_layers',
+		{
+			title: 'Build layers',
+			description:
+				'Creates a whole tree of layers in one call: artboards, groups, shapes, text, SVG, images, and symbol instances, with children nested inside groups and artboards. Prefer this over create_layer for anything with more than a few layers. Child frames are relative to their parent. Groups shrink to fit their children. Renders once at the end. If any layer fails, nothing is kept.',
+			inputSchema: {
+				documentId,
+				parentId: z
+					.string()
+					.optional()
+					.describe('Artboard, group, or page id. Defaults to the "Agent Drafts" page.'),
+				nodes: z.array(buildNode).min(1),
+				...render,
+			},
+			annotations: additive,
+		},
+		write('build')
+	)
+
+	server.registerTool(
 		'create_artboard',
 		{
 			title: 'Create artboard',
 			description:
-				'Creates an artboard. It goes on the "Agent Drafts" page unless pageId is given, placed right of existing content unless x is given. Returns its spec and a PNG.',
+				'Creates an artboard. It goes on the "Agent Drafts" page unless pageId is given, placed right of existing content unless x is given.',
 			inputSchema: {
 				documentId,
 				pageId: z.string().optional(),
@@ -116,6 +85,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 				width: z.number().positive(),
 				height: z.number().positive(),
 				style,
+				...render,
 			},
 			annotations: additive,
 		},
@@ -127,19 +97,12 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Create layer',
 			description:
-				'Creates a rectangle, oval, text, group, or symbol instance inside an artboard, group, or page. Returns its spec and a PNG of its artboard.',
+				'Creates one layer inside an artboard, group, or page. Use build_layers for more than a few layers.',
 			inputSchema: {
 				documentId,
 				parentId: z.string().describe('Id of an artboard, group, or page.'),
-				kind: z.enum(['rectangle', 'oval', 'text', 'group', 'symbol']),
-				name: z.string().optional(),
-				frame: frame.optional().describe('Relative to the parent. Text with a width gets a fixed width.'),
-				cornerRadius: z.number().min(0).optional(),
-				text: z.string().optional(),
-				symbol: z.string().optional().describe('Symbol master name, id, or symbolId, for kind "symbol".'),
-				sharedStyle: z.string().optional().describe('Shared layer or text style name or id to link.'),
-				style,
-				textStyle,
+				...layerInput.shape,
+				...render,
 			},
 			annotations: additive,
 		},
@@ -151,7 +114,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Update layer',
 			description:
-				'Changes an existing layer: name, visibility, frame, text, corner radius, symbol overrides, style, and text style. Returns its spec and a PNG of its artboard.',
+				'Changes an existing layer: name, visibility, frame, text, corner radius, which symbol an instance uses, symbol overrides, style, and text style.',
 			inputSchema: {
 				documentId,
 				id: z.string(),
@@ -160,11 +123,11 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 				frame: frame.optional().describe('Only the given keys change.'),
 				text: z.string().optional(),
 				cornerRadius: z.number().min(0).optional(),
-				overrides: z
-					.array(z.object({ id: z.string().describe('Override id from get_layer.'), value: z.string() }))
-					.optional(),
+				symbol: z.string().optional().describe('Swap a symbol instance to another master, by name or id.'),
+				overrides: overrides.optional(),
 				style,
 				textStyle,
+				...render,
 			},
 			annotations: destructive,
 		},
@@ -172,11 +135,62 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 	)
 
 	server.registerTool(
+		'group_layers',
+		{
+			title: 'Group layers',
+			description: 'Puts layers that share a parent into a new named group, keeping their positions.',
+			inputSchema: {
+				documentId,
+				ids: z.array(z.string()).min(1),
+				name: z.string(),
+				...render,
+			},
+			annotations: additive,
+		},
+		write('groupLayers')
+	)
+
+	server.registerTool(
+		'ungroup_layer',
+		{
+			title: 'Ungroup layer',
+			description:
+				"Moves a group's children into the group's parent, keeping their positions, and removes the group.",
+			inputSchema: { documentId, id: z.string(), ...render },
+			annotations: destructive,
+		},
+		write('ungroupLayer')
+	)
+
+	server.registerTool(
+		'create_symbol',
+		{
+			title: 'Create symbol',
+			description:
+				'Turns layers that share a parent into a symbol master on the Symbols page. By default the layers are replaced with an instance of the new symbol. Name variants with slashes, such as "Feature Row/Left" and "Feature Row/Right", so they can be swapped with update_layer. The reply lists the overrides the symbol exposes.',
+			inputSchema: {
+				documentId,
+				ids: z.array(z.string()).min(1),
+				name: z.string(),
+				replace: z.boolean().optional().describe('Replace the layers with an instance. Default true.'),
+				...render,
+			},
+			annotations: destructive,
+		},
+		write('createSymbol')
+	)
+
+	server.registerTool(
 		'apply_shared_style',
 		{
 			title: 'Apply shared style',
 			description: 'Links a layer to a shared layer style, or a text layer to a shared text style.',
-			inputSchema: { documentId, id: z.string(), sharedStyle: z.string().describe('Shared style name or id.') },
+			inputSchema: {
+				documentId,
+				id: z.string(),
+				sharedStyle: z.string().describe('Shared style name or id.'),
+				...render,
+			},
 			annotations: destructive,
 		},
 		write('applySharedStyle')
@@ -216,9 +230,14 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 	server.registerTool(
 		'delete_layer',
 		{
-			title: 'Delete layer',
-			description: 'Deletes a layer an agent created. Layers made by hand need force: true.',
-			inputSchema: { documentId, id: z.string(), force: z.boolean().optional() },
+			title: 'Delete layers',
+			description: 'Deletes layers an agent created. Layers made by hand need force: true.',
+			inputSchema: {
+				documentId,
+				id: z.string().optional(),
+				ids: z.array(z.string()).optional(),
+				force: z.boolean().optional(),
+			},
 			annotations: destructive,
 		},
 		write('deleteLayer')

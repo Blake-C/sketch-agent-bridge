@@ -7,7 +7,7 @@ import type { SketchBridge } from './sketch.ts'
 const documentId = z.string().optional().describe('Document id from sketch_status. Defaults to the front document.')
 const depth = z.number().int().min(0).max(20).optional().describe('How many levels of children to include. Default 8.')
 const includeHidden = z.boolean().optional().describe('Include hidden layers. Default false.')
-const scale = z.number().min(0.25).max(4).optional().describe('PNG scale. Default 2.')
+const scale = z.number().min(0.25).max(4).optional().describe('PNG scale. Default 1.')
 const readOnly = { readOnlyHint: true, openWorldHint: false }
 
 export async function callOp(
@@ -140,7 +140,7 @@ export function registerReadTools(server: McpServer, bridge: SketchBridge) {
 		async args => {
 			try {
 				const items = await listInbox(bridge.bridgeDir, args.limit)
-				return { content: [{ type: 'text', text: JSON.stringify(items, null, '\t') }] }
+				return { content: [{ type: 'text', text: JSON.stringify(items) }] }
 			} catch (error) {
 				return errorResult(error)
 			}

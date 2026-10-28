@@ -17,7 +17,12 @@ const REQUEST_MAX_AGE_MS = 24 * 60 * 60 * 1000
 
 const fileSchema = z.object({ layerId: z.string(), format: z.string(), path: z.string() })
 const replySchema = z.discriminatedUnion('ok', [
-	z.object({ ok: z.literal(true), result: z.unknown(), files: z.array(fileSchema).default([]) }),
+	z.object({
+		ok: z.literal(true),
+		result: z.unknown(),
+		files: z.array(fileSchema).default([]),
+		render: z.object({ ids: z.array(z.string()), scale: z.number() }).optional(),
+	}),
 	z.object({ ok: z.literal(false), error: z.string() }),
 ])
 

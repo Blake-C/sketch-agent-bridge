@@ -76,3 +76,33 @@ test('Backups refuses paths that are not .sketch files', async () => {
 	await assert.rejects(backups.ensure('/etc/passwd'), /not a .sketch file/)
 	await assert.rejects(backups.ensure('relative/System.sketch'), /not a .sketch file/)
 })
+
+test('callWrite renders in a second call when the plugin asks for it', async () => {
+	const documentPath = await sketchFile()
+	const bridgeDir = await mkdtemp(path.join(tmpdir(), 'write-test-'))
+	const ops: string[] = []
+	const run: Runner = async (_file, args) => {
+		const context = args.find(arg => arg.startsWith('--context=')) ?? ''
+		const request = JSON.parse(JSON.parse(context.slice('--context='.length)).request)
+		ops.push(request.op)
+		let reply: unknown = { ok: true, result: { id: 'L1' }, render: { ids: ['L1'], scale: 1 } }
+		if (request.op === 'status') {
+			reply = {
+				ok: true,
+				result: { selectedDocumentId: 'D1', documents: [{ id: 'D1', name: 'S', path: documentPath }] },
+			}
+		}
+		if (request.op === 'export') {
+			const png = path.join(request.replyDir, 'L1.png')
+			await writeFile(png, 'png')
+			reply = { ok: true, result: {}, files: [{ layerId: 'L1', format: 'png', path: png }] }
+		}
+		await writeFile(path.join(request.replyDir, 'reply.json'), JSON.stringify(reply))
+	}
+	const bridge = new SketchBridge({ bridgeDir, run, isRunning: async () => true })
+
+	const result = await callWrite(bridge, new Backups(bridgeDir), 'updateLayer', { id: 'L1' })
+
+	assert.deepEqual(ops, ['status', 'updateLayer', 'export'])
+	assert.equal(result.content.at(-1)?.type, 'image')
+})

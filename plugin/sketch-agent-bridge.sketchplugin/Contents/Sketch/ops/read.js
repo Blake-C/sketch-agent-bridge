@@ -64,7 +64,7 @@ function selection(args, request) {
 			page: { id: document.selectedPage.id, name: document.selectedPage.name },
 			layers: layers.map(selected => layerSpec(selected, options)),
 		},
-		files: exportLayers(layers, request.replyDir + '/exports', formats, args.scale),
+		files: exportLayers(layers, request.replyDir + '/exports', formats, args.scale || 1),
 	}
 }
 
@@ -73,7 +73,7 @@ function exportOp(args, request) {
 	const layers = (args.ids || []).map(id => findLayer(document, id))
 	return {
 		result: { exported: layers.map(found => ({ id: found.id, name: found.name })) },
-		files: exportLayers(layers, request.replyDir + '/exports', args.formats, args.scale),
+		files: exportLayers(layers, request.replyDir + '/exports', args.formats, args.scale || 1),
 	}
 }
 

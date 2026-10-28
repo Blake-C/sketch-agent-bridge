@@ -1,0 +1,142 @@
+import { z } from 'zod'
+
+export const documentId = z
+	.string()
+	.optional()
+	.describe('Document id from sketch_status. Defaults to the front document.')
+
+export const hex = z.string().regex(/^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/, 'Use #rrggbb or #rrggbbaa')
+
+export const color = z
+	.union([hex, z.object({ swatch: z.string().describe('Swatch name or id.') })])
+	.describe('A hex color, or { "swatch": "<name>" } to link a swatch from get_design_tokens.')
+
+const point = z.object({ x: z.number(), y: z.number() })
+
+export const fill = z
+	.union([
+		color,
+		z.object({
+			gradient: z.object({
+				type: z.enum(['linear', 'radial', 'angular']).optional(),
+				from: point
+					.optional()
+					.describe('Start point as a fraction of the layer size. Default { x: 0.5, y: 0 }.'),
+				to: point.optional().describe('End point as a fraction of the layer size. Default { x: 0.5, y: 1 }.'),
+				stops: z.array(z.object({ position: z.number().min(0).max(1), color })).min(2),
+			}),
+		}),
+		z.object({
+			image: z.string().describe('Absolute path to an image file, such as one from fetch_images.'),
+			mode: z.enum(['fill', 'fit', 'tile', 'stretch']).optional(),
+		}),
+	])
+	.describe('A color, a gradient, or an image fill.')
+
+export const style = z
+	.object({
+		fills: z.array(fill).optional(),
+		borders: z
+			.array(
+				z.object({
+					color,
+					thickness: z.number().min(0).optional(),
+					position: z.enum(['Inside', 'Center', 'Outside']).optional(),
+				})
+			)
+			.optional(),
+		shadows: z
+			.array(
+				z.object({
+					color,
+					x: z.number().optional(),
+					y: z.number().optional(),
+					blur: z.number().min(0).optional(),
+					spread: z.number().optional(),
+				})
+			)
+			.optional(),
+		opacity: z.number().min(0).max(1).optional(),
+	})
+	.optional()
+	.describe('Replaces the listed style parts. Parts left out are unchanged.')
+
+export const textStyle = z
+	.object({
+		fontFamily: z.string().optional(),
+		fontSize: z.number().positive().optional(),
+		fontWeight: z
+			.number()
+			.int()
+			.min(0)
+			.max(12)
+			.optional()
+			.describe('Sketch weight scale, 5 is regular, 9 is bold.'),
+		fontStyle: z.enum(['italic']).optional(),
+		lineHeight: z.number().positive().optional(),
+		kerning: z.number().optional(),
+		paragraphSpacing: z.number().optional(),
+		alignment: z.enum(['left', 'right', 'center', 'justified']).optional(),
+		verticalAlignment: z.enum(['top', 'center', 'bottom']).optional(),
+		textTransform: z.enum(['none', 'uppercase', 'lowercase']).optional(),
+		textColor: color.optional(),
+	})
+	.optional()
+
+export const frame = z.object({
+	x: z.number().optional(),
+	y: z.number().optional(),
+	width: z.number().positive().optional(),
+	height: z.number().positive().optional(),
+})
+
+export const overrides = z
+	.array(
+		z.object({
+			id: z.string().optional().describe('Override id. Use this or layer.'),
+			layer: z.string().optional().describe('Name of the layer inside the symbol.'),
+			property: z
+				.enum(['stringValue', 'symbolID', 'image', 'layerStyle', 'textStyle'])
+				.optional()
+				.describe('Needed only when one layer has several overridable properties.'),
+			value: z.string().describe('Text, a symbol name for symbolID, or an absolute image path for image.'),
+		})
+	)
+	.describe('Overrides on a symbol instance, matched by override id or by layer name.')
+
+export const render = {
+	render: z
+		.enum(['none', 'layer', 'artboard'])
+		.optional()
+		.describe('What to render as a PNG in the reply. "none" saves the most tokens.'),
+	scale: z.number().min(0.25).max(2).optional().describe('PNG scale. Default 1.'),
+	verbose: z.boolean().optional().describe('Return the full layer spec instead of id, name, type, and frame.'),
+}
+
+const layerFields = {
+	kind: z.enum(['artboard', 'rectangle', 'oval', 'text', 'group', 'symbol', 'svg', 'image']),
+	name: z.string().optional(),
+	frame: frame.optional().describe('Relative to the parent. Text with a width gets a fixed width.'),
+	cornerRadius: z.number().min(0).optional(),
+	text: z.string().optional(),
+	svg: z.string().optional().describe('SVG markup, for kind "svg". The frame width and height resize it.'),
+	image: z.string().optional().describe('Absolute path to an image file, for kind "image".'),
+	symbol: z.string().optional().describe('Symbol master name, id, or symbolId, for kind "symbol".'),
+	overrides: overrides.optional(),
+	sharedStyle: z.string().optional().describe('Shared layer or text style name or id to link.'),
+	style,
+	textStyle,
+	hidden: z.boolean().optional(),
+}
+
+export const layerInput = z.object(layerFields)
+
+export type BuildNode = z.infer<typeof layerInput> & { ref?: string; children?: BuildNode[] }
+
+export const buildNode: z.ZodType<BuildNode> = z.lazy(() =>
+	z.object({
+		...layerFields,
+		ref: z.string().optional().describe('A label. The reply maps each ref to the created layer id.'),
+		children: z.array(buildNode).optional().describe('Child layers, for kind "group" or "artboard".'),
+	})
+)
