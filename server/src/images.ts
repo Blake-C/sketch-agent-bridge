@@ -7,6 +7,7 @@ import { BridgeError } from './sketch.ts'
 
 const FETCH_TIMEOUT_MS = 120_000
 const IMAGE_FILE = /\.(jpg|jpeg|png|webp)$/i
+const MAX_ERROR_CHARS = 300
 const SEARCH_PATH = '/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin'
 
 // get_images reads its key with _keychain_secret, which is defined in the system setup repo's functions.sh. functions.sh also sources every other topic file, so _keychain_secret is copied here instead of sourcing functions.sh.
@@ -15,6 +16,10 @@ const SHELL_SCRIPT = [
 	'source "$0" || exit 1',
 	'get_images -g "$1" -sr "$2" -s "$3" -t "$4" -n "$5"',
 ].join('\n')
+
+export function errorDetail(stderr: string, fallback: string): string {
+	return (stderr.trim().split('\n')[0] || fallback).slice(0, MAX_ERROR_CHARS)
+}
 
 export type FetchRequest = { query: string; count: number; width: number; height: number }
 
@@ -32,11 +37,7 @@ export const zshRunner: ShellRunner = (args, cwd) =>
 			},
 			(error, _stdout, stderr) => {
 				if (!error) return resolve()
-				reject(
-					new BridgeError(
-						`get_images failed: ${stderr.trim().split('\n').slice(-3).join('\n') || error.message}`
-					)
-				)
+				reject(new BridgeError(`get_images failed: ${errorDetail(stderr, error.message)}`))
 			}
 		)
 	})
