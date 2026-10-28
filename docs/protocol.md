@@ -44,9 +44,10 @@ Every op takes an optional `documentId`. Without it, the op uses the front docum
 | `tokens`            | `get_design_tokens`   | none                                                                                                                                                                                                                               |
 | `find`              | `find_layers`         | `pageId`, `type`, `name`, `nameMatch`, `text`, `symbol`, `limit`                                                                                                                                                                   |
 | `symbols`           | `list_symbols`        | `includeOverrides`                                                                                                                                                                                                                 |
-| `libraries`         | `list_libraries`      | `libraryId`                                                                                                                                                                                                                        |
+| `libraries`         | `list_libraries`      | `libraryId`, `includeDisabled`                                                                                                                                                                                                     |
 | `reveal`            | `reveal_layer`        | `id`                                                                                                                                                                                                                               |
 | `select`            | `select_layers`       | `ids`                                                                                                                                                                                                                              |
+| `updateLibrary`     | `update_library`      | `path`, or `libraryId` and `enabled`                                                                                                                                                                                               |
 | `build`             | `build_layers`        | `parentId`, `nodes`                                                                                                                                                                                                                |
 | `createArtboard`    | `create_artboard`     | `pageId`, `name`, `x`, `y`, `width`, `height`, `style`                                                                                                                                                                             |
 | `createLayer`       | `create_layer`        | `parentId` and one layer node                                                                                                                                                                                                      |
@@ -56,6 +57,8 @@ Every op takes an optional `documentId`. Without it, the op uses the front docum
 | `duplicate`         | `duplicate_layer`     | `ids`, `offset`, `name`                                                                                                                                                                                                            |
 | `createSymbol`      | `create_symbol`       | `ids`, `name`, `replace`                                                                                                                                                                                                           |
 | `detach`            | `detach_symbol`       | `id`, `recursively`, `force`                                                                                                                                                                                                       |
+| `convertSymbol`     | `convert_symbol`      | `id`, `to`, `force`                                                                                                                                                                                                                |
+| `syncLibraryItem`   | `sync_library_item`   | `kind`, `id`, `action`                                                                                                                                                                                                             |
 | `applySharedStyle`  | `apply_shared_style`  | `id`, `sharedStyle`                                                                                                                                                                                                                |
 | `upsertSwatch`      | `upsert_swatch`       | `name`, `color`                                                                                                                                                                                                                    |
 | `upsertSharedStyle` | `upsert_shared_style` | `kind`, `name`, `fromLayerId`, `style`, `textStyle`                                                                                                                                                                                |
@@ -86,6 +89,12 @@ The reply has `total`, `truncated` when there are more than `limit` matches (def
 - `matches`, with the number of names of each kind that passed the filters
 
 `kind` lists only one kind of item, and `search` keeps names that contain every word in it, case-insensitive. Apple's iOS UI library has 2418 symbols and 816 text styles, and listing every name in it returned about 211 KB of JSON, so the names are capped.
+
+With `includeDisabled`, `libraries` lists every library Sketch knows, and each one has `enabled`.
+
+`updateLibrary` adds the `.sketch` file at `path` to Sketch's libraries, or turns the library given by `libraryId` on or off with `enabled`. Adding a file that is already a library returns the existing library. The change is to Sketch's library list for every document, not to the open document, so the server runs it without a backup and Cmd+Z does not undo it. There is no op to remove a library.
+
+`syncLibraryItem` works on a symbol master, layer style, or text style that came from a library, found by id, symbol id, or name. `sync` updates it to the library's current version. `unlink` turns it into a local item with a new id, and a symbol master moves to the Symbols page. Both refuse an item that did not come from a library.
 
 There is no separate import op. When a write op looks up a symbol, shared style, or swatch by name or id and the document does not have it, the plugin searches the enabled libraries and imports the first match in the same plugin run. Sketch removes an imported library swatch from the document when no layer uses it, so a swatch imported in one run and used in a later run can be gone by then. Symbols and shared styles are imported the same way. A library symbol brings the nested symbols it uses with it, and `symbols` reports each one with `library` and no `page`.
 
@@ -188,6 +197,8 @@ Overrides are set with a list of `{ "layer": "<layer name inside the symbol>", "
 
 `detach` replaces an instance with a group of its layers and keeps the instance's overrides. With `recursively`, nested instances are detached too. It refuses an instance without the `createdByAgent` setting unless `force` is true, and the new group gets the setting when the instance had it.
 
+`convertSymbol` with `to: "symbol"` turns an artboard into a symbol master in the same place, with a new id. With `to: "artboard"`, a symbol master becomes an artboard with the same id, and its instances are detached into groups. The reply has `detachedInstances`. It refuses a master with instances, or one without the `createdByAgent` setting, unless `force` is true, and it refuses a library master until it is unlinked.
+
 Variants of one component are separate masters with slash names, such as `Feature Row/Left` and `Feature Row/Right`. `updateLayer` with `symbol` swaps an instance between them.
 
 ### Token use
@@ -215,7 +226,7 @@ Each layer has `id`, `name`, `type`, and `frame`. These keys appear only when th
 - `shapeType` and `cornerRadius` for shape paths, and for a `Custom` shape path, `path` as SVG path data when it is 2000 characters or shorter, and `closed: false` when the path is open. Export a longer path as SVG with `export`.
 - `text`, `textStyle`, `fixedWidth`, and `lineSpacing` for text layers, where `lineSpacing` is left out when it is `natural`, `textStyle` has `fontAxes` for a variable font, where `alignment` is left out when it is `left` and `verticalAlignment` is left out when it is `top`
 - `style` with `opacity`, `fills`, `borders`, `borderOptions`, `shadows`, `innerShadows`, `blur`, and `blendingMode`. A color linked to a swatch also has `swatch`, a gradient fill has `gradient` and `stops`, and an image fill is `{ "image": true }`. `borderOptions` and `blendingMode` appear only when they differ from Sketch's defaults.
-- `sharedStyle` with the shared style name
+- `sharedStyle` with the shared style name, and `sharedStyleOutOfSync: true` when the layer's style no longer matches the shared style
 - `symbol`, `symbolId`, and `overrides` for symbol instances, where `overrides` lists only overrides changed from the default, and a `fillColor` value is `{ "color": "#rrggbbaa" }` with `swatch` when it is linked to one
 - `flow` with `target`, `targetName`, and `animation`, where `target` is `back` for a back link
 - `flowStartPoint` for artboards

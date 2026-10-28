@@ -16,7 +16,8 @@ An agent connected to the MCP server can:
 - edit layers, move them into other artboards, groups, or pages, lock them, group and ungroup them, and apply shared styles
 - duplicate layers, change their stacking order, rotate and flip them, and set Smart Layout on groups and symbols
 - turn layers into symbols, place instances, set their overrides, swap them between symbols, and detach them
-- use symbols, shared styles, and swatches from enabled libraries by name
+- turn artboards into symbols and back, and see which layers no longer match their shared style
+- use symbols, shared styles, and swatches from enabled libraries by name, sync or unlink them, and add libraries or turn them on and off
 - link layers to artboards for prototypes, and add export presets
 - switch Sketch to a layer's page, select layers, and scroll the canvas to a layer
 - fill layers with colors, gradients, or images, and add inner shadows, blurs, blend modes, dashed borders, and arrowheads
@@ -37,7 +38,8 @@ Build the server in Docker, connect it to an agent, and optionally link the plug
 
 - New layers go on a page named "Agent Drafts" unless the agent names another parent.
 - Before the first edit in a session, the server copies the `.sketch` file to `~/.sketch-agent-bridge/backups/`.
-- The agent can only delete or detach layers it created, unless it passes `force: true`.
+- The agent can only delete or detach layers, delete pages, or turn symbol masters into artboards when it created them, unless it passes `force: true`.
+- `update_library` changes Sketch's library list for every document, outside the backup and Cmd+Z, and it can add or turn off a library but not remove one.
 - The bridge makes no network calls except through `fetch_images`, which runs the `get_images` shell function to download Unsplash photos. That function reads its key from the login keychain, and the server never reads the key.
 - Every file the bridge writes stays under `~/.sketch-agent-bridge/` on the Mac.
 

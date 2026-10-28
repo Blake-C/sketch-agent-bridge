@@ -256,6 +256,41 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 	)
 
 	server.registerTool(
+		'convert_symbol',
+		{
+			title: 'Convert symbol',
+			description:
+				'Turns an artboard into a symbol master in place, or a symbol master into an artboard. A master that becomes an artboard detaches its instances into groups, so a master with instances, or one an agent did not create, needs force: true. Library masters must be unlinked with sync_library_item first.',
+			inputSchema: {
+				documentId,
+				id: z.string().describe('Artboard or symbol master id.'),
+				to: z.enum(['symbol', 'artboard']),
+				force: z.boolean().optional(),
+				...render,
+			},
+			annotations: destructive,
+		},
+		write('convertSymbol')
+	)
+
+	server.registerTool(
+		'sync_library_item',
+		{
+			title: 'Sync or unlink a library item',
+			description:
+				"Updates a symbol or shared style that came from a library to the library's current version, or unlinks it so it becomes a local item with a new id.",
+			inputSchema: {
+				documentId,
+				kind: z.enum(['symbol', 'layerStyle', 'textStyle']),
+				id: z.string().describe('Id, symbolId, or name of the symbol or shared style in this document.'),
+				action: z.enum(['sync', 'unlink']),
+			},
+			annotations: destructive,
+		},
+		write('syncLibraryItem')
+	)
+
+	server.registerTool(
 		'apply_shared_style',
 		{
 			title: 'Apply shared style',

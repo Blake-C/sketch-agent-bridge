@@ -11,6 +11,10 @@ All notable changes to this project will be documented in this file.
 - Added `create_page`, `update_page`, and `delete_page` tools.
 - Added triangle, polygon, star, and path layer kinds, and `path` in `update_layer` and layer specs.
 - Added `lineSpacing` for text layers, and `fontStretch` and variable font axes to `textStyle`.
+- Added a `convert_symbol` tool that turns artboards into symbol masters and back.
+- Added a `sync_library_item` tool that syncs or unlinks library symbols and shared styles.
+- Added an `update_library` tool that adds a library or turns one on or off, and `includeDisabled` in `list_libraries`.
+- Added `sharedStyleOutOfSync` to layer specs.
 
 ## [0.3.0] - 2026-10-27
 

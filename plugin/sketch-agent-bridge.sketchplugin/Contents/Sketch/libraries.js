@@ -11,6 +11,10 @@ function enabledLibraries() {
 	return sketch.getLibraries().filter(library => library.enabled && library.valid)
 }
 
+function librarySummary(library) {
+	return { id: library.id, name: library.name, libraryType: library.libraryType, valid: library.valid }
+}
+
 function references(library, document, kind) {
 	return library[REFERENCE_GETTERS[kind]](document)
 }
@@ -31,4 +35,4 @@ function findLocalOrImport(document, list, key, kind, label) {
 	throw new Error('No ' + label + ' has id or name ' + key + ' in the document or its enabled libraries')
 }
 
-module.exports = { REFERENCE_GETTERS, enabledLibraries, references, findLocalOrImport }
+module.exports = { REFERENCE_GETTERS, enabledLibraries, librarySummary, references, byIdOrName, findLocalOrImport }

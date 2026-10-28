@@ -230,6 +230,8 @@ function layerSpec(layer, options) {
 			lineSpacing: isText && node.lineSpacing !== 'natural' ? node.lineSpacing : undefined,
 			style: styleSpec(node.style, swatches),
 			sharedStyle: node.sharedStyle ? node.sharedStyle.name : undefined,
+			sharedStyleOutOfSync:
+				node.sharedStyle && node.style.isOutOfSyncWithSharedStyle(node.sharedStyle) ? true : undefined,
 			symbol: node.type === 'SymbolInstance' && node.master ? node.master.name : undefined,
 			symbolId: node.type === 'SymbolInstance' || node.type === 'SymbolMaster' ? node.symbolId : undefined,
 			overrides: node.type === 'SymbolInstance' ? overridesSpec(node, swatches) : undefined,

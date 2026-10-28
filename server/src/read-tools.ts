@@ -135,10 +135,14 @@ export function registerReadTools(server: McpServer, bridge: SketchBridge) {
 		{
 			title: 'List libraries',
 			description:
-				'Lists the enabled Sketch libraries. With libraryId, also counts and lists the names of its symbols, layer styles, text styles, and swatches. Large libraries have thousands of names, so narrow the list with search and kind. Use those names anywhere a symbol, shared style, or swatch is asked for, and the item is imported from the library when it is used.',
+				'Lists the enabled Sketch libraries, or every library with includeDisabled. With libraryId, also counts and lists the names of its symbols, layer styles, text styles, and swatches. Large libraries have thousands of names, so narrow the list with search and kind. Use those names anywhere a symbol, shared style, or swatch is asked for, and the item is imported from the library when it is used.',
 			inputSchema: {
 				documentId,
 				libraryId: z.string().optional().describe('Library id or name.'),
+				includeDisabled: z
+					.boolean()
+					.optional()
+					.describe('Also list disabled libraries, with enabled for each.'),
 				kind: z
 					.enum(['symbol', 'layerStyle', 'textStyle', 'swatch'])
 					.optional()
@@ -152,6 +156,28 @@ export function registerReadTools(server: McpServer, bridge: SketchBridge) {
 			annotations: readOnly,
 		},
 		async args => callOp(bridge, 'libraries', args)
+	)
+
+	server.registerTool(
+		'update_library',
+		{
+			title: 'Update library',
+			description:
+				"Adds a .sketch file to Sketch's libraries, or turns a library on or off. This changes Sketch's library list for every document, and Cmd+Z does not undo it. There is no remove: turn a library off instead.",
+			inputSchema: {
+				path: z
+					.string()
+					.optional()
+					.describe('Absolute path to a .sketch file to add as a library. Use this or libraryId.'),
+				libraryId: z
+					.string()
+					.optional()
+					.describe('Library id or name from list_libraries with includeDisabled.'),
+				enabled: z.boolean().optional().describe('With libraryId, turns the library on or off.'),
+			},
+			annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+		},
+		async args => callOp(bridge, 'updateLibrary', args)
 	)
 
 	server.registerTool(
