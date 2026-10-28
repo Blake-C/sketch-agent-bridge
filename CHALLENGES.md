@@ -16,3 +16,24 @@ Two attempts did not work:
 
 - Removing `disableCocoaScriptPreprocessor` from the manifest stopped the plugin from loading at all, because the CocoaScript preprocessor cannot parse the modern JavaScript the plugin uses.
 - Calling `framework()` for Foundation, CoreGraphics, and AppKit without CoreFoundation did not change the error.
+
+## Center and right text alignment were swapped on Apple Silicon
+
+Date: 2026-10-27, Sketch 88.1 on an arm64 Mac running macOS 27.2.
+
+Text set to `center` through Sketch's JavaScript API rendered right-aligned, and text set to `right` rendered centered. A probe plugin set each alignment on a new text layer and read back the raw value from `textAlignment()`. Sketch wrote 2 for center and 1 for right, which are the Intel AppKit values. On arm64, `NSTextAlignmentCenter` is 1 and `NSTextAlignmentRight` is 2, so AppKit drew the swapped alignment. Sketch's API reads the raw value back with the same Intel mapping, so the API reported the value that was set even though the render did not match.
+
+The plugin now swaps `center` and `right` on both write and read when `NSTextAlignmentCenter` is 1.
+
+## Renders after an override change showed the old overrides
+
+Date: 2026-10-27, Sketch 88.1.
+
+After `update_layer` changed the text and image overrides on an existing symbol instance, the PNG in the same reply showed the overrides from the call before. A probe read the new image size back from the instance, and a separate export showed the new values, so the overrides themselves were set. New instances created with overrides in `build_layers` rendered correctly.
+
+Two attempts did not change the render:
+
+- Calling `invalidateImmutableObject()` on the instance after setting the overrides.
+- Calling `invalidateAffectedSymbolInstances()` on the document data as well.
+
+The plugin now skips the render when an update changes overrides, and returns the id of the layer to render in a `render` field. Swapping an instance to another symbol rendered correctly in the same run, so a swap alone does not skip the render. The server then runs the `export` op in a second plugin run, which shows the new values.

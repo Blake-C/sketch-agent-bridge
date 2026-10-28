@@ -27,38 +27,97 @@ The plugin writes `reply.json` into `replyDir`:
 
 On failure it writes `{ "ok": false, "error": "<message>" }`. Exported files go in `replyDir/exports/<layerId>/`. The server drops any file path outside `replyDir`, and it deletes request folders older than 24 hours.
 
+A successful reply can also carry `"render": { "ids": [...], "scale": 1 }`. The plugin sends it after changing overrides on an existing symbol instance, because an export in the same plugin run still shows the instance's previous overrides. The server then runs the `export` op in a second plugin run and returns that PNG.
+
 ## Ops
 
 Every op takes an optional `documentId`. Without it, the op uses the front document.
 
-| Op                  | MCP tool              | Args                                                                                                       |
-| ------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `status`            | `sketch_status`       | none                                                                                                       |
-| `pages`             | `list_pages`          | none                                                                                                       |
-| `artboards`         | `list_artboards`      | `pageId`                                                                                                   |
-| `layer`             | `get_layer`           | `id`, `depth`, `includeHidden`                                                                             |
-| `selection`         | `get_selection`       | `depth`, `includeHidden`, `scale`, `svg`, `export`                                                         |
-| `export`            | `export_layers`       | `ids`, `formats`, `scale`                                                                                  |
-| `tokens`            | `get_design_tokens`   | none                                                                                                       |
-| `createArtboard`    | `create_artboard`     | `pageId`, `name`, `x`, `y`, `width`, `height`, `style`                                                     |
-| `createLayer`       | `create_layer`        | `parentId`, `kind`, `name`, `frame`, `cornerRadius`, `text`, `symbol`, `sharedStyle`, `style`, `textStyle` |
-| `updateLayer`       | `update_layer`        | `id`, `name`, `hidden`, `frame`, `text`, `cornerRadius`, `overrides`, `style`, `textStyle`                 |
-| `applySharedStyle`  | `apply_shared_style`  | `id`, `sharedStyle`                                                                                        |
-| `upsertSwatch`      | `upsert_swatch`       | `name`, `color`                                                                                            |
-| `upsertSharedStyle` | `upsert_shared_style` | `kind`, `name`, `fromLayerId`, `style`, `textStyle`                                                        |
-| `deleteLayer`       | `delete_layer`        | `id`, `force`                                                                                              |
+| Op                  | MCP tool              | Args                                                                                                 |
+| ------------------- | --------------------- | ---------------------------------------------------------------------------------------------------- |
+| `status`            | `sketch_status`       | none                                                                                                 |
+| `pages`             | `list_pages`          | none                                                                                                 |
+| `artboards`         | `list_artboards`      | `pageId`                                                                                             |
+| `layer`             | `get_layer`           | `id`, `depth`, `includeHidden`                                                                       |
+| `selection`         | `get_selection`       | `depth`, `includeHidden`, `scale`, `svg`, `export`                                                   |
+| `export`            | `export_layers`       | `ids`, `formats`, `scale`                                                                            |
+| `tokens`            | `get_design_tokens`   | none                                                                                                 |
+| `build`             | `build_layers`        | `parentId`, `nodes`                                                                                  |
+| `createArtboard`    | `create_artboard`     | `pageId`, `name`, `x`, `y`, `width`, `height`, `style`                                               |
+| `createLayer`       | `create_layer`        | `parentId` and one layer node                                                                        |
+| `updateLayer`       | `update_layer`        | `id`, `name`, `hidden`, `frame`, `text`, `cornerRadius`, `symbol`, `overrides`, `style`, `textStyle` |
+| `groupLayers`       | `group_layers`        | `ids`, `name`                                                                                        |
+| `ungroupLayer`      | `ungroup_layer`       | `id`                                                                                                 |
+| `createSymbol`      | `create_symbol`       | `ids`, `name`, `replace`                                                                             |
+| `applySharedStyle`  | `apply_shared_style`  | `id`, `sharedStyle`                                                                                  |
+| `upsertSwatch`      | `upsert_swatch`       | `name`, `color`                                                                                      |
+| `upsertSharedStyle` | `upsert_shared_style` | `kind`, `name`, `fromLayerId`, `style`, `textStyle`                                                  |
+| `deleteLayer`       | `delete_layer`        | `id` or `ids`, `force`                                                                               |
 
-`list_inbox` and `get_inbox_item` read `~/.sketch-agent-bridge/inbox/` directly and do not call the plugin.
+These tools do not call the plugin:
+
+- `list_inbox` and `get_inbox_item` read `~/.sketch-agent-bridge/inbox/`.
+- `fetch_images` runs the `get_images` shell function. See [Fetching images](#fetching-images).
+
+## Layer nodes
+
+`build` takes a list of nodes, and `createLayer` takes one. A node has a `kind` and these optional fields:
+
+- `name`, `frame`, `hidden`, `style`, `textStyle`, and `sharedStyle` for every kind
+- `cornerRadius` for `rectangle`
+- `text` for `text`
+- `svg` for `svg`, as SVG markup. The frame width and height are written onto the root `<svg>` tag, so the drawing scales to that size.
+- `image` for `image`, as an absolute path to an image file
+- `symbol` and `overrides` for `symbol`
+- `children` for `group` and `artboard`
+- `ref`, a label the `build` reply maps to the new layer's id
+
+The kinds are `artboard`, `rectangle`, `oval`, `text`, `group`, `symbol`, `svg`, and `image`. An artboard node needs a page as its parent. Child frames are relative to their parent, and each group shrinks to fit its children once they are all created. If any node fails, `build` removes everything it created in that call.
 
 ## Write ops
 
 - Every write op refuses a document that has never been saved.
 - Before the first write op on a document in a server session, the server runs `status` to find the document's file and copies it to `~/.sketch-agent-bridge/backups/<name>-<timestamp>.sketch`. The copy is of the file on disk, so edits made in Sketch since the last save are not in it.
-- Colors are a hex string (`#rrggbb` or `#rrggbbaa`) or `{ "swatch": "<name or id>" }`. A swatch color stays linked to the swatch.
-- Layers created by a write op get the layer setting `createdByAgent`, which `deleteLayer` checks unless `force` is true.
 - Each write op is one step in Sketch's undo history, so Cmd+Z in Sketch undoes the whole op.
+- Layers created by a write op get the layer setting `createdByAgent`, which `deleteLayer` checks unless `force` is true.
 - Changing a text layer's text keeps its name when the name was set to something other than the old text.
-- `createLayer`, `createArtboard`, `updateLayer`, and `applySharedStyle` return the layer's spec and a 1x PNG of its artboard.
+- Swapping an instance to another symbol renames it to the new symbol, unless the instance had a name of its own.
+
+### Colors and fills
+
+A color is a hex string (`#rrggbb` or `#rrggbbaa`) or `{ "swatch": "<name or id>" }`. A swatch color stays linked to the swatch. A fill is a color or one of these:
+
+- `{ "gradient": { "type": "linear", "from": { "x": 0, "y": 0 }, "to": { "x": 1, "y": 1 }, "stops": [{ "position": 0, "color": "#000" }, ...] } }`, where `type` is `linear`, `radial`, or `angular`, and points are fractions of the layer size
+- `{ "image": "/absolute/path.jpg", "mode": "fill" }`, where `mode` is `fill`, `fit`, `tile`, or `stretch`
+
+Images can be PNG, JPEG, GIF, TIFF, WebP, HEIC, or BMP files.
+
+### Text alignment
+
+Sketch 88.1 writes text alignment with the raw values AppKit uses on Intel Macs. On Apple Silicon, AppKit's raw values for center and right are swapped, so a layer set to `center` through Sketch's API renders right-aligned. The plugin swaps `center` and `right` on both write and read when `NSTextAlignmentCenter` is 1, which makes the alignment in requests and specs match what renders.
+
+### Symbols
+
+`createSymbol` makes a new symbol master on the Symbols page from the given layers. By default it moves the layers into the master and puts an instance where they were. With `replace` set to false, it copies the layers into the master and leaves the originals in place. Its reply lists the overrides the symbol exposes, by layer name and property.
+
+Overrides are set with a list of `{ "layer": "<layer name inside the symbol>", "value": "..." }`, or `{ "id": "<override id>", "value": "..." }`. Add `property` when one layer has more than one override. The value is text for `stringValue`, a symbol name for `symbolID`, and an absolute image path for `image`.
+
+Variants of one component are separate masters with slash names, such as `Feature Row/Left` and `Feature Row/Right`. `updateLayer` with `symbol` swaps an instance between them.
+
+### Token use
+
+Write replies are sized to keep the agent's context small:
+
+- `createArtboard`, `createLayer`, `updateLayer`, `applySharedStyle`, and `groupLayers` return only `id`, `name`, `type`, and `frame` unless `verbose` is true. `build`, `ungroupLayer`, and `createSymbol` return the same short form for each layer they report on, and they ignore `verbose`.
+- `render` picks what the reply renders as a PNG: `none`, `layer`, or `artboard`. `build` defaults to `artboard` and renders once. The other ops that take `render` default to `layer`. `upsertSwatch`, `upsertSharedStyle`, and `deleteLayer` never render.
+- PNGs render at 1x unless `scale` says otherwise.
+- JSON in replies has no indentation.
+
+## Fetching images
+
+`fetch_images` runs the `get_images` shell function from the file named by the `SKETCH_AGENT_BRIDGE_GET_IMAGES` environment variable. The function asks Unsplash's random photo endpoint for photos that match the query, using the access key it reads from the login keychain, under the service name `unsplash_access_key`, and downloads the photos as JPEGs into a new folder under `~/.sketch-agent-bridge/images/`. The server never reads the key.
+
+The server runs the function with `/bin/zsh -f -c`, and the search text and sizes go in as separate shell parameters, so text from the agent is never parsed as shell code. The shell gets only `HOME`, `USER`, and `PATH` from the environment.
 
 ## Layer spec
 
@@ -67,7 +126,7 @@ Each layer has `id`, `name`, `type`, and `frame`. These keys appear only when th
 - `children`, or `childCount` with `truncated: true` on the root when the depth limit or the 2000-layer limit cut the tree
 - `hidden`, `locked`, `rotation`
 - `shapeType` and `cornerRadius` for shape paths
-- `text` and `textStyle` for text layers
-- `style` with `opacity`, `fills`, `borders`, `shadows`, `innerShadows`, and `blur`, where a color linked to a swatch also has `swatch`
+- `text` and `textStyle` for text layers, where `alignment` is left out when it is `left` and `verticalAlignment` is left out when it is `top`
+- `style` with `opacity`, `fills`, `borders`, `shadows`, `innerShadows`, and `blur`, where a color linked to a swatch also has `swatch`, a gradient fill has `gradient` and `stops`, and an image fill is `{ "image": true }`
 - `sharedStyle` with the shared style name
 - `symbol`, `symbolId`, and `overrides` for symbol instances, where `overrides` lists only overrides changed from the default

@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2026-10-27
+
+### Added
+
+- Added a `build_layers` tool that creates a whole tree of layers in one call and renders once at the end.
+- Added groups, with `group_layers` and `ungroup_layer` tools and group nodes in `build_layers`.
+- Added symbol creation with `create_symbol`, symbol swapping in `update_layer`, and overrides set by layer name.
+- Added SVG layers, image layers, gradient fills, and image fills.
+- Added a `fetch_images` tool that downloads Unsplash photos through the `get_images` shell function.
+- Added a `render` option to write tools, and a `verbose` option for full layer specs.
+- Added deleting several layers in one `delete_layer` call.
+
+### Changed
+
+- Changed write tools to return only id, name, type, and frame by default.
+- Changed tool replies to compact JSON, and default renders to 1x.
+
+### Fixed
+
+- Fixed center and right text alignment being swapped on Apple Silicon Macs.
+- Fixed renders after an override change showing the instance's previous overrides.
+
 ## [0.1.0] - 2026-10-27
 
 ### Added
