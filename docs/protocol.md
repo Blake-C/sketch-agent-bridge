@@ -42,6 +42,8 @@ Every op takes an optional `documentId`. Without it, the op uses the front docum
 | `selection`         | `get_selection`       | `depth`, `includeHidden`, `scale`, `svg`, `export`                                                                           |
 | `export`            | `export_layers`       | `ids`, `formats`, `scale`                                                                                                    |
 | `tokens`            | `get_design_tokens`   | none                                                                                                                         |
+| `find`              | `find_layers`         | `pageId`, `type`, `name`, `nameMatch`, `text`, `symbol`, `limit`                                                             |
+| `symbols`           | `list_symbols`        | `includeOverrides`                                                                                                           |
 | `build`             | `build_layers`        | `parentId`, `nodes`                                                                                                          |
 | `createArtboard`    | `create_artboard`     | `pageId`, `name`, `x`, `y`, `width`, `height`, `style`                                                                       |
 | `createLayer`       | `create_layer`        | `parentId` and one layer node                                                                                                |
@@ -59,6 +61,14 @@ These tools do not call the plugin:
 
 - `list_inbox` and `get_inbox_item` read `~/.sketch-agent-bridge/inbox/`.
 - `fetch_images` runs the `get_images` shell function. See [Fetching images](#fetching-images).
+
+## Finding layers
+
+`find` searches the whole document, or the page given by `pageId`. It passes only `type` to Sketch's `sketch.find`, and it filters by `name`, `text`, and `symbol` in the plugin, so text from the agent never goes into a `sketch.find` selector. `name` and `text` match case-insensitive substrings, and `nameMatch: "exact"` makes `name` match the whole name. `text` searches the text of text layers, which does not include override text inside symbol instances. `symbol` finds the instances of a master given by name, id, or symbol id.
+
+The reply has `total`, `truncated` when there are more than `limit` matches (default 50), and for each match its `id`, `name`, `type`, `frame`, `page`, and `artboard`, plus `hidden` when the layer is hidden.
+
+`symbols` lists each symbol master with `id`, `name`, `symbolId`, `page`, `instanceCount`, `smartLayout`, and `library` when the master came from a library. With `includeOverrides`, each master also lists its overrides with `editable`.
 
 ## Layer nodes
 

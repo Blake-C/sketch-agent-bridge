@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - Added Smart Layout on groups and symbol masters, and instances that resize to fit after an override change.
 - Added a `duplicate_layer` tool.
+- Added a `find_layers` tool that searches by type, name, text, or symbol, and a `list_symbols` tool with instance counts.
 - Added rotation, flips, and stacking order to `update_layer` and layer nodes.
 - Added inner shadows, blur, blend modes, and border dashes, line caps, joins, and arrowheads to `style`.
 - Added underline and strikethrough to `textStyle`, and a `fixedWidth` setting for text layers.

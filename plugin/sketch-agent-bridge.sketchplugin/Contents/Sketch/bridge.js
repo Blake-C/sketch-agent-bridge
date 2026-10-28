@@ -9,7 +9,8 @@ const ops = Object.assign(
 	require('./ops/tokens.js'),
 	require('./ops/write.js'),
 	require('./ops/build.js'),
-	require('./ops/structure.js')
+	require('./ops/structure.js'),
+	require('./ops/inventory.js')
 )
 
 function readRequest(context) {

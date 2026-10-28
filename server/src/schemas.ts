@@ -220,3 +220,26 @@ export const buildNode: z.ZodType<BuildNode> = z.lazy(() =>
 		children: z.array(buildNode).optional().describe('Child layers, for kind "group" or "artboard".'),
 	})
 )
+
+export const findInput = {
+	pageId: z.string().optional().describe('Search only this page. Defaults to every page.'),
+	type: z
+		.enum([
+			'Artboard',
+			'Group',
+			'Text',
+			'ShapePath',
+			'Shape',
+			'Image',
+			'SymbolInstance',
+			'SymbolMaster',
+			'HotSpot',
+			'Slice',
+		])
+		.optional(),
+	name: z.string().optional().describe('Layer name to match. Case-insensitive unless nameMatch is exact.'),
+	nameMatch: z.enum(['contains', 'exact']).optional().describe('Default contains.'),
+	text: z.string().optional().describe('Text that a text layer contains, case-insensitive.'),
+	symbol: z.string().optional().describe('Symbol master name, id, or symbolId, to find its instances.'),
+	limit: z.number().int().min(1).max(500).optional().describe('Most layers to return. Default 50.'),
+}

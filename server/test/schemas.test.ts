@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { z } from 'zod'
-import { layerInput, order } from '../src/schemas.ts'
+import { findInput, layerInput, order } from '../src/schemas.ts'
 
 const node = (fields: Record<string, unknown>) => layerInput.safeParse({ kind: 'group', ...fields })
 
@@ -55,4 +55,11 @@ test('text takes underline, strikethrough, and fixed width', () => {
 	assert.ok(node({ kind: 'text', fixedWidth: false, textStyle: { textUnderline: 'single' } }).success)
 	assert.ok(node({ textStyle: { textStrikethrough: 'none' } }).success)
 	assert.equal(node({ textStyle: { textUnderline: 'wavy' } }).success, false)
+})
+
+test('find_layers takes known layer types and caps the limit at 500', () => {
+	const schema = z.object(findInput)
+	assert.ok(schema.safeParse({ type: 'SymbolInstance', name: 'Row', nameMatch: 'exact', limit: 500 }).success)
+	assert.equal(schema.safeParse({ limit: 501 }).success, false)
+	assert.equal(schema.safeParse({ type: 'Bogus' }).success, false)
 })

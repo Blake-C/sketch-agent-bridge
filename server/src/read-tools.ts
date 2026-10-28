@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { errorResult, replyResult } from './content.ts'
+import { findInput } from './schemas.ts'
 import { listInbox, readInboxItem } from './inbox.ts'
 import type { SketchBridge } from './sketch.ts'
 
@@ -94,6 +95,39 @@ export function registerReadTools(server: McpServer, bridge: SketchBridge) {
 			annotations: readOnly,
 		},
 		async args => callOp(bridge, 'layer', args)
+	)
+
+	server.registerTool(
+		'find_layers',
+		{
+			title: 'Find layers',
+			description:
+				'Searches every page, or one page, for layers by type, name, text, or symbol, and returns each match with its page and artboard. Use it to locate layers without reading whole trees.',
+			inputSchema: {
+				documentId,
+				...findInput,
+			},
+			annotations: readOnly,
+		},
+		async args => callOp(bridge, 'find', args)
+	)
+
+	server.registerTool(
+		'list_symbols',
+		{
+			title: 'List symbols',
+			description:
+				'Lists every symbol master with its page, how many instances use it, its smart layout, and the library it came from.',
+			inputSchema: {
+				documentId,
+				includeOverrides: z
+					.boolean()
+					.optional()
+					.describe("Also list each master's overrides and whether each is editable."),
+			},
+			annotations: readOnly,
+		},
+		async args => callOp(bridge, 'symbols', args)
 	)
 
 	server.registerTool(
