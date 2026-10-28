@@ -49,3 +49,15 @@ Artboards built with a white fill exported with a transparent background, and a 
 Date: 2026-10-27.
 
 Two of eight `fetch_images` calls failed with "Could not extract image URLs from Unsplash response (HTTP 200)". In both responses the photographer's bio held a literal newline, and `jq` rejects a string with a raw control character, so `get_images` found no URLs. Retrying with a different query worked. The fix belongs in `get_images` in the system setup repo. The bridge now returns only the first line of the error so the full response does not land in the agent's context.
+
+## Imported library swatches disappeared before they were used
+
+Date: 2026-10-27, Sketch 88.1 on macOS 27.2.
+
+The first version of library support had an `import_from_library` op that called `import()` on a library reference and returned the local id. Importing the swatch "7. Sapphire" returned an id, but in the next plugin run the document's `foreignSwatches()` was empty and a fill set to that swatch failed with "No swatch has id or name 7. Sapphire". A second import made "7. Sapphire" stay for one more run, and importing "4. Emerald" after that left only "4. Emerald" in `foreignSwatches()`. After a layer used "7. Sapphire" and "9. Amethyst" as its fill and border, both swatches stayed through later write ops, and the unused "4. Emerald" was gone.
+
+Sketch removes an imported library swatch that no layer uses, so an import that runs on its own is not kept. The plugin now has no import op. When a write op names a symbol, shared style, or swatch that the document does not have, `findLocalOrImport` in `libraries.js` imports it from the first enabled library that has it, in the same run that uses it.
+
+A second problem showed up at the same time. `document.swatches` lists only the document's local swatches, so a swatch imported from a library could not be found by name even while it was in the document. `allSwatches` in `style.js` adds the local swatch of each entry in `foreignSwatches()`.
+
+The only enabled library on the test Mac had swatches and no symbols or styles, so importing symbols and shared styles through `findLocalOrImport` has not been tested against Sketch.

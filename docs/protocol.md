@@ -33,29 +33,32 @@ A successful reply can also carry `"render": { "ids": [...], "scale": 1 }`. The 
 
 Every op takes an optional `documentId`. Without it, the op uses the front document.
 
-| Op                  | MCP tool              | Args                                                                                                                         |
-| ------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `status`            | `sketch_status`       | none                                                                                                                         |
-| `pages`             | `list_pages`          | none                                                                                                                         |
-| `artboards`         | `list_artboards`      | `pageId`                                                                                                                     |
-| `layer`             | `get_layer`           | `id`, `depth`, `includeHidden`                                                                                               |
-| `selection`         | `get_selection`       | `depth`, `includeHidden`, `scale`, `svg`, `export`                                                                           |
-| `export`            | `export_layers`       | `ids`, `formats`, `scale`                                                                                                    |
-| `tokens`            | `get_design_tokens`   | none                                                                                                                         |
-| `find`              | `find_layers`         | `pageId`, `type`, `name`, `nameMatch`, `text`, `symbol`, `limit`                                                             |
-| `symbols`           | `list_symbols`        | `includeOverrides`                                                                                                           |
-| `build`             | `build_layers`        | `parentId`, `nodes`                                                                                                          |
-| `createArtboard`    | `create_artboard`     | `pageId`, `name`, `x`, `y`, `width`, `height`, `style`                                                                       |
-| `createLayer`       | `create_layer`        | `parentId` and one layer node                                                                                                |
-| `updateLayer`       | `update_layer`        | `id`, `name`, `hidden`, `frame`, `text`, `cornerRadius`, `symbol`, `overrides`, `style`, `textStyle`, layout fields, `order` |
-| `groupLayers`       | `group_layers`        | `ids`, `name`                                                                                                                |
-| `ungroupLayer`      | `ungroup_layer`       | `id`                                                                                                                         |
-| `duplicate`         | `duplicate_layer`     | `ids`, `offset`, `name`                                                                                                      |
-| `createSymbol`      | `create_symbol`       | `ids`, `name`, `replace`                                                                                                     |
-| `applySharedStyle`  | `apply_shared_style`  | `id`, `sharedStyle`                                                                                                          |
-| `upsertSwatch`      | `upsert_swatch`       | `name`, `color`                                                                                                              |
-| `upsertSharedStyle` | `upsert_shared_style` | `kind`, `name`, `fromLayerId`, `style`, `textStyle`                                                                          |
-| `deleteLayer`       | `delete_layer`        | `id` or `ids`, `force`                                                                                                       |
+| Op                  | MCP tool              | Args                                                                                                                                                                                  |
+| ------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `status`            | `sketch_status`       | none                                                                                                                                                                                  |
+| `pages`             | `list_pages`          | none                                                                                                                                                                                  |
+| `artboards`         | `list_artboards`      | `pageId`                                                                                                                                                                              |
+| `layer`             | `get_layer`           | `id`, `depth`, `includeHidden`                                                                                                                                                        |
+| `selection`         | `get_selection`       | `depth`, `includeHidden`, `scale`, `svg`, `export`                                                                                                                                    |
+| `export`            | `export_layers`       | `ids`, `formats`, `scale`                                                                                                                                                             |
+| `tokens`            | `get_design_tokens`   | none                                                                                                                                                                                  |
+| `find`              | `find_layers`         | `pageId`, `type`, `name`, `nameMatch`, `text`, `symbol`, `limit`                                                                                                                      |
+| `symbols`           | `list_symbols`        | `includeOverrides`                                                                                                                                                                    |
+| `libraries`         | `list_libraries`      | `libraryId`                                                                                                                                                                           |
+| `reveal`            | `reveal_layer`        | `id`                                                                                                                                                                                  |
+| `build`             | `build_layers`        | `parentId`, `nodes`                                                                                                                                                                   |
+| `createArtboard`    | `create_artboard`     | `pageId`, `name`, `x`, `y`, `width`, `height`, `style`                                                                                                                                |
+| `createLayer`       | `create_layer`        | `parentId` and one layer node                                                                                                                                                         |
+| `updateLayer`       | `update_layer`        | `id`, `name`, `hidden`, `frame`, `text`, `cornerRadius`, `symbol`, `overrides`, `style`, `textStyle`, `fixedWidth`, layout fields, `flow`, `flowStartPoint`, `exportFormats`, `order` |
+| `groupLayers`       | `group_layers`        | `ids`, `name`                                                                                                                                                                         |
+| `ungroupLayer`      | `ungroup_layer`       | `id`                                                                                                                                                                                  |
+| `duplicate`         | `duplicate_layer`     | `ids`, `offset`, `name`                                                                                                                                                               |
+| `createSymbol`      | `create_symbol`       | `ids`, `name`, `replace`                                                                                                                                                              |
+| `detach`            | `detach_symbol`       | `id`, `recursively`, `force`                                                                                                                                                          |
+| `applySharedStyle`  | `apply_shared_style`  | `id`, `sharedStyle`                                                                                                                                                                   |
+| `upsertSwatch`      | `upsert_swatch`       | `name`, `color`                                                                                                                                                                       |
+| `upsertSharedStyle` | `upsert_shared_style` | `kind`, `name`, `fromLayerId`, `style`, `textStyle`                                                                                                                                   |
+| `deleteLayer`       | `delete_layer`        | `id` or `ids`, `force`                                                                                                                                                                |
 
 These tools do not call the plugin:
 
@@ -70,6 +73,16 @@ The reply has `total`, `truncated` when there are more than `limit` matches (def
 
 `symbols` lists each symbol master with `id`, `name`, `symbolId`, `page`, `instanceCount`, `smartLayout`, and `library` when the master came from a library. With `includeOverrides`, each master also lists its overrides with `editable`.
 
+## Libraries
+
+`libraries` lists the enabled libraries with `id`, `name`, `libraryType`, and `valid`. With `libraryId`, which is a library id or name, it also lists the names of the library's `symbol`, `layerStyle`, `textStyle`, and `swatch` items.
+
+There is no separate import op. When a write op looks up a symbol, shared style, or swatch by name or id and the document does not have it, the plugin searches the enabled libraries and imports the first match in the same plugin run. Sketch removes an imported library swatch from the document when no layer uses it, so an item imported in one run and used in a later run can be gone by then. `document.swatches` in Sketch's API lists only local swatches, so the plugin also reads the document's foreign swatches when it looks up a swatch.
+
+## Reveal
+
+`reveal` switches the document to the layer's page, selects the layer, and calls `document.centerOnLayer` to scroll the canvas to it. It changes no layer data, so the server sends it without a backup or the saved-document check. The reply has `selected` and `centered`. A page id switches to that page and selects nothing.
+
 ## Layer nodes
 
 `build` takes a list of nodes, and `createLayer` takes one. A node has a `kind` and these optional fields:
@@ -83,6 +96,7 @@ The reply has `total`, `truncated` when there are more than `limit` matches (def
 - `children` for `group` and `artboard`
 - `ref`, a label the `build` reply maps to the new layer's id
 - the layout fields `smartLayout` for `group`, and `rotation`, `flipHorizontal`, and `flipVertical` for every kind
+- `flow` and `exportFormats` for every kind, and `flowStartPoint` for `artboard`
 
 The kinds are `artboard`, `rectangle`, `oval`, `text`, `group`, `symbol`, `svg`, and `image`. An artboard node needs a page as its parent. Child frames are relative to their parent, and each group shrinks to fit its children once they are all created. If any node fails, `build` removes everything it created in that call.
 
@@ -131,11 +145,19 @@ Sketch 88.1 writes text alignment with the raw values AppKit uses on Intel Macs.
 
 `duplicate` copies each layer into the same parent, directly above the original, and moves the copy by `offset`. Each copy gets the `createdByAgent` setting.
 
+### Prototypes and export presets
+
+`flow` is `{ "target": "<artboard id>", "animation": "slideFromLeft" }`, where `target` can also be `"back"` to return to the previous artboard, and `animation` is `none`, `slideFromRight`, `slideFromLeft`, `slideFromBottom`, or `slideFromTop`, with `slideFromRight` as the default. `null` removes the link. `flowStartPoint: true` marks an artboard as a prototype start point.
+
+`exportFormats` replaces a layer's export presets with a list of `{ "fileFormat": "png", "size": "2x", "prefix": "", "suffix": "@2x" }`. `fileFormat` is `png`, `jpg`, `tiff`, `webp`, `gif`, `pdf`, `eps`, or `svg`. `size` is a scale such as `2x`, a width such as `300w`, or a height such as `200h`, and defaults to `1x`. An empty list removes the presets.
+
 ### Symbols
 
 `createSymbol` makes a new symbol master on the Symbols page from the given layers. By default it moves the layers into the master and puts an instance where they were. With `replace` set to false, it copies the layers into the master and leaves the originals in place. Its reply lists the overrides the symbol exposes, by layer name and property.
 
 Overrides are set with a list of `{ "layer": "<layer name inside the symbol>", "value": "..." }`, or `{ "id": "<override id>", "value": "..." }`. A text layer has both a `stringValue` and a `textStyle` override, and matching by layer name picks `stringValue` unless `property` says otherwise. The value is text for `stringValue`, a symbol name for `symbolID`, and an absolute image path for `image`.
+
+`detach` replaces an instance with a group of its layers and keeps the instance's overrides. With `recursively`, nested instances are detached too. It refuses an instance without the `createdByAgent` setting unless `force` is true, and the new group gets the setting when the instance had it.
 
 Variants of one component are separate masters with slash names, such as `Feature Row/Left` and `Feature Row/Right`. `updateLayer` with `symbol` swaps an instance between them.
 
@@ -143,7 +165,7 @@ Variants of one component are separate masters with slash names, such as `Featur
 
 Write replies are sized to keep the agent's context small:
 
-- `createArtboard`, `createLayer`, `updateLayer`, `applySharedStyle`, and `groupLayers` return only `id`, `name`, `type`, and `frame` unless `verbose` is true. `build`, `ungroupLayer`, `createSymbol`, and `duplicate` return the same short form for each layer they report on, and they ignore `verbose`.
+- `createArtboard`, `createLayer`, `updateLayer`, `applySharedStyle`, `groupLayers`, and `detach` return only `id`, `name`, `type`, and `frame` unless `verbose` is true. `build`, `ungroupLayer`, `createSymbol`, and `duplicate` return the same short form for each layer they report on, and they ignore `verbose`.
 - `render` picks what the reply renders as a PNG: `none`, `layer`, or `artboard`. `build` defaults to `artboard` and renders once. The other ops that take `render` default to `layer`. `upsertSwatch`, `upsertSharedStyle`, and `deleteLayer` never render.
 - PNGs render at 1x unless `scale` says otherwise.
 - JSON in replies has no indentation.
@@ -166,3 +188,6 @@ Each layer has `id`, `name`, `type`, and `frame`. These keys appear only when th
 - `style` with `opacity`, `fills`, `borders`, `borderOptions`, `shadows`, `innerShadows`, `blur`, and `blendingMode`. A color linked to a swatch also has `swatch`, a gradient fill has `gradient` and `stops`, and an image fill is `{ "image": true }`. `borderOptions` and `blendingMode` appear only when they differ from Sketch's defaults.
 - `sharedStyle` with the shared style name
 - `symbol`, `symbolId`, and `overrides` for symbol instances, where `overrides` lists only overrides changed from the default
+- `flow` with `target`, `targetName`, and `animation`, where `target` is `back` for a back link
+- `flowStartPoint` for artboards
+- `exportFormats` with `fileFormat`, `size`, and `prefix` or `suffix` when set

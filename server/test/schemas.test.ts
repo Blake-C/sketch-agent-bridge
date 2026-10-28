@@ -63,3 +63,24 @@ test('find_layers takes known layer types and caps the limit at 500', () => {
 	assert.equal(schema.safeParse({ limit: 501 }).success, false)
 	assert.equal(schema.safeParse({ type: 'Bogus' }).success, false)
 })
+
+test('flows target an artboard id or back, and null removes them', () => {
+	assert.ok(node({ flow: { target: 'A1', animation: 'slideFromLeft' } }).success)
+	assert.ok(node({ flow: { target: 'back' } }).success)
+	assert.ok(node({ flow: null }).success)
+	assert.equal(node({ flow: { target: 'A1', animation: 'dissolve' } }).success, false)
+	assert.equal(node({ flow: {} }).success, false)
+})
+
+test('export presets take known formats and sizes', () => {
+	const formats = [
+		{ fileFormat: 'png', size: '2x', suffix: '@2x' },
+		{ fileFormat: 'jpg', size: '300w', prefix: 'thumb-' },
+		{ fileFormat: 'svg' },
+		{ fileFormat: 'pdf', size: '0.5x' },
+	]
+	assert.ok(node({ exportFormats: formats }).success)
+	assert.ok(node({ exportFormats: [] }).success)
+	assert.equal(node({ exportFormats: [{ fileFormat: 'bmp' }] }).success, false)
+	assert.equal(node({ exportFormats: [{ fileFormat: 'png', size: 'large' }] }).success, false)
+})

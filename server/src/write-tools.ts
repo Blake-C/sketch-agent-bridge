@@ -13,6 +13,7 @@ import {
 	layout,
 	order,
 	overrides,
+	prototypeAndExport,
 	render,
 	style,
 	textStyle,
@@ -127,7 +128,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Update layer',
 			description:
-				'Changes an existing layer: name, visibility, frame, text, corner radius, which symbol an instance uses, symbol overrides, style, text style, smart layout, rotation, flips, and stacking order.',
+				'Changes an existing layer: name, visibility, frame, text, corner radius, which symbol an instance uses, symbol overrides, style, text style, smart layout, rotation, flips, stacking order, prototype links, and export presets.',
 			inputSchema: {
 				documentId,
 				id: z.string(),
@@ -137,11 +138,17 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 				text: z.string().optional(),
 				fixedWidth: fixedWidth.optional(),
 				cornerRadius: z.number().min(0).optional(),
-				symbol: z.string().optional().describe('Swap a symbol instance to another master, by name or id.'),
+				symbol: z
+					.string()
+					.optional()
+					.describe(
+						'Swap a symbol instance to another master, by name or id. Library symbol names work too.'
+					),
 				overrides: overrides.optional(),
 				style,
 				textStyle,
 				...layout,
+				...prototypeAndExport,
 				order: order.optional(),
 				...render,
 			},
@@ -197,6 +204,24 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 			annotations: additive,
 		},
 		write('duplicate')
+	)
+
+	server.registerTool(
+		'detach_symbol',
+		{
+			title: 'Detach symbol',
+			description:
+				'Replaces a symbol instance with a group of its layers, keeping its overrides. Instances placed by hand need force: true.',
+			inputSchema: {
+				documentId,
+				id: z.string(),
+				recursively: z.boolean().optional().describe('Also detach symbol instances nested inside it.'),
+				force: z.boolean().optional(),
+				...render,
+			},
+			annotations: destructive,
+		},
+		write('detach')
 	)
 
 	server.registerTool(

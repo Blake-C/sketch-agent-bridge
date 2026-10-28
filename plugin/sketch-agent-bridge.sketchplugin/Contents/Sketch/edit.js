@@ -1,9 +1,10 @@
 const sketch = require('sketch')
 const Settings = require('sketch/settings')
-const { resolveDocument } = require('./document.js')
+const { resolveDocument, findLayer } = require('./document.js')
 const { layerSpec, swatchNames, frameSpec } = require('./spec.js')
 const { exportLayers } = require('./export.js')
-const { applyStyle, findByIdOrName, loadImage } = require('./style.js')
+const { applyStyle, loadImage } = require('./style.js')
+const { findLocalOrImport } = require('./libraries.js')
 
 const DRAFTS_PAGE = 'Agent Drafts'
 const CREATED_KEY = 'createdByAgent'
@@ -91,16 +92,48 @@ function applyLayout(layer, input) {
 	if (input.flipVertical !== undefined) layer.transform.flippedVertically = input.flipVertical
 }
 
+function setFlow(document, layer, flow) {
+	if (flow === null) {
+		layer.flow = null
+		return
+	}
+	const back = flow.target === 'back'
+	const target = back ? sketch.Flow.BackTarget : findLayer(document, flow.target)
+	if (!back && target.type !== 'Artboard') throw new Error('A flow target must be an artboard or "back"')
+	layer.flow = { target, animationType: flow.animation || 'slideFromRight' }
+}
+
+function exportFormatFromInput(format) {
+	const out = { fileFormat: format.fileFormat, size: format.size || '1x' }
+	if (format.prefix !== undefined) out.prefix = format.prefix
+	if (format.suffix !== undefined) out.suffix = format.suffix
+	return out
+}
+
+function applyPrototypeAndExport(document, layer, input) {
+	if (input.flow !== undefined) setFlow(document, layer, input.flow)
+	if (input.flowStartPoint !== undefined) {
+		if (layer.type !== 'Artboard') throw new Error('Only artboards can be a flow start point')
+		layer.flowStartPoint = input.flowStartPoint
+	}
+	if (input.exportFormats !== undefined) layer.exportFormats = input.exportFormats.map(exportFormatFromInput)
+}
+
 function linkSharedStyle(document, layer, key) {
-	const list = layer.type === 'Text' ? document.sharedTextStyles : document.sharedLayerStyles
-	const shared = findByIdOrName(list, key, layer.type === 'Text' ? 'text style' : 'layer style')
+	const isText = layer.type === 'Text'
+	const list = isText ? document.sharedTextStyles : document.sharedLayerStyles
+	const shared = isText
+		? findLocalOrImport(document, list, key, 'textStyle', 'text style')
+		: findLocalOrImport(document, list, key, 'layerStyle', 'layer style')
 	layer.sharedStyle = shared
 	layer.style.syncWithSharedStyle(shared)
 }
 
 function findSymbolMaster(document, key) {
 	const masters = document.getSymbols()
-	return masters.find(master => master.symbolId === key) || findByIdOrName(masters, key, 'symbol')
+	return (
+		masters.find(master => master.symbolId === key) || findLocalOrImport(document, masters, key, 'symbol', 'symbol')
+	)
 }
 
 function overrideValue(document, override, value) {
@@ -185,6 +218,7 @@ function createNode(document, parent, node) {
 		if (node.sharedStyle) linkSharedStyle(document, layer, node.sharedStyle)
 		applyStyle(document, layer, node.style, node.textStyle)
 		applyLayout(layer, node)
+		applyPrototypeAndExport(document, layer, node)
 		if (node.fixedWidth !== undefined) setFixedWidth(layer, node.fixedWidth)
 		if (node.overrides) setOverrides(document, layer, node.overrides)
 		if (node.hidden) layer.hidden = true
@@ -243,6 +277,7 @@ module.exports = {
 	setOrder,
 	setFixedWidth,
 	applyLayout,
+	applyPrototypeAndExport,
 	linkSharedStyle,
 	findSymbolMaster,
 	setOverrides,

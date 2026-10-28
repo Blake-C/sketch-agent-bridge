@@ -8,7 +8,10 @@ export const documentId = z
 export const hex = z.string().regex(/^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/, 'Use #rrggbb or #rrggbbaa')
 
 export const color = z
-	.union([hex, z.object({ swatch: z.string().describe('Swatch name or id.') })])
+	.union([
+		hex,
+		z.object({ swatch: z.string().describe('Swatch name or id, from the document or an enabled library.') }),
+	])
 	.describe('A hex color, or { "swatch": "<name>" } to link a swatch from get_design_tokens.')
 
 const point = z.object({ x: z.number(), y: z.number() })
@@ -187,6 +190,39 @@ export const order = z
 	.union([z.enum(['front', 'back', 'forward', 'backward']), z.number().int().min(0)])
 	.describe('Move the layer within its parent: front, back, forward, backward, or an index where 0 is the back.')
 
+export const prototypeAndExport = {
+	flow: z
+		.object({
+			target: z.string().describe('Artboard id to go to, or "back" to return to the previous artboard.'),
+			animation: z
+				.enum(['none', 'slideFromRight', 'slideFromLeft', 'slideFromBottom', 'slideFromTop'])
+				.optional()
+				.describe('Default slideFromRight.'),
+		})
+		.nullable()
+		.optional()
+		.describe('Prototype link from this layer. null removes it.'),
+	flowStartPoint: z.boolean().optional().describe('For artboards. Marks the artboard as a prototype start point.'),
+	exportFormats: z
+		.array(
+			z.object({
+				fileFormat: z.enum(['png', 'jpg', 'tiff', 'webp', 'gif', 'pdf', 'eps', 'svg']),
+				size: z
+					.string()
+					.regex(
+						/^\d+(\.\d+)?(x|w|h)$/,
+						'Use a scale such as "2x", a width such as "300w", or a height such as "200h"'
+					)
+					.optional()
+					.describe('Default "1x".'),
+				prefix: z.string().optional(),
+				suffix: z.string().optional(),
+			})
+		)
+		.optional()
+		.describe("Export presets shown in Sketch's export panel. Replaces the layer's presets, and [] removes them."),
+}
+
 export const fixedWidth = z
 	.boolean()
 	.describe('For text. true wraps text at the frame width, false makes the layer grow with its text.')
@@ -200,13 +236,20 @@ const layerFields = {
 	text: z.string().optional(),
 	svg: z.string().optional().describe('SVG markup, for kind "svg". The frame width and height resize it.'),
 	image: z.string().optional().describe('Absolute path to an image file, for kind "image".'),
-	symbol: z.string().optional().describe('Symbol master name, id, or symbolId, for kind "symbol".'),
+	symbol: z
+		.string()
+		.optional()
+		.describe('Symbol master name, id, or symbolId, for kind "symbol". Names from list_libraries work too.'),
 	overrides: overrides.optional(),
-	sharedStyle: z.string().optional().describe('Shared layer or text style name or id to link.'),
+	sharedStyle: z
+		.string()
+		.optional()
+		.describe('Shared layer or text style name or id to link. Names from list_libraries work too.'),
 	style,
 	textStyle,
 	hidden: z.boolean().optional(),
 	...layout,
+	...prototypeAndExport,
 }
 
 export const layerInput = z.object(layerFields)

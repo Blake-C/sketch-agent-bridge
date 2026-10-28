@@ -1,5 +1,5 @@
 const sketch = require('sketch')
-const { fromSketchAlignment } = require('./style.js')
+const { fromSketchAlignment, allSwatches } = require('./style.js')
 
 const DEFAULT_DEPTH = 8
 const MAX_NODES = 2000
@@ -7,7 +7,7 @@ const MAX_NODES = 2000
 function swatchNames(document) {
 	const names = {}
 	if (!document || !document.swatches) return names
-	document.swatches.forEach(swatch => {
+	allSwatches(document).forEach(swatch => {
 		names[swatchId(swatch)] = swatch.name
 	})
 	return names
@@ -151,6 +151,26 @@ function smartLayoutName(layer) {
 	)
 }
 
+function flowSpec(flow) {
+	if (!flow) return undefined
+	if (flow.isBackAction()) return { target: 'back', animation: flow.animationType }
+	const target = flow.target
+	return compact({
+		target: target ? target.id : undefined,
+		targetName: target ? target.name : undefined,
+		animation: flow.animationType,
+	})
+}
+
+function exportFormatsSpec(formats) {
+	return (formats || []).map(format => {
+		const spec = { fileFormat: format.fileFormat, size: format.size }
+		if (format.prefix) spec.prefix = format.prefix
+		if (format.suffix) spec.suffix = format.suffix
+		return spec
+	})
+}
+
 function frameSpec(frame) {
 	return { x: frame.x, y: frame.y, width: frame.width, height: frame.height }
 }
@@ -186,6 +206,9 @@ function layerSpec(layer, options) {
 			symbol: node.type === 'SymbolInstance' && node.master ? node.master.name : undefined,
 			symbolId: node.type === 'SymbolInstance' || node.type === 'SymbolMaster' ? node.symbolId : undefined,
 			overrides: node.type === 'SymbolInstance' ? overridesSpec(node) : undefined,
+			flow: flowSpec(node.flow),
+			flowStartPoint: node.type === 'Artboard' && node.flowStartPoint ? true : undefined,
+			exportFormats: exportFormatsSpec(node.exportFormats),
 		}
 		if (Object.keys(spec.style).length === 0) delete spec.style
 		const children = (node.layers || []).filter(child => includeHidden || !child.hidden)

@@ -131,6 +131,33 @@ export function registerReadTools(server: McpServer, bridge: SketchBridge) {
 	)
 
 	server.registerTool(
+		'list_libraries',
+		{
+			title: 'List libraries',
+			description:
+				'Lists the enabled Sketch libraries. With libraryId, also lists the names of its symbols, layer styles, text styles, and swatches. Use those names anywhere a symbol, shared style, or swatch is asked for, and the item is imported from the library when it is used.',
+			inputSchema: {
+				documentId,
+				libraryId: z.string().optional().describe('Library id or name.'),
+			},
+			annotations: readOnly,
+		},
+		async args => callOp(bridge, 'libraries', args)
+	)
+
+	server.registerTool(
+		'reveal_layer',
+		{
+			title: 'Reveal layer',
+			description:
+				"Shows a layer in Sketch: switches to the layer's page, selects the layer, and scrolls the canvas to it. Changes only the selection and view.",
+			inputSchema: { documentId, id: z.string().describe('Layer id.') },
+			annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+		},
+		async args => callOp(bridge, 'reveal', args)
+	)
+
+	server.registerTool(
 		'export_layers',
 		{
 			title: 'Export layers',

@@ -13,7 +13,10 @@ An agent connected to the MCP server can:
 - build a whole tree of artboards, groups, shapes, text, SVG drawings, and images in one call
 - edit layers, group and ungroup them, and apply shared styles
 - duplicate layers, change their stacking order, rotate and flip them, and set Smart Layout on groups and symbols
-- turn layers into symbols, place instances, set their overrides, and swap them between symbols
+- turn layers into symbols, place instances, set their overrides, swap them between symbols, and detach them
+- use symbols, shared styles, and swatches from enabled libraries by name
+- link layers to artboards for prototypes, and add export presets
+- switch Sketch to a layer's page, select the layer, and scroll the canvas to it
 - fill layers with colors, gradients, or images, and add inner shadows, blurs, blend modes, dashed borders, and arrowheads
 - add or change swatches and shared styles
 - download random Unsplash photos that match a query, through a local shell function, for use as image layers and fills
@@ -32,7 +35,7 @@ Build the server in Docker, connect it to an agent, and optionally link the plug
 
 - New layers go on a page named "Agent Drafts" unless the agent names another parent.
 - Before the first edit in a session, the server copies the `.sketch` file to `~/.sketch-agent-bridge/backups/`.
-- The agent can only delete layers it created, unless it passes `force: true`.
+- The agent can only delete or detach layers it created, unless it passes `force: true`.
 - The bridge makes no network calls except through `fetch_images`, which runs the `get_images` shell function to download Unsplash photos. That function reads its key from the login keychain, and the server never reads the key.
 - Every file the bridge writes stays under `~/.sketch-agent-bridge/` on the Mac.
 

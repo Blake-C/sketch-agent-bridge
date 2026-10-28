@@ -1,3 +1,6 @@
+const sketch = require('sketch')
+const { findLocalOrImport } = require('./libraries.js')
+
 const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'tif', 'tiff', 'webp', 'heic', 'bmp']
 const GRADIENT_TYPES = { linear: 'Linear', radial: 'Radial', angular: 'Angular' }
 const PATTERN_MODES = { fill: 'Fill', fit: 'Fit', tile: 'Tile', stretch: 'Stretch' }
@@ -46,9 +49,21 @@ function loadImage(path) {
 	return image
 }
 
+// document.swatches lists only local swatches, so swatches imported from a library are added from foreignSwatches.
+function allSwatches(document) {
+	const foreign = document.sketchObject.documentData().foreignSwatches()
+	const imported = []
+	for (let index = 0; index < foreign.count(); index++) {
+		imported.push(sketch.Swatch.fromNative(foreign.objectAtIndex(index).localSwatch()))
+	}
+	return document.swatches.concat(imported)
+}
+
 function resolveColor(document, value) {
 	if (typeof value === 'string') return value
-	if (value && value.swatch) return findByIdOrName(document.swatches, value.swatch, 'swatch').referencingColor
+	if (value && value.swatch) {
+		return findLocalOrImport(document, allSwatches(document), value.swatch, 'swatch', 'swatch').referencingColor
+	}
 	throw new Error('A color must be a hex string or { "swatch": "<name>" }')
 }
 
@@ -148,4 +163,4 @@ function applyStyle(document, layer, style, textStyle) {
 	}
 }
 
-module.exports = { applyStyle, resolveColor, fromSketchAlignment, findByIdOrName, loadImage }
+module.exports = { applyStyle, resolveColor, allSwatches, fromSketchAlignment, findByIdOrName, loadImage }
