@@ -131,6 +131,13 @@ export const textStyle = z
 			.optional()
 			.describe('Sketch weight scale, 5 is regular, 9 is bold.'),
 		fontStyle: z.enum(['italic']).optional(),
+		fontStretch: z.enum(['compressed', 'condensed', 'narrow', 'expanded', 'poster']).optional(),
+		fontAxes: z
+			.record(z.string(), z.number())
+			.optional()
+			.describe(
+				'Variable font axes by name, such as { "Weight": 700, "Width": 80 }. get_layer shows the axes a text layer has.'
+			),
 		lineHeight: z.number().positive().optional(),
 		kerning: z.number().optional(),
 		paragraphSpacing: z.number().optional(),
@@ -227,15 +234,44 @@ export const prototypeAndExport = {
 		.describe("Export presets shown in Sketch's export panel. Replaces the layer's presets, and [] removes them."),
 }
 
+export const lineSpacing = z
+	.enum(['natural', 'system', 'variable', 'constantBaseline'])
+	.describe('For text. How Sketch spaces lines. Default natural.')
+
+export const svgPath = z
+	.string()
+	.describe(
+		'SVG path data, such as "M0 0 L100 0 L50 80 Z", in the coordinates of the parent. The layer frame fits the path.'
+	)
+
 export const fixedWidth = z
 	.boolean()
 	.describe('For text. true wraps text at the frame width, false makes the layer grow with its text.')
 
 const layerFields = {
-	kind: z.enum(['artboard', 'rectangle', 'oval', 'text', 'group', 'symbol', 'svg', 'image']),
+	kind: z.enum([
+		'artboard',
+		'rectangle',
+		'oval',
+		'triangle',
+		'polygon',
+		'star',
+		'path',
+		'text',
+		'group',
+		'symbol',
+		'svg',
+		'image',
+	]),
 	name: z.string().optional(),
-	frame: frame.optional().describe('Relative to the parent. Text with a width gets a fixed width.'),
+	frame: frame
+		.optional()
+		.describe(
+			'Relative to the parent. Text with a width gets a fixed width. For kind "path", only the given keys move or resize the path.'
+		),
 	fixedWidth: fixedWidth.optional(),
+	lineSpacing: lineSpacing.optional(),
+	path: svgPath.optional().describe('SVG path data, for kind "path". Coordinates are in the parent.'),
 	cornerRadius: z.number().min(0).optional(),
 	text: z.string().optional(),
 	svg: z.string().optional().describe('SVG markup, for kind "svg". The frame width and height resize it.'),

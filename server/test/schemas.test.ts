@@ -57,6 +57,16 @@ test('text takes underline, strikethrough, and fixed width', () => {
 	assert.equal(node({ textStyle: { textUnderline: 'wavy' } }).success, false)
 })
 
+test('layer nodes take shape kinds, paths, line spacing, and font axes', () => {
+	for (const kind of ['triangle', 'polygon', 'star']) assert.ok(node({ kind }).success, kind)
+	assert.ok(node({ kind: 'path', path: 'M0 0 L10 10' }).success)
+	assert.ok(node({ kind: 'text', lineSpacing: 'constantBaseline' }).success)
+	assert.equal(node({ kind: 'text', lineSpacing: 'loose' }).success, false)
+	assert.ok(node({ textStyle: { fontStretch: 'condensed', fontAxes: { Weight: 700, Width: 80 } } }).success)
+	assert.equal(node({ textStyle: { fontAxes: { Weight: 'bold' } } }).success, false)
+	assert.equal(node({ textStyle: { fontStretch: 'wide' } }).success, false)
+})
+
 test('find_layers takes known layer types and caps the limit at 500', () => {
 	const schema = z.object(findInput)
 	assert.ok(schema.safeParse({ type: 'SymbolInstance', name: 'Row', nameMatch: 'exact', limit: 500 }).success)

@@ -9,6 +9,8 @@ All notable changes to this project will be documented in this file.
 - Added `parentId` and `locked` to `update_layer`, so a layer can move into another artboard, group, or page and keep its place on the canvas.
 - Added a `select_layers` tool.
 - Added `create_page`, `update_page`, and `delete_page` tools.
+- Added triangle, polygon, star, and path layer kinds, and `path` in `update_layer` and layer specs.
+- Added `lineSpacing` for text layers, and `fontStretch` and variable font axes to `textStyle`.
 
 ## [0.3.0] - 2026-10-27
 

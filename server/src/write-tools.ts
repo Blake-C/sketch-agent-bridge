@@ -11,11 +11,13 @@ import {
 	hex,
 	layerInput,
 	layout,
+	lineSpacing,
 	order,
 	overrides,
 	prototypeAndExport,
 	render,
 	style,
+	svgPath,
 	textStyle,
 } from './schemas.ts'
 import { BridgeError, type SketchBridge } from './sketch.ts'
@@ -69,7 +71,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Build layers',
 			description:
-				'Creates a whole tree of layers in one call: artboards, groups, shapes, text, SVG, images, and symbol instances, with children nested inside groups and artboards. Prefer this over create_layer for anything with more than a few layers. Child frames are relative to their parent. Groups shrink to fit their children. Renders once at the end. If any layer fails, nothing is kept.',
+				'Creates a whole tree of layers in one call: artboards, groups, shapes, paths, text, SVG, images, and symbol instances, with children nested inside groups and artboards. Prefer this over create_layer for anything with more than a few layers. Child frames are relative to their parent. Groups shrink to fit their children. Renders once at the end. If any layer fails, nothing is kept.',
 			inputSchema: {
 				documentId,
 				parentId: z
@@ -128,7 +130,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Update layer',
 			description:
-				'Changes an existing layer: parent, name, visibility, lock, frame, text, corner radius, which symbol an instance uses, symbol overrides, style, text style, smart layout, rotation, flips, stacking order, prototype links, and export presets.',
+				'Changes an existing layer: parent, name, visibility, lock, frame, text, line spacing, corner radius, path, which symbol an instance uses, symbol overrides, style, text style, smart layout, rotation, flips, stacking order, prototype links, and export presets.',
 			inputSchema: {
 				documentId,
 				id: z.string(),
@@ -144,7 +146,11 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 				frame: frame.optional().describe('Only the given keys change.'),
 				text: z.string().optional(),
 				fixedWidth: fixedWidth.optional(),
+				lineSpacing: lineSpacing.optional(),
 				cornerRadius: z.number().min(0).optional(),
+				path: svgPath
+					.optional()
+					.describe('Replaces the points of a path layer. Coordinates are in the parent.'),
 				symbol: z
 					.string()
 					.optional()

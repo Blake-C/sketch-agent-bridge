@@ -9,6 +9,7 @@ const TEXT_PROPERTIES = [
 	'fontSize',
 	'fontWeight',
 	'fontStyle',
+	'fontStretch',
 	'lineHeight',
 	'kerning',
 	'paragraphSpacing',
@@ -161,6 +162,21 @@ function blurFromInput(blur) {
 	}
 }
 
+function setFontAxes(layer, values) {
+	const axes = layer.style.fontAxes
+	if (!axes) throw new Error(layer.style.fontFamily + ' is not a variable font')
+	Object.keys(values).forEach(name => {
+		const axis = axes[name]
+		if (!axis) throw new Error('No font axis is named ' + name + '. This font has ' + Object.keys(axes).join(', '))
+		const value = values[name]
+		if (value < Number(axis.min) || value > Number(axis.max)) {
+			throw new Error(name + ' must be from ' + Number(axis.min) + ' to ' + Number(axis.max))
+		}
+		axis.value = value
+	})
+	layer.style.fontAxes = axes
+}
+
 function applyStyle(document, layer, style, textStyle) {
 	if (style) {
 		if (style.fills && layer.type === 'Artboard') {
@@ -190,6 +206,7 @@ function applyStyle(document, layer, style, textStyle) {
 		})
 		if (textStyle.alignment !== undefined) layer.style.alignment = toSketchAlignment(textStyle.alignment)
 		if (textStyle.textColor !== undefined) layer.style.textColor = resolveColor(document, textStyle.textColor)
+		if (textStyle.fontAxes !== undefined) setFontAxes(layer, textStyle.fontAxes)
 	}
 }
 

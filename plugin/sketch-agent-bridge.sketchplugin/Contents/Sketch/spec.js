@@ -3,6 +3,7 @@ const { fromSketchAlignment, allSwatches, hexFromNative } = require('./style.js'
 
 const DEFAULT_DEPTH = 8
 const MAX_NODES = 2000
+const MAX_PATH_LENGTH = 2000
 
 function swatchNames(document) {
 	const names = {}
@@ -104,6 +105,15 @@ function styleSpec(style, swatches) {
 	return compact(spec)
 }
 
+function fontAxesSpec(axes) {
+	if (!axes) return undefined
+	const values = {}
+	Object.keys(axes).forEach(name => {
+		values[name] = Number(axes[name].value)
+	})
+	return values
+}
+
 function textStyleSpec(style) {
 	if (!style) return undefined
 	return compact({
@@ -111,6 +121,8 @@ function textStyleSpec(style) {
 		fontSize: style.fontSize,
 		fontWeight: style.fontWeight,
 		fontStyle: style.fontStyle,
+		fontStretch: style.fontStretch,
+		fontAxes: fontAxesSpec(style.fontAxes),
 		lineHeight: style.lineHeight,
 		kerning: style.kerning,
 		paragraphSpacing: style.paragraphSpacing || undefined,
@@ -128,6 +140,12 @@ function cornerRadius(layer) {
 	const radii = layer.points.map(point => point.cornerRadius)
 	if (radii.every(radius => radius === 0)) return undefined
 	return radii.every(radius => radius === radii[0]) ? radii[0] : radii
+}
+
+function pathSpec(layer) {
+	if (layer.type !== 'ShapePath' || layer.shapeType !== 'Custom') return undefined
+	const path = String(layer.getSVGPath())
+	return path.length <= MAX_PATH_LENGTH ? path : undefined
 }
 
 function colorOverrideValue(override, swatches) {
@@ -204,9 +222,12 @@ function layerSpec(layer, options) {
 			smartLayout: node.type === 'Group' || node.type === 'SymbolMaster' ? smartLayoutName(node) : undefined,
 			shapeType: node.type === 'ShapePath' ? node.shapeType : undefined,
 			cornerRadius: cornerRadius(node),
+			path: pathSpec(node),
+			closed: node.type === 'ShapePath' && node.shapeType === 'Custom' && !node.closed ? false : undefined,
 			text: isText ? node.text : undefined,
 			textStyle: isText ? textStyleSpec(node.style) : undefined,
 			fixedWidth: isText && node.fixedWidth ? true : undefined,
+			lineSpacing: isText && node.lineSpacing !== 'natural' ? node.lineSpacing : undefined,
 			style: styleSpec(node.style, swatches),
 			sharedStyle: node.sharedStyle ? node.sharedStyle.name : undefined,
 			symbol: node.type === 'SymbolInstance' && node.master ? node.master.name : undefined,

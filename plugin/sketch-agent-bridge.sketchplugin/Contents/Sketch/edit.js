@@ -13,6 +13,8 @@ const VERBOSE_DEPTH = 3
 const CONTAINER_TYPES = ['Artboard', 'Group', 'SymbolMaster', 'Page']
 const STYLE_OVERRIDES = ['textStyle', 'layerStyle']
 const SMART_LAYOUT_TYPES = ['Group', 'SymbolMaster']
+const SHAPE_KINDS = { rectangle: 'Rectangle', oval: 'Oval', triangle: 'Triangle', polygon: 'Polygon', star: 'Star' }
+const LINE_SPACINGS = ['natural', 'system', 'variable', 'constantBaseline']
 const ORDER_MOVES = { front: 'moveToFront', back: 'moveToBack', forward: 'moveForward', backward: 'moveBackward' }
 
 function editableDocument(args) {
@@ -93,6 +95,22 @@ function setSmartLayout(layer, name) {
 function setFixedWidth(layer, fixed) {
 	if (layer.type !== 'Text') throw new Error('Only text layers have a fixed width')
 	layer.fixedWidth = fixed
+}
+
+function setLineSpacing(layer, lineSpacing) {
+	if (layer.type !== 'Text') throw new Error('Only text layers have line spacing')
+	if (!LINE_SPACINGS.includes(lineSpacing)) throw new Error('Unknown line spacing: ' + lineSpacing)
+	layer.lineSpacing = lineSpacing
+}
+
+function setPath(layer, path) {
+	if (layer.type !== 'ShapePath' || layer.shapeType !== 'Custom') {
+		throw new Error('Only custom shape paths, such as path layers, can take a new path')
+	}
+	const next = sketch.ShapePath.fromSVGPath(path)
+	layer.points = next.points
+	layer.closed = next.closed
+	layer.frame = next.frame
 }
 
 function setOrder(layer, order) {
@@ -221,13 +239,18 @@ function createNode(document, parent, node) {
 		if (parent.type !== 'Page') throw new Error('Artboards can only be added to a page')
 		rectangle.x = frame.x === undefined ? rightOfContent(parent) : frame.x
 		layer = new sketch.Artboard({ name: node.name || 'Artboard', parent, frame: rectangle })
-	} else if (node.kind === 'rectangle' || node.kind === 'oval') {
+	} else if (SHAPE_KINDS[node.kind]) {
 		layer = new sketch.ShapePath({
 			parent,
 			frame: rectangle,
-			shapeType: node.kind === 'oval' ? sketch.ShapePath.ShapeType.Oval : sketch.ShapePath.ShapeType.Rectangle,
+			shapeType: sketch.ShapePath.ShapeType[SHAPE_KINDS[node.kind]],
 		})
 		if (node.kind === 'rectangle' && node.cornerRadius) setCornerRadius(layer, node.cornerRadius)
+	} else if (node.kind === 'path') {
+		if (!node.path) throw new Error('A path layer needs SVG path data')
+		layer = sketch.ShapePath.fromSVGPath(node.path)
+		layer.parent = parent
+		setFrame(layer, frame)
 	} else if (node.kind === 'text') {
 		layer = new sketch.Text({ parent, text: node.text || '', frame: rectangle })
 		if (frame.width !== undefined) layer.fixedWidth = true
@@ -261,6 +284,7 @@ function createNode(document, parent, node) {
 		applyLayout(layer, node)
 		applyPrototypeAndExport(document, layer, node)
 		if (node.fixedWidth !== undefined) setFixedWidth(layer, node.fixedWidth)
+		if (node.lineSpacing !== undefined) setLineSpacing(layer, node.lineSpacing)
 		if (node.overrides) setOverrides(document, layer, node.overrides)
 		if (node.hidden) layer.hidden = true
 	} catch (error) {
@@ -322,6 +346,8 @@ module.exports = {
 	setCornerRadius,
 	setOrder,
 	setFixedWidth,
+	setLineSpacing,
+	setPath,
 	applyLayout,
 	applyPrototypeAndExport,
 	linkSharedStyle,

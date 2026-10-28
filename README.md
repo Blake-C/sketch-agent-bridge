@@ -11,7 +11,8 @@ An agent connected to the MCP server can:
 - add, rename, and delete pages
 - find layers by type, name, text, or symbol, and list symbols with how many instances use each one
 - read the document's design tokens, which are its swatches, text styles, layer styles, and symbols
-- build a whole tree of artboards, groups, shapes, text, SVG drawings, and images in one call
+- build a whole tree of artboards, groups, shapes, paths, text, SVG drawings, and images in one call
+- edit the points of a path, and set line spacing and variable font axes on text
 - edit layers, move them into other artboards, groups, or pages, lock them, group and ungroup them, and apply shared styles
 - duplicate layers, change their stacking order, rotate and flip them, and set Smart Layout on groups and symbols
 - turn layers into symbols, place instances, set their overrides, swap them between symbols, and detach them

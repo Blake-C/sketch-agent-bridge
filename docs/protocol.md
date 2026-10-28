@@ -33,36 +33,36 @@ A successful reply can also carry `"render": { "ids": [...], "scale": 1 }`. The 
 
 Every op takes an optional `documentId`. Without it, the op uses the front document.
 
-| Op                  | MCP tool              | Args                                                                                                                                                                                                        |
-| ------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `status`            | `sketch_status`       | none                                                                                                                                                                                                        |
-| `pages`             | `list_pages`          | none                                                                                                                                                                                                        |
-| `artboards`         | `list_artboards`      | `pageId`                                                                                                                                                                                                    |
-| `layer`             | `get_layer`           | `id`, `depth`, `includeHidden`                                                                                                                                                                              |
-| `selection`         | `get_selection`       | `depth`, `includeHidden`, `scale`, `svg`, `export`                                                                                                                                                          |
-| `export`            | `export_layers`       | `ids`, `formats`, `scale`                                                                                                                                                                                   |
-| `tokens`            | `get_design_tokens`   | none                                                                                                                                                                                                        |
-| `find`              | `find_layers`         | `pageId`, `type`, `name`, `nameMatch`, `text`, `symbol`, `limit`                                                                                                                                            |
-| `symbols`           | `list_symbols`        | `includeOverrides`                                                                                                                                                                                          |
-| `libraries`         | `list_libraries`      | `libraryId`                                                                                                                                                                                                 |
-| `reveal`            | `reveal_layer`        | `id`                                                                                                                                                                                                        |
-| `select`            | `select_layers`       | `ids`                                                                                                                                                                                                       |
-| `build`             | `build_layers`        | `parentId`, `nodes`                                                                                                                                                                                         |
-| `createArtboard`    | `create_artboard`     | `pageId`, `name`, `x`, `y`, `width`, `height`, `style`                                                                                                                                                      |
-| `createLayer`       | `create_layer`        | `parentId` and one layer node                                                                                                                                                                               |
-| `updateLayer`       | `update_layer`        | `id`, `parentId`, `name`, `hidden`, `locked`, `frame`, `text`, `cornerRadius`, `symbol`, `overrides`, `style`, `textStyle`, `fixedWidth`, layout fields, `flow`, `flowStartPoint`, `exportFormats`, `order` |
-| `groupLayers`       | `group_layers`        | `ids`, `name`                                                                                                                                                                                               |
-| `ungroupLayer`      | `ungroup_layer`       | `id`                                                                                                                                                                                                        |
-| `duplicate`         | `duplicate_layer`     | `ids`, `offset`, `name`                                                                                                                                                                                     |
-| `createSymbol`      | `create_symbol`       | `ids`, `name`, `replace`                                                                                                                                                                                    |
-| `detach`            | `detach_symbol`       | `id`, `recursively`, `force`                                                                                                                                                                                |
-| `applySharedStyle`  | `apply_shared_style`  | `id`, `sharedStyle`                                                                                                                                                                                         |
-| `upsertSwatch`      | `upsert_swatch`       | `name`, `color`                                                                                                                                                                                             |
-| `upsertSharedStyle` | `upsert_shared_style` | `kind`, `name`, `fromLayerId`, `style`, `textStyle`                                                                                                                                                         |
-| `deleteLayer`       | `delete_layer`        | `id` or `ids`, `force`                                                                                                                                                                                      |
-| `createPage`        | `create_page`         | `name`                                                                                                                                                                                                      |
-| `updatePage`        | `update_page`         | `id`, `name`                                                                                                                                                                                                |
-| `deletePage`        | `delete_page`         | `id`, `force`                                                                                                                                                                                               |
+| Op                  | MCP tool              | Args                                                                                                                                                                                                                               |
+| ------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `status`            | `sketch_status`       | none                                                                                                                                                                                                                               |
+| `pages`             | `list_pages`          | none                                                                                                                                                                                                                               |
+| `artboards`         | `list_artboards`      | `pageId`                                                                                                                                                                                                                           |
+| `layer`             | `get_layer`           | `id`, `depth`, `includeHidden`                                                                                                                                                                                                     |
+| `selection`         | `get_selection`       | `depth`, `includeHidden`, `scale`, `svg`, `export`                                                                                                                                                                                 |
+| `export`            | `export_layers`       | `ids`, `formats`, `scale`                                                                                                                                                                                                          |
+| `tokens`            | `get_design_tokens`   | none                                                                                                                                                                                                                               |
+| `find`              | `find_layers`         | `pageId`, `type`, `name`, `nameMatch`, `text`, `symbol`, `limit`                                                                                                                                                                   |
+| `symbols`           | `list_symbols`        | `includeOverrides`                                                                                                                                                                                                                 |
+| `libraries`         | `list_libraries`      | `libraryId`                                                                                                                                                                                                                        |
+| `reveal`            | `reveal_layer`        | `id`                                                                                                                                                                                                                               |
+| `select`            | `select_layers`       | `ids`                                                                                                                                                                                                                              |
+| `build`             | `build_layers`        | `parentId`, `nodes`                                                                                                                                                                                                                |
+| `createArtboard`    | `create_artboard`     | `pageId`, `name`, `x`, `y`, `width`, `height`, `style`                                                                                                                                                                             |
+| `createLayer`       | `create_layer`        | `parentId` and one layer node                                                                                                                                                                                                      |
+| `updateLayer`       | `update_layer`        | `id`, `parentId`, `name`, `hidden`, `locked`, `frame`, `text`, `lineSpacing`, `cornerRadius`, `path`, `symbol`, `overrides`, `style`, `textStyle`, `fixedWidth`, layout fields, `flow`, `flowStartPoint`, `exportFormats`, `order` |
+| `groupLayers`       | `group_layers`        | `ids`, `name`                                                                                                                                                                                                                      |
+| `ungroupLayer`      | `ungroup_layer`       | `id`                                                                                                                                                                                                                               |
+| `duplicate`         | `duplicate_layer`     | `ids`, `offset`, `name`                                                                                                                                                                                                            |
+| `createSymbol`      | `create_symbol`       | `ids`, `name`, `replace`                                                                                                                                                                                                           |
+| `detach`            | `detach_symbol`       | `id`, `recursively`, `force`                                                                                                                                                                                                       |
+| `applySharedStyle`  | `apply_shared_style`  | `id`, `sharedStyle`                                                                                                                                                                                                                |
+| `upsertSwatch`      | `upsert_swatch`       | `name`, `color`                                                                                                                                                                                                                    |
+| `upsertSharedStyle` | `upsert_shared_style` | `kind`, `name`, `fromLayerId`, `style`, `textStyle`                                                                                                                                                                                |
+| `deleteLayer`       | `delete_layer`        | `id` or `ids`, `force`                                                                                                                                                                                                             |
+| `createPage`        | `create_page`         | `name`                                                                                                                                                                                                                             |
+| `updatePage`        | `update_page`         | `id`, `name`                                                                                                                                                                                                                       |
+| `deletePage`        | `delete_page`         | `id`, `force`                                                                                                                                                                                                                      |
 
 These tools do not call the plugin:
 
@@ -105,7 +105,8 @@ Assigning a library text style with `syncWithSharedStyle` links the style withou
 
 - `name`, `frame`, `hidden`, `style`, `textStyle`, and `sharedStyle` for every kind
 - `cornerRadius` for `rectangle`
-- `text` and `fixedWidth` for `text`. A text node with a frame width gets a fixed width unless `fixedWidth` is false.
+- `text`, `fixedWidth`, and `lineSpacing` for `text`. A text node with a frame width gets a fixed width unless `fixedWidth` is false. `lineSpacing` is `natural`, `system`, `variable`, or `constantBaseline`.
+- `path` for `path`, as SVG path data in the parent's coordinates. The layer's frame fits the path, and a `frame` moves or resizes it with only the keys given.
 - `svg` for `svg`, as SVG markup. The frame width and height are written onto the root `<svg>` tag, so the drawing scales to that size.
 - `image` for `image`, as an absolute path to an image file
 - `symbol` and `overrides` for `symbol`
@@ -114,7 +115,7 @@ Assigning a library text style with `syncWithSharedStyle` links the style withou
 - the layout fields `smartLayout` for `group`, and `rotation`, `flipHorizontal`, and `flipVertical` for every kind
 - `flow` and `exportFormats` for every kind, and `flowStartPoint` for `artboard`
 
-The kinds are `artboard`, `rectangle`, `oval`, `text`, `group`, `symbol`, `svg`, and `image`. An artboard node needs a page as its parent. Child frames are relative to their parent, and each group shrinks to fit its children once they are all created. If any node fails, `build` removes everything it created in that call.
+The kinds are `artboard`, `rectangle`, `oval`, `triangle`, `polygon`, `star`, `path`, `text`, `group`, `symbol`, `svg`, and `image`. An artboard node needs a page as its parent. Child frames are relative to their parent, and each group shrinks to fit its children once they are all created. If any node fails, `build` removes everything it created in that call.
 
 ## Write ops
 
@@ -147,7 +148,13 @@ An artboard takes a single color fill, which the plugin writes to the artboard's
 
 Assigning `style.borderOptions` in Sketch's API resets every key left out to its default, so the plugin sets each key that is given and leaves the others unchanged.
 
-`textStyle` also takes `textUnderline` and `textStrikethrough`, which are `none`, `single`, `double`, or `thick`.
+`textStyle` also takes `textUnderline` and `textStrikethrough`, which are `none`, `single`, `double`, or `thick`, and `fontStretch`, which is `compressed`, `condensed`, `narrow`, `expanded`, or `poster`.
+
+`textStyle.fontAxes` sets the axes of a variable font by name, such as `{ "Weight": 700, "Width": 80 }`. The plugin refuses a font that is not variable, an axis the font does not have, and a value outside the axis range. Set `fontFamily` in the same request to switch to the font first.
+
+### Paths
+
+`updateLayer` takes `path` to replace the points of a shape path whose `shapeType` is `Custom`, such as a `path` layer or a shape from an SVG. The frame moves to fit the new path. Rectangles, ovals, and the other preset shapes refuse `path`.
 
 ### Text alignment
 
@@ -205,8 +212,8 @@ Each layer has `id`, `name`, `type`, and `frame`. These keys appear only when th
 - `children`, or `childCount` with `truncated: true` on the root when the depth limit or the 2000-layer limit cut the tree
 - `hidden`, `locked`, `rotation`, `flippedHorizontally`, `flippedVertically`
 - `smartLayout` for groups and symbol masters
-- `shapeType` and `cornerRadius` for shape paths
-- `text`, `textStyle`, and `fixedWidth` for text layers, where `alignment` is left out when it is `left` and `verticalAlignment` is left out when it is `top`
+- `shapeType` and `cornerRadius` for shape paths, and for a `Custom` shape path, `path` as SVG path data when it is 2000 characters or shorter, and `closed: false` when the path is open. Export a longer path as SVG with `export`.
+- `text`, `textStyle`, `fixedWidth`, and `lineSpacing` for text layers, where `lineSpacing` is left out when it is `natural`, `textStyle` has `fontAxes` for a variable font, where `alignment` is left out when it is `left` and `verticalAlignment` is left out when it is `top`
 - `style` with `opacity`, `fills`, `borders`, `borderOptions`, `shadows`, `innerShadows`, `blur`, and `blendingMode`. A color linked to a swatch also has `swatch`, a gradient fill has `gradient` and `stops`, and an image fill is `{ "image": true }`. `borderOptions` and `blendingMode` appear only when they differ from Sketch's defaults.
 - `sharedStyle` with the shared style name
 - `symbol`, `symbolId`, and `overrides` for symbol instances, where `overrides` lists only overrides changed from the default, and a `fillColor` value is `{ "color": "#rrggbbaa" }` with `swatch` when it is linked to one

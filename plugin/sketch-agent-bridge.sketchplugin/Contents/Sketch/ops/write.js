@@ -11,6 +11,8 @@ const {
 	setCornerRadius,
 	setOrder,
 	setFixedWidth,
+	setLineSpacing,
+	setPath,
 	applyLayout,
 	applyPrototypeAndExport,
 	linkSharedStyle,
@@ -49,6 +51,7 @@ function updateLayer(args, request) {
 	if (args.parentId !== undefined) setParent(document, layer, args.parentId)
 	if (args.hidden !== undefined) layer.hidden = args.hidden
 	if (args.locked !== undefined) layer.locked = args.locked
+	if (args.path !== undefined) setPath(layer, args.path)
 	if (args.frame) setFrame(layer, args.frame)
 	if (args.text !== undefined) {
 		if (layer.type !== 'Text') throw new Error('Only text layers have text')
@@ -70,6 +73,7 @@ function updateLayer(args, request) {
 	applyLayout(layer, args)
 	applyPrototypeAndExport(document, layer, args)
 	if (args.fixedWidth !== undefined) setFixedWidth(layer, args.fixedWidth)
+	if (args.lineSpacing !== undefined) setLineSpacing(layer, args.lineSpacing)
 	if (args.order !== undefined) setOrder(layer, args.order)
 	const deferRender = args.overrides !== undefined || args.symbol !== undefined
 	return deferRender ? deferredResult(document, layer, args) : result(document, layer, args, request)
