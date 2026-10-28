@@ -24,8 +24,13 @@ import { BridgeError, type SketchBridge } from './sketch.ts'
 
 const statusSchema = z.object({
 	selectedDocumentId: z.string().nullable(),
-	documents: z.array(z.object({ id: z.string(), name: z.string(), path: z.string().nullable() })),
+	documents: z.array(
+		z.object({ id: z.string(), name: z.string(), path: z.string().nullable(), undoStuck: z.boolean().optional() })
+	),
 })
+
+export const UNDO_STUCK_WARNING =
+	'Warning: Sketch has stopped recording undo history for this document, so Cmd+Z cannot undo this edit. Restart Sketch to fix it.'
 
 export async function callWrite(
 	bridge: SketchBridge,
@@ -55,6 +60,7 @@ export async function callWrite(
 		}
 		const result = await replyResult(reply)
 		if (backup) result.content.unshift({ type: 'text', text: `Backed up ${document.path} to ${backup}` })
+		if (document.undoStuck) result.content.unshift({ type: 'text', text: UNDO_STUCK_WARNING })
 		return result
 	} catch (error) {
 		return errorResult(error)

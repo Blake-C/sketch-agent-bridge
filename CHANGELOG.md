@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Added a `sync_library_item` tool that syncs or unlinks library symbols and shared styles.
 - Added an `update_library` tool that adds a library or turns one on or off, and `includeDisabled` in `list_libraries`.
 - Added `sharedStyleOutOfSync` to layer specs.
+- Added a warning on write replies when Sketch has stopped recording undo history for the document, and `undoStuck` in `sketch_status`.
 
 ## [0.3.0] - 2026-10-27
 

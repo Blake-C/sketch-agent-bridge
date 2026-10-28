@@ -29,4 +29,13 @@ function documentName(document) {
 	return String(document.sketchObject.displayName())
 }
 
-module.exports = { resolveDocument, findLayer, findPage, documentName }
+// Sketch 88.1 can leave a document's history maker partway through a moment, and then no edit becomes an undo step until Sketch restarts.
+function undoIsStuck(document) {
+	try {
+		return Boolean(document.sketchObject.historyMaker().isMakingHistory())
+	} catch {
+		return false
+	}
+}
+
+module.exports = { resolveDocument, findLayer, findPage, documentName, undoIsStuck }

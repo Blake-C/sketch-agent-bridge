@@ -5,9 +5,9 @@ import path from 'node:path'
 import { test } from 'node:test'
 import { Backups } from '../src/backup.ts'
 import { SketchBridge, type Runner } from '../src/sketch.ts'
-import { callWrite } from '../src/write-tools.ts'
+import { UNDO_STUCK_WARNING, callWrite } from '../src/write-tools.ts'
 
-type Document = { id: string; name: string; path: string | null }
+type Document = { id: string; name: string; path: string | null; undoStuck?: boolean }
 
 async function setup(documents: Document[]) {
 	const bridgeDir = await mkdtemp(path.join(tmpdir(), 'write-test-'))
@@ -49,6 +49,18 @@ test('callWrite backs up the document once, then runs the op on that document', 
 	assert.equal(backupsMade.length, 1)
 	assert.equal(await readFile(path.join(bridgeDir, 'backups', backupsMade[0]), 'utf8'), 'zip')
 	assert.deepEqual(calls[1], { op: 'createArtboard', args: { width: 100, height: 100, documentId: 'D1' } })
+})
+
+test('callWrite warns when Sketch has stopped recording undo history', async () => {
+	const documentPath = await sketchFile()
+	const stuck = await setup([{ id: 'D1', name: 'System', path: documentPath, undoStuck: true }])
+	const healthy = await setup([{ id: 'D1', name: 'System', path: documentPath }])
+
+	const warned = await callWrite(stuck.bridge, stuck.backups, 'createPage', { name: 'P' })
+	const quiet = await callWrite(healthy.bridge, healthy.backups, 'createPage', { name: 'P' })
+
+	assert.equal(firstText(warned), UNDO_STUCK_WARNING)
+	assert.ok(quiet.content.every(block => block.type !== 'text' || block.text !== UNDO_STUCK_WARNING))
 })
 
 test('callWrite refuses unsaved documents without running the op', async () => {

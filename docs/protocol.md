@@ -131,6 +131,7 @@ The kinds are `artboard`, `rectangle`, `oval`, `triangle`, `polygon`, `star`, `p
 - Every write op refuses a document that has never been saved.
 - Before the first write op on a document in a server session, the server runs `status` to find the document's file and copies it to `~/.sketch-agent-bridge/backups/<name>-<timestamp>.sketch`. The copy is of the file on disk, so edits made in Sketch since the last save are not in it.
 - Each write op is one step in Sketch's undo history, so Cmd+Z in Sketch undoes the whole op.
+- Sketch 88.1 can stop recording a document's undo history, for manual edits as well as plugin edits, until Sketch restarts. `status` then reports `undoStuck: true` for that document, which it reads from `isMakingHistory()` on the document's history maker. The server puts a warning at the top of every write reply for that document.
 - Layers created by a write op get the layer setting `createdByAgent`, which `deleteLayer` checks unless `force` is true.
 - Changing a text layer's text keeps its name when the name was set to something other than the old text.
 - Swapping an instance to another symbol renames it to the new symbol, unless the instance had a name of its own.

@@ -1,5 +1,5 @@
 const sketch = require('sketch')
-const { resolveDocument, findLayer, findPage, documentName } = require('../document.js')
+const { resolveDocument, findLayer, findPage, documentName, undoIsStuck } = require('../document.js')
 const { layerSpec, swatchNames, frameSpec } = require('../spec.js')
 const { exportLayers } = require('../export.js')
 
@@ -15,6 +15,7 @@ function status() {
 				path: document.path ? String(document.path) : null,
 				selectedPage: document.selectedPage ? document.selectedPage.name : null,
 				selectionCount: document.selectedLayers.length,
+				undoStuck: undoIsStuck(document) || undefined,
 			})),
 		},
 	}
