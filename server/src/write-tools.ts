@@ -211,7 +211,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Detach symbol',
 			description:
-				'Replaces a symbol instance with a group of its layers, keeping its overrides. Instances placed by hand need force: true.',
+				'Replaces a symbol instance with a group of its layers, keeping its overrides. Instances an agent did not create need force: true.',
 			inputSchema: {
 				documentId,
 				id: z.string(),

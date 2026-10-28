@@ -150,7 +150,7 @@ export function registerReadTools(server: McpServer, bridge: SketchBridge) {
 		{
 			title: 'Reveal layer',
 			description:
-				"Shows a layer in Sketch: switches to the layer's page, selects the layer, and scrolls the canvas to it. Changes only the selection and view.",
+				"Switches to the layer's page in Sketch, selects the layer, and scrolls the canvas to it. Changes only the selection and view.",
 			inputSchema: { documentId, id: z.string().describe('Layer id.') },
 			annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
 		},

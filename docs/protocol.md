@@ -77,7 +77,7 @@ The reply has `total`, `truncated` when there are more than `limit` matches (def
 
 `libraries` lists the enabled libraries with `id`, `name`, `libraryType`, and `valid`. With `libraryId`, which is a library id or name, it also lists the names of the library's `symbol`, `layerStyle`, `textStyle`, and `swatch` items.
 
-There is no separate import op. When a write op looks up a symbol, shared style, or swatch by name or id and the document does not have it, the plugin searches the enabled libraries and imports the first match in the same plugin run. Sketch removes an imported library swatch from the document when no layer uses it, so an item imported in one run and used in a later run can be gone by then. `document.swatches` in Sketch's API lists only local swatches, so the plugin also reads the document's foreign swatches when it looks up a swatch.
+There is no separate import op. When a write op looks up a symbol, shared style, or swatch by name or id and the document does not have it, the plugin searches the enabled libraries and imports the first match in the same plugin run. Sketch removes an imported library swatch from the document when no layer uses it, so a swatch imported in one run and used in a later run can be gone by then. Symbols and shared styles have not been tested for this, and the plugin imports them the same way. `document.swatches` in Sketch's API lists only local swatches, so the plugin also reads the document's foreign swatches when it looks up a swatch.
 
 ## Reveal
 

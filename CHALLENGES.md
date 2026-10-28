@@ -58,6 +58,6 @@ The first version of library support had an `import_from_library` op that called
 
 Sketch removes an imported library swatch that no layer uses, so an import that runs on its own is not kept. The plugin now has no import op. When a write op names a symbol, shared style, or swatch that the document does not have, `findLocalOrImport` in `libraries.js` imports it from the first enabled library that has it, in the same run that uses it.
 
-A second problem showed up at the same time. `document.swatches` lists only the document's local swatches, so a swatch imported from a library could not be found by name even while it was in the document. `allSwatches` in `style.js` adds the local swatch of each entry in `foreignSwatches()`.
+`document.swatches` lists only the document's local swatches, so a swatch imported from a library could not be found by name even while it was in the document. `allSwatches` in `style.js` adds the local swatch of each entry in `foreignSwatches()`.
 
 The only enabled library on the test Mac had swatches and no symbols or styles, so importing symbols and shared styles through `findLocalOrImport` has not been tested against Sketch.

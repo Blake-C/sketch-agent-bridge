@@ -19,7 +19,7 @@ function byIdOrName(list, key) {
 	return list.find(item => item.id === key) || list.find(item => item.name === key)
 }
 
-// Sketch drops an imported library item that nothing in the document uses, so items are imported in the run that uses them.
+// Sketch removes an imported library swatch that no layer uses, so library items are imported in the run that uses them.
 function findLocalOrImport(document, list, key, kind, label) {
 	const local = byIdOrName(list, key)
 	if (local) return local
