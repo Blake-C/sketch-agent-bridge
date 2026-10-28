@@ -37,7 +37,9 @@ function createLayer(args, request) {
 	const parent = findLayer(document, args.parentId)
 	assertContainer(parent)
 	const layer = createNode(document, parent, args)
-	return args.overrides ? deferredResult(document, layer, args) : result(document, layer, args, request)
+	return args.overrides || args.kind === 'symbol'
+		? deferredResult(document, layer, args)
+		: result(document, layer, args, request)
 }
 
 function updateLayer(args, request) {
@@ -66,7 +68,8 @@ function updateLayer(args, request) {
 	applyPrototypeAndExport(document, layer, args)
 	if (args.fixedWidth !== undefined) setFixedWidth(layer, args.fixedWidth)
 	if (args.order !== undefined) setOrder(layer, args.order)
-	return args.overrides !== undefined ? deferredResult(document, layer, args) : result(document, layer, args, request)
+	const deferRender = args.overrides !== undefined || args.symbol !== undefined
+	return deferRender ? deferredResult(document, layer, args) : result(document, layer, args, request)
 }
 
 function applySharedStyle(args, request) {

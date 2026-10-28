@@ -61,3 +61,21 @@ Sketch removes an imported library swatch that no layer uses, so an import that 
 `document.swatches` lists only the document's local swatches, so a swatch imported from a library could not be found by name even while it was in the document. `allSwatches` in `style.js` adds the local swatch of each entry in `foreignSwatches()`.
 
 The only enabled library on the test Mac had swatches and no symbols or styles, so importing symbols and shared styles through `findLocalOrImport` has not been tested against Sketch.
+
+Note, 2026-10-27: symbols, layer styles, and text styles from Apple's iOS UI library were later imported through `findLocalOrImport`. The two entries below cover the problems that came up.
+
+## Library text styles linked without changing the text
+
+Date: 2026-10-27, Sketch 88.1 on macOS 27.2, with Apple's iOS UI library.
+
+A text layer given the library style "Title1/2 Bold/1 Light/1 Label Color/1 Left Aligned" through `sharedStyle` stayed at its old font and its 44 by 14 frame. Its layer spec named the style and reported 28 pt, because the spec reads the layer's style object, while the text itself was unchanged. A local text style on the same layer changed the font and the frame, and so did a local style made with the system font, so the font was not the cause. Calling `setSharedStyle` on the native layer did not change the text either.
+
+Copying the shared style onto the layer with `layer.style = shared.style` before linking it changed the font to the style's `.AppleSystemUIFont` at 28 pt and left the layer linked and in sync. `linkSharedStyle` in `edit.js` does this for every text layer.
+
+The style is named Bold, and the text still renders at a regular weight. The style stores `.AppleSystemUIFont` with no bold trait, and the SF Pro font files that Apple's design kit expects are not installed on this Mac.
+
+## Renders left out symbols imported from a library in the same run
+
+Date: 2026-10-27, Sketch 88.1 on macOS 27.2, with Apple's iOS UI library.
+
+A `build_layers` call that placed two switches from the iOS library returned a PNG with no switches, and an `export_layers` call right after it showed both. An `update_layer` call that swapped an instance to a library variant returned an empty PNG, and a later export showed the new variant. `build` and `createLayer` now render in a second plugin run whenever they place a symbol, and `updateLayer` does the same when it swaps the symbol.

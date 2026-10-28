@@ -27,7 +27,7 @@ The plugin writes `reply.json` into `replyDir`:
 
 On failure it writes `{ "ok": false, "error": "<message>" }`. Exported files go in `replyDir/exports/<layerId>/`. The server drops any file path outside `replyDir`, and it deletes request folders older than 24 hours.
 
-A successful reply can also carry `"render": { "ids": [...], "scale": 1 }`. The plugin sends it from `build`, `createLayer`, and `updateLayer` whenever they set overrides, because an export in the same plugin run still shows the instance's previous overrides and the size it had before Smart Layout resized it. The server then runs the `export` op in a second plugin run and returns that PNG.
+A successful reply can also carry `"render": { "ids": [...], "scale": 1 }`. The plugin sends it from `build` and `createLayer` when they place a symbol instance or set overrides, and from `updateLayer` when it sets overrides or swaps the symbol. An export in the same plugin run still shows the instance's previous overrides and the size it had before Smart Layout resized it, and it leaves out symbols imported from a library during that run. The server then runs the `export` op in a second plugin run and returns that PNG.
 
 ## Ops
 
@@ -75,9 +75,17 @@ The reply has `total`, `truncated` when there are more than `limit` matches (def
 
 ## Libraries
 
-`libraries` lists the enabled libraries with `id`, `name`, `libraryType`, and `valid`. With `libraryId`, which is a library id or name, it also lists the names of the library's `symbol`, `layerStyle`, `textStyle`, and `swatch` items.
+`libraries` lists the enabled libraries with `id`, `name`, `libraryType`, and `valid`. With `libraryId`, which is a library id or name, it also returns the library's items:
 
-There is no separate import op. When a write op looks up a symbol, shared style, or swatch by name or id and the document does not have it, the plugin searches the enabled libraries and imports the first match in the same plugin run. Sketch removes an imported library swatch from the document when no layer uses it, so a swatch imported in one run and used in a later run can be gone by then. Symbols and shared styles have not been tested for this, and the plugin imports them the same way. `document.swatches` in Sketch's API lists only local swatches, so the plugin also reads the document's foreign swatches when it looks up a swatch.
+- `counts`, with the number of `symbol`, `layerStyle`, `textStyle`, and `swatch` items
+- `items`, with up to `limit` names of each kind (default 50)
+- `matches`, with the number of names of each kind that passed the filters
+
+`kind` lists only one kind of item, and `search` keeps names that contain every word in it, case-insensitive. Apple's iOS UI library has 2418 symbols and 816 text styles, and listing every name in it returned about 211 KB of JSON, so the names are capped.
+
+There is no separate import op. When a write op looks up a symbol, shared style, or swatch by name or id and the document does not have it, the plugin searches the enabled libraries and imports the first match in the same plugin run. Sketch removes an imported library swatch from the document when no layer uses it, so a swatch imported in one run and used in a later run can be gone by then. Symbols and shared styles are imported the same way. A library symbol brings the nested symbols it uses with it, and `symbols` reports each one with `library` and no `page`.
+
+Assigning a library text style with `syncWithSharedStyle` links the style without changing the text layer's font, size, or frame, so for a text layer the plugin first copies the shared style onto the layer with `layer.style = shared.style` and then links it. `document.swatches` in Sketch's API lists only local swatches, so the plugin also reads the document's foreign swatches when it looks up a swatch.
 
 ## Reveal
 

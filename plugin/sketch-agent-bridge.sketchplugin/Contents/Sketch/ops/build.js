@@ -19,7 +19,7 @@ function build(args, request) {
 	const refs = {}
 	const roots = []
 	let count = 0
-	let setOverrides = false
+	let deferRender = false
 
 	function make(container, node, isRoot) {
 		count++
@@ -27,7 +27,7 @@ function build(args, request) {
 		const layer = createNode(document, container, node)
 		if (isRoot) roots.push(layer)
 		if (node.ref) refs[node.ref] = layer.id
-		if (node.overrides) setOverrides = true
+		if (node.overrides || node.kind === 'symbol') deferRender = true
 		const children = node.children || []
 		if (children.length > 0) {
 			if (!PARENT_KINDS.includes(node.kind)) throw new Error('Only groups and artboards can have children')
@@ -47,7 +47,7 @@ function build(args, request) {
 	const shown = roots.length === 1 || parent.type === 'Page' ? roots[0] : parent
 	const options = Object.assign({ render: 'artboard' }, args)
 	const reply = { result: { created: count, roots: roots.map(summary), refs } }
-	if (setOverrides) return Object.assign(reply, { files: [], render: renderRequest(shown, options) })
+	if (deferRender) return Object.assign(reply, { files: [], render: renderRequest(shown, options) })
 	return Object.assign(reply, { files: renderFiles(shown, options, request) })
 }
 

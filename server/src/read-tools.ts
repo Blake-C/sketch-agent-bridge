@@ -135,10 +135,19 @@ export function registerReadTools(server: McpServer, bridge: SketchBridge) {
 		{
 			title: 'List libraries',
 			description:
-				'Lists the enabled Sketch libraries. With libraryId, also lists the names of its symbols, layer styles, text styles, and swatches. Use those names anywhere a symbol, shared style, or swatch is asked for, and the item is imported from the library when it is used.',
+				'Lists the enabled Sketch libraries. With libraryId, also counts and lists the names of its symbols, layer styles, text styles, and swatches. Large libraries have thousands of names, so narrow the list with search and kind. Use those names anywhere a symbol, shared style, or swatch is asked for, and the item is imported from the library when it is used.',
 			inputSchema: {
 				documentId,
 				libraryId: z.string().optional().describe('Library id or name.'),
+				kind: z
+					.enum(['symbol', 'layerStyle', 'textStyle', 'swatch'])
+					.optional()
+					.describe('List only this kind of item. Counts for every kind are always returned.'),
+				search: z
+					.string()
+					.optional()
+					.describe('Words that each listed name must contain, case-insensitive, such as "toggle light".'),
+				limit: z.number().int().min(1).max(500).optional().describe('Most names per kind. Default 50.'),
 			},
 			annotations: readOnly,
 		},

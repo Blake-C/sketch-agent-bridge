@@ -12,14 +12,16 @@ All notable changes to this project will be documented in this file.
 - Added rotation, flips, and stacking order to `update_layer` and layer nodes.
 - Added inner shadows, blur, blend modes, and border dashes, line caps, joins, and arrowheads to `style`.
 - Added underline and strikethrough to `textStyle`, and a `fixedWidth` setting for text layers.
-- Added a `list_libraries` tool, and symbols, shared styles, and swatches from enabled libraries are imported when a write op names them.
+- Added a `list_libraries` tool with `search`, `kind`, and `limit` filters, and symbols, shared styles, and swatches from enabled libraries are imported when a write op names them.
 - Added prototype links, flow start points, and export presets to `update_layer` and layer nodes.
 - Added a `detach_symbol` tool and a `reveal_layer` tool.
 
 ### Fixed
 
 - Fixed agents being able to change overrides that the symbol master marks as not editable.
-- Fixed `build_layers` and `create_layer` renders showing symbol instances before their overrides and Smart Layout resize.
+- Fixed `build_layers` and `create_layer` renders showing symbol instances before their overrides and Smart Layout resize, and leaving out symbols just imported from a library.
+- Fixed `update_layer` renders leaving out a symbol that a swap just imported from a library.
+- Fixed library text styles linking to a text layer without changing its font.
 
 ## [0.2.0] - 2026-10-27
 

@@ -125,6 +125,8 @@ function linkSharedStyle(document, layer, key) {
 	const shared = isText
 		? findLocalOrImport(document, list, key, 'textStyle', 'text style')
 		: findLocalOrImport(document, list, key, 'layerStyle', 'layer style')
+	// syncWithSharedStyle leaves a text layer's font unchanged when the text style comes from a library, so the style is copied first.
+	if (isText) layer.style = shared.style
 	layer.sharedStyle = shared
 	layer.style.syncWithSharedStyle(shared)
 }
@@ -265,7 +267,7 @@ function result(document, layer, args, request) {
 	}
 }
 
-// An export in the same plugin run still shows an instance's previous overrides and size, so the server renders it in a second run.
+// An export in the same plugin run still shows an instance's previous overrides and size, and leaves out symbols imported from a library in that run, so the server renders it in a second run.
 function renderRequest(layer, args) {
 	const target = renderTarget(layer, args.render || 'layer')
 	return target ? { ids: [target.id], scale: args.scale || 1 } : undefined
