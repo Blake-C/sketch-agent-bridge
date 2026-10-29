@@ -55,6 +55,7 @@ All notable changes to this project will be documented in this file.
 - Fixed SVG layers shifting up and to the left when the drawing did not fill its viewBox. The drawing now sits where it does in the viewBox.
 - Fixed layer specs reporting `breaksMask: true` on artboards and symbol masters. Sketch 88.1 set the native flag on every artboard and symbol master in the test document, and they cannot sit in a group with a mask, so the spec now leaves `breaksMask` out for pages, artboards, and symbol masters.
 - Fixed `get_layer` returning the points of every part of a compound shape, which reached about 95,000 characters for a dotted map. A shape with more than 20 parts now reports `childCount` instead.
+- Fixed the server and plugin reporting version 0.2.0. The server now reads its version from `package.json`, and a test checks that the plugin manifest matches it.
 
 ## [0.3.0] - 2026-10-27
 

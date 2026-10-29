@@ -3,7 +3,7 @@
 	"identifier": "com.digitalblake.sketch-agent-bridge",
 	"description": "Lets AI agents read and edit the open Sketch document through a local MCP server.",
 	"author": "Blake Cerecero",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"compatibleVersion": 3,
 	"bundleVersion": 1,
 	"disableCocoaScriptPreprocessor": true,
