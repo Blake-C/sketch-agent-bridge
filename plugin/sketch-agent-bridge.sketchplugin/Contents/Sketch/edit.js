@@ -3,7 +3,7 @@ const Settings = require('sketch/settings')
 const { resolveDocument, findLayer } = require('./document.js')
 const { layerSpec, swatchNames, frameSpec, resizingOf, RESIZING_EDGES, BOOLEAN_OPERATIONS } = require('./spec.js')
 const { exportLayers } = require('./export.js')
-const { applyStyle, loadImage, nativeColor, isColorValue } = require('./style.js')
+const { applyStyle, assertHasStyle, loadImage, nativeColor, isColorValue } = require('./style.js')
 const { findLocalOrImport } = require('./libraries.js')
 const { splitSubpaths } = require('./path.js')
 const { setLayoutGrid, setGrid } = require('./grids.js')
@@ -291,6 +291,7 @@ function applyPrototypeAndExport(document, layer, input) {
 }
 
 function linkSharedStyle(document, layer, key) {
+	assertHasStyle(layer)
 	const isText = layer.type === 'Text'
 	const list = isText ? document.sharedTextStyles : document.sharedLayerStyles
 	const shared = isText
@@ -471,6 +472,8 @@ function createNode(document, parent, node) {
 	} else if (node.kind === 'hotspot') {
 		if (!node.flow) throw new Error('A hotspot needs a flow to an artboard or "back"')
 		layer = new sketch.HotSpot({ parent, frame: rectangle })
+	} else if (node.kind === 'slice') {
+		layer = new sketch.Slice({ parent, frame: rectangle })
 	} else if (node.kind === 'image') {
 		layer = new sketch.Image({ parent, image: loadImage(node.image), frame: rectangle })
 	} else if (node.kind === 'svg') {

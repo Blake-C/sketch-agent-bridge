@@ -214,7 +214,12 @@ function warnOnFontSubstitution(layer, textStyle) {
 	}
 }
 
+function assertHasStyle(layer) {
+	if (!layer.style) throw new Error('A ' + layer.type + ' layer has no style')
+}
+
 function applyStyle(document, layer, style, textStyle) {
+	if (style || textStyle) assertHasStyle(layer)
 	if (style) {
 		if (style.fills && layer.type === 'Artboard') {
 			setArtboardBackground(document, layer, style.fills)
@@ -252,6 +257,7 @@ function applyStyle(document, layer, style, textStyle) {
 
 module.exports = {
 	applyStyle,
+	assertHasStyle,
 	resolveColor,
 	hexToMSColor,
 	nativeColor,
