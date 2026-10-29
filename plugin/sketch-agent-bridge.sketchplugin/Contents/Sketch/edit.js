@@ -464,6 +464,9 @@ function createNode(document, parent, node) {
 		layer = new sketch.Shape({ layers: [] })
 		layer.parent = parent
 		layer.frame = rectangle
+	} else if (node.kind === 'hotspot') {
+		if (!node.flow) throw new Error('A hotspot needs a flow to an artboard or "back"')
+		layer = new sketch.HotSpot({ parent, frame: rectangle })
 	} else if (node.kind === 'image') {
 		layer = new sketch.Image({ parent, image: loadImage(node.image), frame: rectangle })
 	} else if (node.kind === 'svg') {

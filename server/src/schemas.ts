@@ -304,10 +304,11 @@ const layerKinds = [
 	'symbol',
 	'svg',
 	'image',
+	'hotspot',
 ] as const
 
 const layerFields = {
-	kind: z.enum(layerKinds),
+	kind: z.enum(layerKinds).describe('"hotspot" is an invisible clickable area for a prototype, and it needs a flow.'),
 	name: z.string().optional(),
 	frame: frame
 		.optional()
@@ -367,7 +368,7 @@ export const buildNode: z.ZodType<BuildNode> = z.lazy(() =>
 		kind: z
 			.enum([...layerKinds, 'shape'])
 			.describe(
-				'"shape" combines its children, which must be shapes or paths, into one shape with boolean operations.'
+				'"hotspot" is an invisible clickable area for a prototype, and it needs a flow. "shape" combines its children, which must be shapes or paths, into one shape with boolean operations.'
 			),
 		ref: z.string().optional().describe('A label. The reply maps each ref to the created layer id.'),
 		booleanOperation: booleanOperation.optional().describe('For a child of a shape node. Default none.'),

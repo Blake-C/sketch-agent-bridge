@@ -141,3 +141,7 @@ test('find takes a shared style and a swatch', () => {
 	const schema = z.object(findInput)
 	assert.ok(schema.safeParse({ sharedStyle: 'Button/Primary', swatch: 'ACF/Blue' }).success)
 })
+
+test('layer nodes take the hotspot kind', () => {
+	assert.ok(layerInput.safeParse({ kind: 'hotspot', flow: { target: 'back' } }).success)
+})

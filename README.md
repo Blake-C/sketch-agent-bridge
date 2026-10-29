@@ -21,7 +21,7 @@ An agent connected to the MCP server can:
 - turn layers into symbols, place instances, set their overrides, swap them between symbols, and detach them
 - turn artboards into symbols and back, and see which layers no longer match their shared style
 - use symbols, shared styles, and swatches from enabled libraries by name, sync or unlink them, and add libraries or turn them on and off
-- link layers to artboards for prototypes, and add export presets
+- link layers and hotspots to artboards for prototypes, and add export presets
 - switch Sketch to a layer's page, select layers, and scroll the canvas to a layer
 - fill layers with colors, gradients, or images, and add inner shadows, blurs, blend modes, dashed borders, and arrowheads
 - add or change swatches and shared styles
