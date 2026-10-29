@@ -28,6 +28,7 @@ These commands all run through Docker:
 - `docker compose run --rm dev pnpm build`
 - `docker compose run --rm dev pnpm test`
 - `docker compose run --rm dev pnpm lint`
+- `docker compose run --rm dev pnpm check`, which runs lint, typecheck, and test
 - `docker compose run --rm dev pnpm format`
 - `docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:latest git /repo`
 

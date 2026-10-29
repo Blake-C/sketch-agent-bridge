@@ -39,6 +39,7 @@ All notable changes to this project will be documented in this file.
 - Added a `hotspot` layer kind to `build_layers` and `create_layer`, which makes an invisible clickable area with a prototype link.
 - Added `sharedStyle` and `swatch` to `find_layers`, which find the layers linked to a shared style or using a swatch.
 - Added `orientation` and `color` to `fetch_images`, and `warnings` to its reply for a filter that `get_images` dropped because no photo matched it.
+- Added a `pnpm check` script that runs lint, typecheck, and test.
 
 ### Changed
 
