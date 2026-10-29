@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - Added `textStyle` to `build_layers` and to its group and artboard nodes, which sets default text style keys for the text nodes inside them.
 - Added `copyOf` to `build_layers` nodes, which copies an earlier node in the same call by its `ref` and applies the fields given on the copy.
+- Added `region` to `export_layers`, which crops each PNG to a rectangle measured from the layer's top-left corner.
 - Added a test that fails when `tools/list` grows past 80,000 characters.
 - Added an `install_google_font` tool, which downloads a family from Google Fonts into `~/Library/Fonts` as static TrueType files, registers them so Sketch can use them without a restart, and adds the family to a "Google Fonts" collection in Font Book.
 - Added a `list_fonts` tool, which lists the installed font families, the families in the "Google Fonts" collection, and each face's style and weight on the Sketch scale.
@@ -73,6 +74,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Fixed exported PNG names, which showed a different scale than the one used, such as `@1x` for an export at 1.5. Each PNG is now named with the scale that was asked for.
 - Fixed `fetch_images` reporting a dropped filter as the reason it failed. `get_images` prints its `Warning:` lines before the line that says no photos matched, and the error kept only the first line. The error now skips the warnings.
 - Fixed path layers keeping only the first subpath of path data with several movetos, which turned five grid lines into one. Path data with several subpaths now becomes a compound shape with one part per subpath, and `update_layer` can replace the parts of that shape.
 - Fixed `build_layers` placing layers in the wrong spot when a group held a text layer with a `textStyle`. Sketch refit the group as soon as the text changed size, and every layer built after it was offset by the group's new origin.

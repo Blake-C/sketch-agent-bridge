@@ -84,6 +84,7 @@ function exportOp(args, request) {
 		files: exportLayers(layers, request.replyDir + '/exports', args.formats, args.scale || 1, {
 			trimmed: args.trimmed,
 			background: args.background,
+			region: args.region,
 		}),
 	}
 }

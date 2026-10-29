@@ -65,7 +65,14 @@ function listDir(path) {
 	return result
 }
 
+function moveFile(from, to) {
+	const manager = NSFileManager.defaultManager()
+	if (manager.fileExistsAtPath(to)) manager.removeItemAtPath_error(to, null)
+	if (!manager.moveItemAtPath_toPath_error(from, to, null)) throw new Error('Could not move ' + from + ' to ' + to)
+}
+
 module.exports = {
+	moveFile,
 	BRIDGE_DIR,
 	standardize,
 	isInsideBridgeDir,

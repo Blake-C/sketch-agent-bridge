@@ -3,6 +3,8 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 const cocoaGlobals = {
+	CGImageCreateWithImageInRect: 'readonly',
+	CGRectMake: 'readonly',
 	CTFontManagerRegisterFontsForURL: 'readonly',
 	framework: 'readonly',
 	MOPointer: 'readonly',
@@ -12,6 +14,8 @@ const cocoaGlobals = {
 	NSImage: 'readonly',
 	NSTextAlignmentCenter: 'readonly',
 	NSArray: 'readonly',
+	NSBitmapImageRep: 'readonly',
+	NSData: 'readonly',
 	NSFileManager: 'readonly',
 	NSFontCollection: 'readonly',
 	NSFontDescriptor: 'readonly',
@@ -23,6 +27,7 @@ const cocoaGlobals = {
 	NSMakeRange: 'readonly',
 	NSPasteboard: 'readonly',
 	NSPasteboardTypeString: 'readonly',
+	NSPNGFileType: 'readonly',
 	NSSelectorFromString: 'readonly',
 	NSString: 'readonly',
 	NSURL: 'readonly',

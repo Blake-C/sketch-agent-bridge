@@ -249,6 +249,17 @@ export function registerReadTools(server: McpServer, bridge: SketchBridge) {
 				background: hex
 					.optional()
 					.describe('Color painted behind the content of a PNG. SVG and JSON ignore it.'),
+				region: z
+					.object({
+						x: z.number(),
+						y: z.number(),
+						width: z.number().positive(),
+						height: z.number().positive(),
+					})
+					.optional()
+					.describe(
+						"Crops each PNG to this rectangle, measured from the layer's top-left corner, so one section of a tall artboard can be checked at full scale. It turns trimmed off."
+					),
 			},
 			annotations: readOnly,
 		},

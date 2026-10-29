@@ -129,6 +129,10 @@ Assigning a library text style with `syncWithSharedStyle` links the style withou
 
 `export` writes each layer as `png`, `svg`, or `json` into `replyDir/exports/<layerId>/`. The server returns a PNG as an image and an SVG as its markup. JSON is the layer in Sketch's file format, which Sketch writes with `sketch.export`, and the server returns it as text when it is 100 KB or smaller and as a path otherwise. One artboard in the test document came to 510 KB of JSON.
 
+Sketch names a PNG with a scale that can differ from the one used, such as `@1x` for 1.5, so the plugin renames each PNG to `<layerId>@<scale>x.png` with the scale that was asked for.
+
+`region` crops each PNG to `{ x, y, width, height }`, measured in points from the top-left corner of the layer, so one section of a tall artboard can be checked at full scale. The plugin exports the whole layer with `trimmed` turned off, crops it with `CGImageCreateWithImageInRect`, and writes the crop over the PNG. It refuses a region that does not overlap the layer.
+
 `trimmed` and `background` change PNGs only. Sketch crops a PNG to its visible content unless `trimmed` is false, and with `false` the PNG covers the layer's whole frame. `background` is a hex color painted behind the content, and Sketch ignores it for SVG.
 
 ## Reveal
