@@ -20,6 +20,7 @@ import {
 	render,
 	style,
 	svgPath,
+	textRuns,
 	textStyle,
 } from './schemas.ts'
 import { BridgeError, type SketchBridge } from './sketch.ts'
@@ -146,7 +147,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Update layer',
 			description:
-				'Changes an existing layer: parent, name, visibility, lock, frame, text, line spacing, corner radius, path, which symbol an instance uses, symbol overrides, style, text style, smart layout, resizing, rotation, flips, masks, boolean operations, stacking order, prototype links, and export presets.',
+				'Changes an existing layer: parent, name, visibility, lock, frame, text, styled runs of text, line spacing, corner radius, path, which symbol an instance uses, symbol overrides, style, text style, smart layout, resizing, rotation, flips, masks, boolean operations, stacking order, prototype links, and export presets.',
 			inputSchema: {
 				documentId,
 				id: z.string(),
@@ -162,6 +163,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 				frame: frame.optional().describe('Only the given keys change.'),
 				relativeTo,
 				text: z.string().optional(),
+				textRuns: textRuns.optional(),
 				fixedWidth: fixedWidth.optional(),
 				lineSpacing: lineSpacing.optional(),
 				cornerRadius: z.number().min(0).optional(),

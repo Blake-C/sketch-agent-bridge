@@ -156,3 +156,12 @@ test('layer nodes take a layout grid and a square grid', () => {
 	assert.equal(node({ layoutGrid: { columns: { count: 0, gutterWidth: 24 } } }).success, false)
 	assert.equal(node({ layoutGrid: { rows: { gutterHeight: 8, rowHeightMultiplier: 1.5 } } }).success, false)
 })
+
+test('text nodes take styled runs by text or by index', () => {
+	const textRuns = [
+		{ text: 'free', fontWeight: 9, textColor: { swatch: 'ACF/Blue' } },
+		{ start: 0, length: 3, fontStyle: 'italic', textUnderline: 'single' },
+	]
+	assert.ok(node({ kind: 'text', text: 'Get it free', textRuns }).success)
+	assert.equal(node({ kind: 'text', textRuns: [{ text: 'x', fontWeight: 15 }] }).success, false)
+})

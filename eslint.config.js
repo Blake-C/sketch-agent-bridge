@@ -4,6 +4,7 @@ import tseslint from 'typescript-eslint'
 
 const cocoaGlobals = {
 	framework: 'readonly',
+	MOPointer: 'readonly',
 	MSColor: 'readonly',
 	MSLayoutGrid: 'readonly',
 	MSSimpleGrid: 'readonly',
@@ -13,6 +14,8 @@ const cocoaGlobals = {
 	NSFontItalicTrait: 'readonly',
 	NSFontManager: 'readonly',
 	NSHomeDirectory: 'readonly',
+	NSItalicFontMask: 'readonly',
+	NSMakeRange: 'readonly',
 	NSPasteboard: 'readonly',
 	NSPasteboardTypeString: 'readonly',
 	NSSelectorFromString: 'readonly',

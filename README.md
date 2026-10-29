@@ -13,6 +13,7 @@ An agent connected to the MCP server can:
 - read the document's design tokens, which are its swatches, text styles, layer styles, and symbols
 - build a whole tree of artboards, groups, shapes, paths, text, SVG drawings, and images in one call
 - edit the points of a path, and set line spacing and variable font axes on text
+- style part of a text layer, such as one bold or colored word
 - read the lines a text layer wraps into, and whether the text overflows its frame
 - edit layers, move them into other artboards, groups, or pages, lock them, group and ungroup them, and apply shared styles
 - duplicate layers, change their stacking order, rotate and flip them, and set Smart Layout on groups and symbols

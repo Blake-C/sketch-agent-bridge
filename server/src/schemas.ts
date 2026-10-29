@@ -150,6 +150,34 @@ export const textStyle = z
 	})
 	.optional()
 
+export const textRuns = z
+	.array(
+		z.object({
+			text: z
+				.string()
+				.optional()
+				.describe('The first place this text appears is styled. Use this, or start and length.'),
+			start: z.number().int().min(0).optional().describe('Index of the first character to style.'),
+			length: z.number().int().min(1).optional(),
+			fontFamily: z.string().optional(),
+			fontWeight: z
+				.number()
+				.int()
+				.min(0)
+				.max(12)
+				.optional()
+				.describe('Sketch weight scale, 5 is regular, 9 is bold.'),
+			fontSize: z.number().positive().optional(),
+			fontStyle: z.enum(['italic', 'normal']).optional(),
+			textColor: color.optional(),
+			textUnderline: lineDecoration.optional(),
+			textStrikethrough: lineDecoration.optional(),
+		})
+	)
+	.describe(
+		'For text. Styles part of the text, such as one bold word. Setting text or textStyle restyles the whole text, so runs in the same request are applied after them.'
+	)
+
 export const frame = z.object({
 	x: z.number().optional(),
 	y: z.number().optional(),
@@ -363,6 +391,7 @@ const layerFields = {
 		),
 	cornerRadius: z.number().min(0).optional(),
 	text: z.string().optional(),
+	textRuns: textRuns.optional(),
 	svg: z
 		.string()
 		.optional()

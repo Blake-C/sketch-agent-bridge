@@ -7,6 +7,7 @@ const { applyStyle, loadImage, nativeColor, isColorValue } = require('./style.js
 const { findLocalOrImport } = require('./libraries.js')
 const { splitSubpaths } = require('./path.js')
 const { setLayoutGrid, setGrid } = require('./grids.js')
+const { applyTextRuns } = require('./text.js')
 
 const DRAFTS_PAGE = 'Agent Drafts'
 const CREATED_KEY = 'createdByAgent'
@@ -497,6 +498,7 @@ function createNode(document, parent, node) {
 		applyPrototypeAndExport(document, layer, node)
 		if (node.fixedWidth !== undefined) setFixedWidth(layer, node.fixedWidth)
 		if (node.lineSpacing !== undefined) setLineSpacing(layer, node.lineSpacing)
+		if (node.textRuns) applyTextRuns(document, layer, node.textRuns)
 		if (node.overrides) setOverrides(document, layer, node.overrides)
 		if (node.hidden) layer.hidden = true
 	} catch (error) {
@@ -602,6 +604,7 @@ module.exports = {
 	fillGroup,
 	setFixedWidth,
 	setLineSpacing,
+	applyTextRuns,
 	setPath,
 	setBooleanOperation,
 	applyLayout,

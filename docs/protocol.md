@@ -120,7 +120,7 @@ Assigning a library text style with `syncWithSharedStyle` links the style withou
 
 - `name`, `frame`, `hidden`, `style`, `textStyle`, and `sharedStyle` for every kind
 - `cornerRadius` for `rectangle`
-- `text`, `fixedWidth`, and `lineSpacing` for `text`. A text node with a frame width gets a fixed width unless `fixedWidth` is false. `lineSpacing` is `natural`, `system`, `variable`, or `constantBaseline`.
+- `text`, `textRuns`, `fixedWidth`, and `lineSpacing` for `text`. A text node with a frame width gets a fixed width unless `fixedWidth` is false. `lineSpacing` is `natural`, `system`, `variable`, or `constantBaseline`.
 - `path` for `path`, as SVG path data in the parent's coordinates. The layer's frame fits the path, and a `frame` moves or resizes it with only the keys given. Sketch's `ShapePath.fromSVGPath` keeps only the first subpath, so the plugin splits path data at each moveto. Data with one subpath becomes a `ShapePath`, and data with several becomes a `Shape` that holds one `ShapePath` per subpath with no boolean operation and a nonzero fill rule, which is how Sketch imports an SVG path. A relative moveto that starts a later subpath is made absolute first, because it depends on where the previous subpath ended.
 - `svg` for `svg`, as SVG markup. The frame width and height are written onto the root `<svg>` tag, so the viewBox scales to that size. Sketch trims the empty space around imported SVG content, so the plugin adds an invisible rect the size of the viewBox, uses it to place the drawing where it sits in the viewBox, and then removes it. The layer's frame ends up the size of the drawing, which can be smaller than the requested frame. When the frame gives only a width or only a height, the plugin sets the other from the viewBox's aspect ratio. `svgFile` takes an absolute path to a `.svg` file in place of `svg`, and the plugin reads the markup from that file.
 - `image` for `image`, as an absolute path to an image file
@@ -174,6 +174,12 @@ Assigning `style.borderOptions` in Sketch's API resets every key left out to its
 ### Paths
 
 `updateLayer` takes `path` to replace the points of a shape path whose `shapeType` is `Custom`, such as a `path` layer or a shape from an SVG. The frame moves to fit the new path. Rectangles, ovals, and the other preset shapes refuse `path`. A `Shape` takes path data with any number of subpaths and replaces its parts with one shape path per subpath. A single shape path refuses path data with more than one subpath, because turning it into a `Shape` would change its id.
+
+### Text runs
+
+`textRuns` styles part of a text layer, such as one bold word, in `build`, `createLayer`, and `updateLayer`. Each run picks its characters with `text`, which styles the first place that text appears, or with `start` and `length`, which count characters the way JavaScript strings do, so an emoji can count as 2. A run takes `fontFamily`, `fontWeight`, `fontSize`, `fontStyle` (`italic` or `normal`), `textColor`, `textUnderline`, and `textStrikethrough`, and keys left out keep the style the characters already have. A swatch color stays linked to the swatch.
+
+Sketch's JavaScript API styles the whole text of a layer, so the plugin writes runs to the native attributed string with `setAttributedStringValue:`. Setting `text` gives all of the new text the style of the old first character, and setting `textStyle` restyles the whole text, so the plugin applies `textRuns` after both when they come in the same request.
 
 ### Text alignment
 
@@ -255,6 +261,7 @@ Each layer has `id`, `name`, `type`, and `frame`. These keys appear only when th
 - `booleanOperation` for a part of a Shape, when it is not `none`
 - `shapeType` and `cornerRadius` for shape paths, and for a `Custom` shape path, `path` as SVG path data when it is 2000 characters or shorter, and `closed: false` when the path is open. Export a longer path as SVG with `export`.
 - `lines` and `overflows` for text layers when `textLines` is true, described below
+- `textRuns` for text layers with more than one style, listing each run that differs from the layer's `textStyle`, which describes the first character. Each run has `text`, `start`, `length`, and the keys that differ, plus `swatch` when its color is linked to one. Reading the runs of the 388 text layers in the test document took 134 milliseconds.
 - `text`, `textStyle`, `fixedWidth`, and `lineSpacing` for text layers, where `lineSpacing` is left out when it is `natural`, `textStyle` has `fontAxes` for a variable font, where `alignment` is left out when it is `left` and `verticalAlignment` is left out when it is `top`
 - `style` with `opacity`, `fills`, `borders`, `borderOptions`, `shadows`, `innerShadows`, `blur`, and `blendingMode`. A color linked to a swatch also has `swatch`, a gradient fill is `{ "gradient": { "type", "from", "to", "stops" } }` in the same form `style` takes as input, and an image fill is `{ "image": true }`. `borderOptions` and `blendingMode` appear only when they differ from Sketch's defaults.
 - `sharedStyle` with the shared style name, and `sharedStyleOutOfSync: true` when the layer's style no longer matches the shared style
