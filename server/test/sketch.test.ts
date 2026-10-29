@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdir, mkdtemp, readdir, stat, utimes, writeFile } from 'node:fs/promises'
+import { chmod, mkdir, mkdtemp, readdir, stat, utimes, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
@@ -61,6 +61,7 @@ test('call runs sketchtool with an argument array and reads the reply', async ()
 		run,
 		isRunning: async () => true,
 	})
+	await chmod(bridgeDir, 0o755)
 	const { reply, dir } = await bridge.call('layer', { id: 'X' })
 
 	assert.equal(seen?.file, '/bin/sketchtool')
@@ -68,6 +69,7 @@ test('call runs sketchtool with an argument array and reads the reply', async ()
 	assert.equal(seen?.args.at(-1), '--without-activating')
 	assert.equal(seen?.args.join(' ').includes('"X"'), false)
 	assert.equal((await stat(path.join(dir, 'request.json'))).mode & 0o777, 0o600)
+	assert.equal((await stat(bridgeDir)).mode & 0o777, 0o700)
 	assert.ok(isInside(dir, path.join(bridgeDir, 'requests')))
 	assert.ok(reply.ok)
 	assert.deepEqual(reply.result, { op: 'layer', args: { id: 'X' } })

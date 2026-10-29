@@ -10,17 +10,21 @@ function isInsideBridgeDir(path) {
 	return standardize(path).startsWith(BRIDGE_DIR + '/')
 }
 
+const PRIVATE_DIR = { NSFilePosixPermissions: 0o700 }
+const PRIVATE_FILE = { NSFilePosixPermissions: 0o600 }
+
 function makeDir(path) {
 	NSFileManager.defaultManager().createDirectoryAtPath_withIntermediateDirectories_attributes_error(
 		path,
 		true,
-		null,
+		PRIVATE_DIR,
 		null
 	)
 }
 
 function writeText(path, text) {
 	NSString.stringWithString(text).writeToFile_atomically_encoding_error(path, true, NSUTF8StringEncoding, null)
+	NSFileManager.defaultManager().setAttributes_ofItemAtPath_error(PRIVATE_FILE, path, null)
 }
 
 function readText(path) {
