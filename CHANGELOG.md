@@ -44,6 +44,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Changed `fetch_images` to refuse a photo larger than 25 MB, and a download that redirects away from `images.unsplash.com`.
 - Changed the plugin to read image and SVG files only from `~/.sketch-agent-bridge/` and the folders in the new `SKETCH_AGENT_BRIDGE_ASSET_DIRS` variable. Before, an agent could read any image or SVG file on the Mac into a document.
 - Changed the server to delete folders in `images/` and `inbox/` older than 7 days, and to keep only the newest 10 backups of each document. Before, those folders grew without limit.
 - Changed the plugin to create folders with mode 0700 and write files with mode 0600, and the server to set `~/.sketch-agent-bridge` to 0700 on each request. Folders made by Send Selection could be read by other users on the Mac.
@@ -98,6 +99,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Changed `fetch_images` to refuse a photo larger than 25 MB, and a download that redirects away from `images.unsplash.com`.
 - Changed the plugin to read image and SVG files only from `~/.sketch-agent-bridge/` and the folders in the new `SKETCH_AGENT_BRIDGE_ASSET_DIRS` variable. Before, an agent could read any image or SVG file on the Mac into a document.
 - Changed the server to delete folders in `images/` and `inbox/` older than 7 days, and to keep only the newest 10 backups of each document. Before, those folders grew without limit.
 - Changed the plugin to create folders with mode 0700 and write files with mode 0600, and the server to set `~/.sketch-agent-bridge` to 0700 on each request. Folders made by Send Selection could be read by other users on the Mac.

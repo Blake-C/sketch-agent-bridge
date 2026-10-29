@@ -9,6 +9,7 @@ const FETCH_TIMEOUT_MS = 120_000
 const CONNECT_ATTEMPT_TIMEOUT_MS = 1000
 const KEY_TIMEOUT_MS = 10_000
 const MAX_ERROR_CHARS = 300
+const MAX_IMAGE_BYTES = 25 * 1024 * 1024
 const JPEG_QUALITY = '80'
 const KEYCHAIN_SERVICE = 'unsplash_access_key'
 const KEY_ENV = 'UNSPLASH_ACCESS_KEY'
@@ -229,7 +230,25 @@ async function download(deps: FetchDeps, photo: Photo, request: FetchRequest, fi
 	const type = response.headers.get('content-type') ?? ''
 	if (!type.startsWith('image/'))
 		throw new BridgeError(`Unsplash sent ${type || 'no content type'} instead of an image`)
-	await writeFile(file, new Uint8Array(await response.arrayBuffer()), { mode: 0o600 })
+	if (response.url && new URL(response.url).hostname !== IMAGE_HOST) {
+		throw new BridgeError(`Downloading a photo was redirected to ${new URL(response.url).hostname}`)
+	}
+	await writeFile(file, await readLimited(response, MAX_IMAGE_BYTES), { mode: 0o600 })
+}
+
+async function readLimited(response: Response, maxBytes: number): Promise<Uint8Array> {
+	const tooLarge = () => new BridgeError(`Unsplash sent a photo larger than ${maxBytes / 1024 / 1024} MB`)
+	if (Number(response.headers.get('content-length') ?? 0) > maxBytes) throw tooLarge()
+	const chunks: Uint8Array[] = []
+	let total = 0
+	if (response.body) {
+		for await (const chunk of response.body) {
+			total += chunk.byteLength
+			if (total > maxBytes) throw tooLarge()
+			chunks.push(chunk)
+		}
+	}
+	return Buffer.concat(chunks)
 }
 
 // Unsplash's API guidelines require a request to download_location for each photo the app uses.

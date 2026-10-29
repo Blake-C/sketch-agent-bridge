@@ -146,6 +146,35 @@ test('fetchImages refuses a download that is not an image', async () => {
 	await assert.rejects(fetchImages(await bridgeDir(), request, deps(fake.fetch)), /text\/html instead of an image/)
 })
 
+function imageFetch(response: () => Response): typeof globalThis.fetch {
+	const fake = fakeFetch([{ total: 1, results: [photo('1')] }])
+	return (async (input: URL | string, init?: RequestInit) =>
+		new URL(String(input)).hostname === 'images.unsplash.com'
+			? response()
+			: fake.fetch(input, init)) as typeof globalThis.fetch
+}
+
+test('fetchImages refuses a photo over the size limit', async () => {
+	const declared = imageFetch(
+		() => new Response('jpeg', { headers: { 'content-type': 'image/jpeg', 'content-length': '999999999' } })
+	)
+	await assert.rejects(fetchImages(await bridgeDir(), request, deps(declared)), /larger than 25 MB/)
+
+	const streamed = imageFetch(
+		() => new Response(new Uint8Array(26 * 1024 * 1024), { headers: { 'content-type': 'image/jpeg' } })
+	)
+	await assert.rejects(fetchImages(await bridgeDir(), request, deps(streamed)), /larger than 25 MB/)
+})
+
+test('fetchImages refuses a photo download redirected to another host', async () => {
+	const redirected = imageFetch(() => {
+		const response = new Response('jpeg', { headers: { 'content-type': 'image/jpeg' } })
+		Object.defineProperty(response, 'url', { value: 'https://evil.example/photo.jpg' })
+		return response
+	})
+	await assert.rejects(fetchImages(await bridgeDir(), request, deps(redirected)), /redirected to evil.example/)
+})
+
 test('fetchImages keeps the photos that downloaded and warns about one that failed', async () => {
 	const fake = fakeFetch([{ total: 2, results: [photo('1'), photo('2')] }])
 	const reset = Object.assign(new Error('socket closed'), { code: 'ECONNRESET' })
