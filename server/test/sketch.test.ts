@@ -3,7 +3,7 @@ import { chmod, mkdir, mkdtemp, readdir, stat, utimes, writeFile } from 'node:fs
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
-import { BridgeError, SketchBridge, isInside, parseReply, type Runner } from '../src/sketch.ts'
+import { BridgeError, SketchBridge, assetDirsFrom, isInside, parseReply, type Runner } from '../src/sketch.ts'
 import { requestFrom } from './helpers.ts'
 
 async function tempBridgeDir() {
@@ -41,6 +41,7 @@ test('call runs sketchtool with an argument array and reads the reply', async ()
 	const run: Runner = async (file, args) => {
 		seen = { file, args }
 		const request = requestFrom(args)
+		assert.deepEqual(request.assetDirs, ['/Users/me/Assets'])
 		await writeFile(path.join(request.replyDir, 'inside.png'), 'png')
 		await writeFile(
 			path.join(request.replyDir, 'reply.json'),
@@ -60,6 +61,7 @@ test('call runs sketchtool with an argument array and reads the reply', async ()
 		sketchtool: '/bin/sketchtool',
 		run,
 		isRunning: async () => true,
+		assetDirs: ['/Users/me/Assets'],
 	})
 	await chmod(bridgeDir, 0o755)
 	const { reply, dir } = await bridge.call('layer', { id: 'X' })
@@ -132,4 +134,9 @@ test('prune removes requests older than a day and images and inbox items older t
 	assert.deepEqual(await readdir(path.join(bridgeDir, 'requests')), ['new'])
 	assert.deepEqual(await readdir(path.join(bridgeDir, 'images')), ['recent'])
 	assert.deepEqual(await readdir(path.join(bridgeDir, 'inbox')), ['recent'])
+})
+
+test('assetDirsFrom keeps only absolute folders', () => {
+	assert.deepEqual(assetDirsFrom(undefined), [])
+	assert.deepEqual(assetDirsFrom('/a/b: relative :/c'), ['/a/b', '/c'])
 })

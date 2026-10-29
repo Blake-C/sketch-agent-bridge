@@ -48,6 +48,12 @@ claude mcp add --scope user sketch -e UNSPLASH_ACCESS_KEY=<key> -- node "$PWD/se
 
 If the server is already registered, run `claude mcp remove --scope user sketch` first. After rebuilding the server, reconnect it from `/mcp` in Claude Code or start a new session, so the new build is the one running.
 
+By default, the plugin only reads image and SVG files inside `~/.sketch-agent-bridge/`, which holds the photos from `fetch_images`. To let the agent place files from other folders, list them in `SKETCH_AGENT_BRIDGE_ASSET_DIRS`, separated by `:`:
+
+```sh
+claude mcp add --scope user sketch -e SKETCH_AGENT_BRIDGE_ASSET_DIRS="$HOME/Design/Assets:$HOME/Downloads" -- node "$PWD/server/dist/server.js"
+```
+
 Other MCP clients take the same command in their own config format:
 
 ```json

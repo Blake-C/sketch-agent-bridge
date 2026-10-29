@@ -44,6 +44,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Changed the plugin to read image and SVG files only from `~/.sketch-agent-bridge/` and the folders in the new `SKETCH_AGENT_BRIDGE_ASSET_DIRS` variable. Before, an agent could read any image or SVG file on the Mac into a document.
 - Changed the server to delete folders in `images/` and `inbox/` older than 7 days, and to keep only the newest 10 backups of each document. Before, those folders grew without limit.
 - Changed the plugin to create folders with mode 0700 and write files with mode 0600, and the server to set `~/.sketch-agent-bridge` to 0700 on each request. Folders made by Send Selection could be read by other users on the Mac.
 - Changed the server to write each request to `request.json` in the request folder and pass only the folder path to `sketchtool`. Other users on the Mac could read the request, including layer text, in the process list, and a large request could go over the system's limit on argument size.
@@ -97,6 +98,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Changed the plugin to read image and SVG files only from `~/.sketch-agent-bridge/` and the folders in the new `SKETCH_AGENT_BRIDGE_ASSET_DIRS` variable. Before, an agent could read any image or SVG file on the Mac into a document.
 - Changed the server to delete folders in `images/` and `inbox/` older than 7 days, and to keep only the newest 10 backups of each document. Before, those folders grew without limit.
 - Changed the plugin to create folders with mode 0700 and write files with mode 0600, and the server to set `~/.sketch-agent-bridge` to 0700 on each request. Folders made by Send Selection could be read by other users on the Mac.
 - Changed the server to write each request to `request.json` in the request folder and pass only the folder path to `sketchtool`. Other users on the Mac could read the request, including layer text, in the process list, and a large request could go over the system's limit on argument size.

@@ -74,6 +74,7 @@ Build the server in Docker, connect it to an agent, and optionally link the plug
 - `update_library` changes Sketch's library list for every document, outside the backup and Cmd+Z, and it can add or turn off a library but not remove one.
 - The bridge makes no network calls except through `fetch_images`, which calls `api.unsplash.com` and downloads photos from `images.unsplash.com`. The server reads the Unsplash key from the login keychain, or from `UNSPLASH_ACCESS_KEY` when the keychain has no key, and sends it only to `api.unsplash.com`.
 - Apart from the `.sketch` file that `save_document` saves, every file the bridge writes stays under `~/.sketch-agent-bridge/` on the Mac.
+- The plugin reads image and SVG files only from `~/.sketch-agent-bridge/` and the folders listed in `SKETCH_AGENT_BRIDGE_ASSET_DIRS`. The folders under `~/.sketch-agent-bridge/` can be read only by the user who owns them.
 
 ## License
 

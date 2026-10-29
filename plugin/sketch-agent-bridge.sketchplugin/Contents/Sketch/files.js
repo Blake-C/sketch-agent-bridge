@@ -10,6 +10,30 @@ function isInsideBridgeDir(path) {
 	return standardize(path).startsWith(BRIDGE_DIR + '/')
 }
 
+let assetDirs = []
+
+function resolveLinks(path) {
+	return String(NSString.stringWithString(path).stringByResolvingSymlinksInPath())
+}
+
+function setAssetDirs(dirs) {
+	assetDirs = (Array.isArray(dirs) ? dirs : [])
+		.map(String)
+		.filter(dir => dir.startsWith('/'))
+		.map(resolveLinks)
+}
+
+function assertAllowedAsset(path) {
+	const resolved = resolveLinks(String(path))
+	const allowed = [resolveLinks(BRIDGE_DIR), ...assetDirs]
+	if (!allowed.some(dir => resolved.startsWith(dir + '/'))) {
+		throw new Error(
+			path +
+				' is outside ~/.sketch-agent-bridge and the folders in SKETCH_AGENT_BRIDGE_ASSET_DIRS. Add its folder to that variable where the MCP server is registered.'
+		)
+	}
+}
+
 const PRIVATE_DIR = { NSFilePosixPermissions: 0o700 }
 const PRIVATE_FILE = { NSFilePosixPermissions: 0o600 }
 
@@ -41,4 +65,14 @@ function listDir(path) {
 	return result
 }
 
-module.exports = { BRIDGE_DIR, standardize, isInsideBridgeDir, makeDir, readText, writeText, listDir }
+module.exports = {
+	BRIDGE_DIR,
+	standardize,
+	isInsideBridgeDir,
+	setAssetDirs,
+	assertAllowedAsset,
+	makeDir,
+	readText,
+	writeText,
+	listDir,
+}

@@ -1,5 +1,8 @@
 import { z } from 'zod'
 
+const ASSET_PATH_RULE =
+	'The file must be inside ~/.sketch-agent-bridge or a folder listed in SKETCH_AGENT_BRIDGE_ASSET_DIRS.'
+
 export const documentId = z
 	.string()
 	.optional()
@@ -30,7 +33,9 @@ export const fill = z
 			}),
 		}),
 		z.object({
-			image: z.string().describe('Absolute path to an image file, such as one from fetch_images.'),
+			image: z
+				.string()
+				.describe(`Absolute path to an image file, such as one from fetch_images. ${ASSET_PATH_RULE}`),
 			mode: z.enum(['fill', 'fit', 'tile', 'stretch']).optional(),
 		}),
 	])
@@ -442,8 +447,11 @@ const layerFields = {
 		.describe(
 			'SVG markup, for kind "svg". The viewBox maps onto the frame. Given only a width or only a height, the other follows the viewBox shape. Sketch trims empty space, so the layer ends up the size of the drawing, placed where the drawing sits in the viewBox.'
 		),
-	svgFile: z.string().optional().describe('Absolute path to a .svg file, for kind "svg", used in place of svg.'),
-	image: z.string().optional().describe('Absolute path to an image file, for kind "image".'),
+	svgFile: z
+		.string()
+		.optional()
+		.describe(`Absolute path to a .svg file, for kind "svg", used in place of svg. ${ASSET_PATH_RULE}`),
+	image: z.string().optional().describe(`Absolute path to an image file, for kind "image". ${ASSET_PATH_RULE}`),
 	symbol: z
 		.string()
 		.optional()

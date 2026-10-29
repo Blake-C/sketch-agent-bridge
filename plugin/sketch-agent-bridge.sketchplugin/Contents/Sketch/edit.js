@@ -8,6 +8,7 @@ const { findLocalOrImport } = require('./libraries.js')
 const { splitSubpaths } = require('./path.js')
 const { setLayoutGrid, setGrid } = require('./grids.js')
 const { applyTextRuns } = require('./text.js')
+const { assertAllowedAsset } = require('./files.js')
 
 const DRAFTS_PAGE = 'Agent Drafts'
 const CREATED_KEY = 'createdByAgent'
@@ -407,6 +408,7 @@ function readSvgFile(path) {
 	if (!String(path).startsWith('/') || !/\.svg$/i.test(path)) {
 		throw new Error('svgFile must be an absolute path to a .svg file')
 	}
+	assertAllowedAsset(path)
 	const svg = NSString.stringWithContentsOfFile_encoding_error(path, NSUTF8StringEncoding, null)
 	if (!svg) throw new Error('Could not read the SVG at ' + path)
 	return String(svg)

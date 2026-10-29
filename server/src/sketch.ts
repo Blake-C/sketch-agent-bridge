@@ -12,6 +12,15 @@ export const PLUGIN_PATH =
 	process.env.SKETCH_AGENT_BRIDGE_PLUGIN ??
 	fileURLToPath(new URL('../../plugin/sketch-agent-bridge.sketchplugin', import.meta.url))
 
+export const ASSET_DIRS_ENV = 'SKETCH_AGENT_BRIDGE_ASSET_DIRS'
+
+export function assetDirsFrom(value: string | undefined): string[] {
+	return (value ?? '')
+		.split(':')
+		.map(dir => dir.trim())
+		.filter(dir => path.isAbsolute(dir))
+}
+
 const DEFAULT_TIMEOUT_MS = 60_000
 const DAY_MS = 24 * 60 * 60 * 1000
 const REQUEST_MAX_AGE_MS = DAY_MS
@@ -95,6 +104,7 @@ export type BridgeOptions = {
 	run?: Runner
 	isRunning?: RunningCheck
 	timeoutMs?: number
+	assetDirs?: string[]
 }
 
 export type CallResult = { reply: Reply; dir: string }
@@ -106,6 +116,7 @@ export class SketchBridge {
 	readonly run: Runner
 	readonly isRunning: RunningCheck
 	readonly timeoutMs: number
+	readonly assetDirs: string[]
 
 	constructor(options: BridgeOptions = {}) {
 		this.bridgeDir = options.bridgeDir ?? BRIDGE_DIR
@@ -114,6 +125,7 @@ export class SketchBridge {
 		this.run = options.run ?? execRunner
 		this.isRunning = options.isRunning ?? pgrepRunning
 		this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS
+		this.assetDirs = options.assetDirs ?? assetDirsFrom(process.env[ASSET_DIRS_ENV])
 	}
 
 	get requestsDir(): string {
@@ -127,7 +139,9 @@ export class SketchBridge {
 		await mkdir(dir, { recursive: true, mode: 0o700 })
 		// The plugin's Send Selection command can create the bridge folder before the server ever runs.
 		await chmod(this.bridgeDir, 0o700)
-		await writeFile(path.join(dir, 'request.json'), JSON.stringify({ op, args }), { mode: 0o600 })
+		await writeFile(path.join(dir, 'request.json'), JSON.stringify({ op, args, assetDirs: this.assetDirs }), {
+			mode: 0o600,
+		})
 		await this.run(
 			this.sketchtool,
 			[

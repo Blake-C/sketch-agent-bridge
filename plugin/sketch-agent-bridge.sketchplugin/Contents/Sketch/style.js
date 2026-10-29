@@ -1,6 +1,7 @@
 const sketch = require('sketch')
 const { findLocalOrImport } = require('./libraries.js')
 const { warn } = require('./warnings.js')
+const { assertAllowedAsset } = require('./files.js')
 
 const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'tif', 'tiff', 'webp', 'heic', 'bmp']
 const GRADIENT_TYPES = { linear: 'Linear', radial: 'Radial', angular: 'Angular' }
@@ -46,6 +47,7 @@ function loadImage(path) {
 	if (!String(path).startsWith('/') || !IMAGE_EXTENSIONS.includes(extension)) {
 		throw new Error('Images must be an absolute path to a ' + IMAGE_EXTENSIONS.join(', ') + ' file')
 	}
+	assertAllowedAsset(path)
 	const image = NSImage.alloc().initWithContentsOfFile(path)
 	if (!image) throw new Error('Could not read the image at ' + path)
 	return image
