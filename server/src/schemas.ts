@@ -412,6 +412,12 @@ export const fixedWidth = z
 	.boolean()
 	.describe('For text. true wraps text at the frame width, false makes the layer grow with its text.')
 
+export const fixedHeight = z
+	.boolean()
+	.describe(
+		'For text. true keeps the frame height and wraps at the frame width, so verticalAlignment has room to work. false makes the height follow the text again.'
+	)
+
 const layerKinds = [
 	'artboard',
 	'rectangle',
@@ -439,9 +445,10 @@ const layerFields = {
 	frame: frame
 		.optional()
 		.describe(
-			'Relative to the parent. Text with a width gets a fixed width. For kind "path", only the given keys move or resize the path.'
+			'Relative to the parent. Text with a width gets a fixed width, and text with a height gets a fixed height. For kind "path", only the given keys move or resize the path.'
 		),
 	fixedWidth: fixedWidth.optional(),
+	fixedHeight: fixedHeight.optional(),
 	lineSpacing: lineSpacing.optional(),
 	path: svgPath
 		.optional()
@@ -500,6 +507,7 @@ export const updateFields = {
 	text: z.string().optional(),
 	textRuns: textRuns.optional(),
 	fixedWidth: fixedWidth.optional(),
+	fixedHeight: fixedHeight.optional(),
 	lineSpacing: lineSpacing.optional(),
 	cornerRadius: z.number().min(0).optional(),
 	image: z

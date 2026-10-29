@@ -1,7 +1,7 @@
 const sketch = require('sketch')
 const { fromSketchAlignment, allSwatches, hexFromNative } = require('./style.js')
 const { layoutGridSpec, gridSpec } = require('./grids.js')
-const { textLinesSpec, textRunsSpec } = require('./text.js')
+const { textLinesSpec, textRunsSpec, hasFixedHeight } = require('./text.js')
 
 const DEFAULT_DEPTH = 8
 const MAX_NODES = 2000
@@ -301,7 +301,8 @@ function layerSpec(layer, options) {
 			text: isText ? node.text : undefined,
 			textStyle: isText ? textStyleSpec(node.style) : undefined,
 			textRuns: isText ? textRunsSpec(node, swatches) : undefined,
-			fixedWidth: isText && node.fixedWidth ? true : undefined,
+			fixedWidth: isText && (node.fixedWidth || hasFixedHeight(node)) ? true : undefined,
+			fixedHeight: hasFixedHeight(node) ? true : undefined,
 			lineSpacing: isText && node.lineSpacing !== 'natural' ? node.lineSpacing : undefined,
 			style: styleSpec(node.style, swatches),
 			sharedStyle: node.sharedStyle ? node.sharedStyle.name : undefined,

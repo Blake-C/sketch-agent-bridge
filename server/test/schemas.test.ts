@@ -25,6 +25,13 @@ test('layer nodes take rotation and flips', () => {
 	assert.equal(node({ rotation: '15' }).success, false)
 })
 
+test('text nodes and updates take fixedHeight as a boolean', () => {
+	assert.ok(node({ kind: 'text', fixedHeight: true }).success)
+	assert.equal(node({ kind: 'text', fixedHeight: 'yes' }).success, false)
+	const update = z.object(updateFields)
+	assert.ok(update.safeParse({ id: 'a', fixedHeight: false }).success)
+})
+
 test('updates take an image path for an image layer', () => {
 	const update = z.object(updateFields)
 	const parsed = update.safeParse({ id: 'a', image: '~/.sketch-agent-bridge/images/x/1.jpg' })

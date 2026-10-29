@@ -10,6 +10,7 @@ const {
 	setCornerRadius,
 	setOrder,
 	setFixedWidth,
+	setFixedHeight,
 	setLineSpacing,
 	applyTextRuns,
 	setPath,
@@ -122,6 +123,7 @@ function applyUpdate(document, found, args) {
 	if (args.booleanOperation !== undefined) setBooleanOperation(layer, args.booleanOperation)
 	applyPrototypeAndExport(document, layer, args)
 	if (args.fixedWidth !== undefined) setFixedWidth(layer, args.fixedWidth)
+	if (args.fixedHeight !== undefined) setFixedHeight(layer, args.fixedHeight, args.frame && args.frame.height)
 	if (args.lineSpacing !== undefined) setLineSpacing(layer, args.lineSpacing)
 	if (args.textRuns) applyTextRuns(document, layer, args.textRuns)
 	if (args.order !== undefined) setOrder(document, layer, args.order)

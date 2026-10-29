@@ -7,7 +7,7 @@ const { applyStyle, assertHasStyle, loadImage, nativeColor, isColorValue } = req
 const { findLocalOrImport } = require('./libraries.js')
 const { splitSubpaths } = require('./path.js')
 const { setLayoutGrid, setGrid } = require('./grids.js')
-const { applyTextRuns } = require('./text.js')
+const { applyTextRuns, TEXT_BEHAVIOUR_FIXED_SIZE } = require('./text.js')
 const { assertAllowedAsset, expandHome } = require('./files.js')
 
 const DRAFTS_PAGE = 'Agent Drafts'
@@ -105,6 +105,18 @@ function setSmartLayout(layer, name) {
 function setFixedWidth(layer, fixed) {
 	if (layer.type !== 'Text') throw new Error('Only text layers have a fixed width')
 	layer.fixedWidth = fixed
+}
+
+// The JS API has no fixed-size text, so the native text behaviour is set. Auto-height text shrinks to its lines, which leaves verticalAlignment nothing to align in.
+function setFixedHeight(layer, fixed, height) {
+	if (layer.type !== 'Text') throw new Error('Only text layers have a fixed height')
+	if (!fixed) {
+		layer.fixedWidth = true
+		return
+	}
+	const target = height === undefined ? layer.frame.height : height
+	layer.sketchObject.setTextBehaviour(TEXT_BEHAVIOUR_FIXED_SIZE)
+	setFrame(layer, { height: target })
 }
 
 function setLineSpacing(layer, lineSpacing) {
@@ -530,6 +542,7 @@ function createNode(document, parent, node) {
 		applyLayout(layer, node)
 		applyPrototypeAndExport(document, layer, node)
 		if (node.fixedWidth !== undefined) setFixedWidth(layer, node.fixedWidth)
+		if (node.kind === 'text' && fixedHeightOf(node)) setFixedHeight(layer, true, frame.height)
 		if (node.lineSpacing !== undefined) setLineSpacing(layer, node.lineSpacing)
 		if (node.textRuns) applyTextRuns(document, layer, node.textRuns)
 		if (node.overrides) setOverrides(document, layer, node.overrides)
@@ -540,6 +553,11 @@ function createNode(document, parent, node) {
 	}
 	tagCreated(layer)
 	return layer
+}
+
+function fixedHeightOf(node) {
+	if (node.fixedHeight !== undefined) return node.fixedHeight
+	return node.frame !== undefined && node.frame.height !== undefined && node.fixedWidth !== false
 }
 
 // The nearest container whose children are not refit around them: an artboard, symbol master, or page.
@@ -628,6 +646,7 @@ module.exports = {
 	moveInto,
 	fillGroup,
 	setFixedWidth,
+	setFixedHeight,
 	setLineSpacing,
 	applyTextRuns,
 	setPath,
