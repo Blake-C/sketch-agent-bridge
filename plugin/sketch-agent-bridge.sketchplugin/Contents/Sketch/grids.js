@@ -18,7 +18,7 @@ function totalWidth(layer, columns) {
 	return columns.totalWidth !== undefined ? columns.totalWidth : layer.frame.width
 }
 
-// Sketch's layout grid setters recalculate the values that were not set, so the total width goes in before the gutter, and Sketch works out the column width from both.
+// Sketch's layout grid setters recalculate the values that were not set, so the total width is set before the gutter width, and Sketch works out the column width from the number of columns, the total width, and the gutter width.
 function setColumns(layer, grid, columns) {
 	const total = totalWidth(layer, columns)
 	if (total - gutterCount(columns) * columns.gutterWidth <= 0) {

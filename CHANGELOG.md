@@ -43,7 +43,7 @@ All notable changes to this project will be documented in this file.
 - Fixed path layers keeping only the first subpath of path data with several movetos, which turned five grid lines into one. Path data with several subpaths now becomes a compound shape with one part per subpath, and `update_layer` can replace the parts of that shape.
 - Fixed `build_layers` placing layers in the wrong spot when a group held a text layer with a `textStyle`. Sketch refit the group as soon as the text changed size, and every layer built after it was offset by the group's new origin.
 - Fixed SVG layers shifting up and to the left when the drawing did not fill its viewBox. The drawing now sits where it does in the viewBox.
-- Fixed layer specs reporting `breaksMask: true` on every artboard and symbol master. Sketch 88.1 sets the native flag on them, and they cannot sit in a group with a mask, so the spec now leaves it out for them.
+- Fixed layer specs reporting `breaksMask: true` on artboards and symbol masters. Sketch 88.1 set the native flag on every artboard and symbol master in the test document, and they cannot sit in a group with a mask, so the spec now leaves `breaksMask` out for pages, artboards, and symbol masters.
 - Fixed `get_layer` returning the points of every part of a compound shape, which reached about 95,000 characters for a dotted map. A shape with more than 20 parts now reports `childCount` instead.
 
 ## [0.3.0] - 2026-10-27

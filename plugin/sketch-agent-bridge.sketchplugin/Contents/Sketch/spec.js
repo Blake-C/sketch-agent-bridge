@@ -7,7 +7,7 @@ const DEFAULT_DEPTH = 8
 const MAX_NODES = 2000
 const MAX_PATH_LENGTH = 2000
 const MAX_SHAPE_PARTS = 20
-// Sketch 88.1 reported every artboard and symbol master in the test document as breaking the mask chain, and neither can sit in a group with a mask.
+// Pages, artboards, and symbol masters cannot sit in a group with a mask, and Sketch 88.1 reported every artboard and symbol master in the test document as breaking the mask chain.
 const TOP_LEVEL_TYPES = ['Page', 'Artboard', 'SymbolMaster']
 const RESIZING_EDGES = {
 	pinLeft: 'Left',
