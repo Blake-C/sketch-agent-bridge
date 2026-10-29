@@ -451,6 +451,26 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 	)
 
 	server.registerTool(
+		'update_document',
+		{
+			title: 'Update document',
+			description:
+				"Changes the document's color space. sketch_status shows the current one. Changing it changes how every color in the document renders.",
+			inputSchema: {
+				documentId,
+				colorSpace: z.enum(['Unmanaged', 'sRGB', 'P3']),
+				convert: z
+					.boolean()
+					.describe(
+						'true converts every color so it looks the same in the new color space. false keeps the color values, so colors can look different.'
+					),
+			},
+			annotations: destructive,
+		},
+		write('updateDocument')
+	)
+
+	server.registerTool(
 		'save_document',
 		{
 			title: 'Save document',

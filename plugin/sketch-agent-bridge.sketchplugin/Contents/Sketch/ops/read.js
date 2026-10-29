@@ -13,6 +13,7 @@ function status() {
 				id: document.id,
 				name: documentName(document),
 				path: document.path ? String(document.path) : null,
+				colorSpace: String(document.colorSpace),
 				selectedPage: document.selectedPage ? document.selectedPage.name : null,
 				selectionCount: document.selectedLayers.length,
 				undoStuck: undoIsStuck(document) || undefined,

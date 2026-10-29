@@ -69,6 +69,7 @@ Every op takes an optional `documentId`. Without it, the op uses the front docum
 | `createPage`        | `create_page`         | `name`                                                                                                                                                                                                                                                               |
 | `updatePage`        | `update_page`         | `id`, `name`, `index`                                                                                                                                                                                                                                                |
 | `deletePage`        | `delete_page`         | `id`, `force`                                                                                                                                                                                                                                                        |
+| `updateDocument`    | `update_document`     | `colorSpace`, `convert`                                                                                                                                                                                                                                              |
 | `save`              | `save_document`       | none                                                                                                                                                                                                                                                                 |
 
 These tools do not call the plugin:
@@ -219,6 +220,10 @@ Sketch 88.1 writes text alignment with the raw values AppKit uses on Intel Macs.
 ### Pages
 
 `createPage` adds a page at the end of the document and gives it the `createdByAgent` setting. `updatePage` renames a page, and `index` moves it in the page list, where 0 is the first page and an index past the end moves it last. Sketch's JavaScript API cannot reorder pages, so the plugin calls `removePage:` and then `insertPage:atIndex:` on the native document data. The page keeps its id and layers. Taking the page out can change which page Sketch shows, so the plugin selects the page that was selected before. The reply has the page's `index` after the move. `deletePage` removes a page and every layer on it. It refuses the last page, the Symbols page unless `force` is true, and a page without the `createdByAgent` setting unless `force` is true. To switch pages, use `reveal` with a page id.
+
+### Color space
+
+`status` reports each document's `colorSpace`, which is `Unmanaged`, `sRGB`, or `P3`. `updateDocument` calls `document.changeColorSpace` with `colorSpace` and `convert`. With `convert: true`, Sketch converts every color so it looks the same in the new color space. With `convert: false`, Sketch keeps the color values, so colors can look different. The plugin refuses `colorSpace` without `convert`. Sketch's `undoManager` is null in a plugin run, so the plugin cannot check whether Cmd+Z undoes the change, and it has not been checked by hand.
 
 ### Saving
 

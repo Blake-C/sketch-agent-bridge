@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Added `colorSpace` to `sketch_status`, and an `update_document` tool that changes the document's color space.
 - Added the `json` format, `trimmed`, and `background` to `export_layers`.
 - Added `index` to `update_page`, which moves a page in the page list.
 - Added a `slice` layer kind to `build_layers` and `create_layer`, which marks an area of the canvas to export.
