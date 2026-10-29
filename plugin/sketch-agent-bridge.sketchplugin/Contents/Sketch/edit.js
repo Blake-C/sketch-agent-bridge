@@ -5,6 +5,7 @@ const { layerSpec, swatchNames, frameSpec } = require('./spec.js')
 const { exportLayers } = require('./export.js')
 const { applyStyle, loadImage, nativeColor, isColorValue } = require('./style.js')
 const { findLocalOrImport } = require('./libraries.js')
+const { splitSubpaths } = require('./path.js')
 
 const DRAFTS_PAGE = 'Agent Drafts'
 const CREATED_KEY = 'createdByAgent'
@@ -17,6 +18,8 @@ const SHAPE_KINDS = { rectangle: 'Rectangle', oval: 'Oval', triangle: 'Triangle'
 const LINE_SPACINGS = ['natural', 'system', 'variable', 'constantBaseline']
 const ORDER_MOVES = { front: 'moveToFront', back: 'moveToBack', forward: 'moveForward', backward: 'moveBackward' }
 const SVG_BOUNDS_NAME = 'sketch-agent-bridge-svg-bounds'
+const NO_BOOLEAN_OPERATION = -1
+const NONZERO_WINDING = 0
 
 function editableDocument(args) {
 	const document = resolveDocument(args)
@@ -104,14 +107,53 @@ function setLineSpacing(layer, lineSpacing) {
 	layer.lineSpacing = lineSpacing
 }
 
-function setPath(layer, path) {
-	if (layer.type !== 'ShapePath' || layer.shapeType !== 'Custom') {
-		throw new Error('Only custom shape paths, such as path layers, can take a new path')
+function subpathLayers(path) {
+	return splitSubpaths(path).map(subpath => {
+		const part = sketch.ShapePath.fromSVGPath(subpath)
+		part.sketchObject.setBooleanOperation(NO_BOOLEAN_OPERATION)
+		return part
+	})
+}
+
+// A path with several subpaths becomes a Shape holding one shape path per subpath, the way Sketch imports SVG.
+function createPathLayer(parent, path) {
+	const parts = subpathLayers(path)
+	if (parts.length === 1) {
+		parts[0].parent = parent
+		return parts[0]
 	}
-	const next = sketch.ShapePath.fromSVGPath(path)
-	layer.points = next.points
-	layer.closed = next.closed
-	layer.frame = next.frame
+	const shape = new sketch.Shape({ layers: [] })
+	shape.parent = parent
+	shape.style.sketchObject.setWindingRule(NONZERO_WINDING)
+	fillGroup(shape, parts)
+	return shape
+}
+
+function setPath(layer, path) {
+	if (layer.type === 'Shape') {
+		const origin = layer.frame
+		const previous = layer.layers.slice()
+		const parts = subpathLayers(path)
+		// Sketch deletes a group once its last child is removed, so the new parts go in before the old ones come out.
+		parts.forEach(part => moveInto(part, layer, origin.x, origin.y))
+		previous.forEach(child => child.remove())
+		layer.adjustToFit()
+		return
+	}
+	if (layer.type !== 'ShapePath' || layer.shapeType !== 'Custom') {
+		throw new Error('Only custom shape paths and compound shapes, such as path layers, can take a new path')
+	}
+	const parts = subpathLayers(path)
+	if (parts.length > 1) {
+		throw new Error(
+			'This layer holds one subpath, so it cannot take path data with ' +
+				parts.length +
+				' subpaths. Create a new path layer instead.'
+		)
+	}
+	layer.points = parts[0].points
+	layer.closed = parts[0].closed
+	layer.frame = parts[0].frame
 }
 
 function setOrder(document, layer, order) {
@@ -354,8 +396,7 @@ function createNode(document, parent, node) {
 		if (node.kind === 'rectangle' && node.cornerRadius) setCornerRadius(layer, node.cornerRadius)
 	} else if (node.kind === 'path') {
 		if (!node.path) throw new Error('A path layer needs SVG path data')
-		layer = sketch.ShapePath.fromSVGPath(node.path)
-		layer.parent = parent
+		layer = createPathLayer(parent, node.path)
 		setFrame(layer, frame)
 	} else if (node.kind === 'text') {
 		layer = new sketch.Text({ parent, text: node.text || '', frame: rectangle })

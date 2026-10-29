@@ -92,7 +92,7 @@ The reply has `total`, `truncated` when there are more than `limit` matches (def
 
 With `includeDisabled`, `libraries` lists every library Sketch knows, and each one has `enabled`.
 
-`updateLibrary` adds the `.sketch` file at `path` to Sketch's libraries, or turns the library given by `libraryId` on or off with `enabled`. Adding a file that is already a library returns the existing library. The change is to Sketch's library list for every document, not to the open document, so the server runs it without a backup and Cmd+Z does not undo it. There is no op to remove a library.
+`updateLibrary` adds the `.sketch` file at `path` to Sketch's libraries, or turns the library given by `libraryId` on or off with `enabled`. Adding a file that is already a library returns the existing library. The change applies to Sketch's library list, which every document shares, so the server runs it without a backup and Cmd+Z does not undo it. There is no op to remove a library.
 
 `syncLibraryItem` works on a symbol master, layer style, or text style that came from a library, found by id, symbol id, or name. `sync` updates it to the library's current version. `unlink` turns it into a local item with a new id, and a symbol master moves to the Symbols page. Both refuse an item that did not come from a library.
 
@@ -115,8 +115,8 @@ Assigning a library text style with `syncWithSharedStyle` links the style withou
 - `name`, `frame`, `hidden`, `style`, `textStyle`, and `sharedStyle` for every kind
 - `cornerRadius` for `rectangle`
 - `text`, `fixedWidth`, and `lineSpacing` for `text`. A text node with a frame width gets a fixed width unless `fixedWidth` is false. `lineSpacing` is `natural`, `system`, `variable`, or `constantBaseline`.
-- `path` for `path`, as SVG path data in the parent's coordinates. The layer's frame fits the path, and a `frame` moves or resizes it with only the keys given.
-- `svg` for `svg`, as SVG markup. The frame width and height are written onto the root `<svg>` tag, so the viewBox scales to that size. Sketch trims the empty space around imported SVG content, so the plugin adds an invisible rect the size of the viewBox, uses it to place the drawing where it sits in the viewBox, and then removes it. The layer's frame is the size of the drawing, not the requested frame.
+- `path` for `path`, as SVG path data in the parent's coordinates. The layer's frame fits the path, and a `frame` moves or resizes it with only the keys given. Sketch's `ShapePath.fromSVGPath` keeps only the first subpath, so the plugin splits path data at each moveto. Data with one subpath becomes a `ShapePath`, and data with several becomes a `Shape` that holds one `ShapePath` per subpath with no boolean operation and a nonzero fill rule, which is how Sketch imports an SVG path. A relative moveto that starts a later subpath is made absolute first, because it depends on where the previous subpath ended.
+- `svg` for `svg`, as SVG markup. The frame width and height are written onto the root `<svg>` tag, so the viewBox scales to that size. Sketch trims the empty space around imported SVG content, so the plugin adds an invisible rect the size of the viewBox, uses it to place the drawing where it sits in the viewBox, and then removes it. The layer's frame ends up the size of the drawing, which can be smaller than the requested frame.
 - `image` for `image`, as an absolute path to an image file
 - `symbol` and `overrides` for `symbol`
 - `children` for `group` and `artboard`
@@ -164,7 +164,7 @@ Assigning `style.borderOptions` in Sketch's API resets every key left out to its
 
 ### Paths
 
-`updateLayer` takes `path` to replace the points of a shape path whose `shapeType` is `Custom`, such as a `path` layer or a shape from an SVG. The frame moves to fit the new path. Rectangles, ovals, and the other preset shapes refuse `path`.
+`updateLayer` takes `path` to replace the points of a shape path whose `shapeType` is `Custom`, such as a `path` layer or a shape from an SVG. The frame moves to fit the new path. Rectangles, ovals, and the other preset shapes refuse `path`. A `Shape` takes path data with any number of subpaths and replaces its parts with one shape path per subpath. A single shape path refuses path data with more than one subpath, because turning it into a `Shape` would change its id.
 
 ### Text alignment
 

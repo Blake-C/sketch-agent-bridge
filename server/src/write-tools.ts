@@ -77,7 +77,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Build layers',
 			description:
-				'Creates a whole tree of layers in one call: artboards, groups, shapes, paths, text, SVG, images, and symbol instances, with children nested inside groups and artboards. Prefer this over create_layer for anything with more than a few layers. Child frames are relative to the frame given for their parent. Groups shrink to fit their children. Renders once at the end. If any layer fails, nothing is kept.',
+				'Creates a whole tree of layers in one call: artboards, groups, shapes, paths, text, SVG, images, and symbol instances, with children nested inside groups and artboards. Prefer this over create_layer for anything with more than a few layers. Child frames are relative to the frame given for their parent. Groups shrink to fit their children. A path with several subpaths becomes a Shape with one part per subpath. Renders once at the end. If any layer fails, nothing is kept.',
 			inputSchema: {
 				documentId,
 				parentId: z
@@ -156,7 +156,9 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 				cornerRadius: z.number().min(0).optional(),
 				path: svgPath
 					.optional()
-					.describe('Replaces the points of a path layer. Coordinates are in the parent.'),
+					.describe(
+						'Replaces the points of a path layer, or the parts of a Shape. Coordinates are in the parent. A single path layer refuses data with several subpaths.'
+					),
 				symbol: z
 					.string()
 					.optional()

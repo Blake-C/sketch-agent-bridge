@@ -278,7 +278,11 @@ const layerFields = {
 		),
 	fixedWidth: fixedWidth.optional(),
 	lineSpacing: lineSpacing.optional(),
-	path: svgPath.optional().describe('SVG path data, for kind "path". Coordinates are in the parent.'),
+	path: svgPath
+		.optional()
+		.describe(
+			'SVG path data, for kind "path". Coordinates are in the parent. Several subpaths make a Shape with one part per subpath.'
+		),
 	cornerRadius: z.number().min(0).optional(),
 	text: z.string().optional(),
 	svg: z
