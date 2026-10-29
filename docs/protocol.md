@@ -247,7 +247,7 @@ The leaf drawings point up with the stem at the bottom, so a `rotation` angle se
 Each layer has `id`, `name`, `type`, and `frame`. These keys appear only when they have a value:
 
 - `children`, or `childCount` with `truncated: true` on the root when the depth limit or the 2000-layer limit cut the tree. A `Shape` made of more than 20 parts, such as an SVG path with many subpaths, always shows `childCount` instead of its parts.
-- `hidden`, `locked`, `rotation`, `flippedHorizontally`, `flippedVertically`, `mask`, `breaksMask`
+- `hidden`, `locked`, `rotation`, `flippedHorizontally`, `flippedVertically`, `mask`, and `breaksMask`, which is left out for artboards and symbol masters because Sketch 88.1 reported every artboard and symbol master in the test document as breaking the mask chain
 - `smartLayout` for groups and symbol masters
 - `resizing` with each of `pinLeft`, `pinRight`, `pinTop`, `pinBottom`, `fixWidth`, and `fixHeight` that is set
 - `booleanOperation` for a part of a Shape, when it is not `none`

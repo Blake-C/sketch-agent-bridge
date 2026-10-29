@@ -5,6 +5,8 @@ const DEFAULT_DEPTH = 8
 const MAX_NODES = 2000
 const MAX_PATH_LENGTH = 2000
 const MAX_SHAPE_PARTS = 20
+// Sketch 88.1 reported every artboard and symbol master in the test document as breaking the mask chain, and neither can sit in a group with a mask.
+const TOP_LEVEL_TYPES = ['Page', 'Artboard', 'SymbolMaster']
 const RESIZING_EDGES = {
 	pinLeft: 'Left',
 	pinRight: 'Right',
@@ -261,7 +263,8 @@ function layerSpec(layer, options) {
 			flippedHorizontally: node.transform && node.transform.flippedHorizontally ? true : undefined,
 			flippedVertically: node.transform && node.transform.flippedVertically ? true : undefined,
 			mask: node.sketchObject.hasClippingMask() ? true : undefined,
-			breaksMask: node.sketchObject.shouldBreakMaskChain() ? true : undefined,
+			breaksMask:
+				!TOP_LEVEL_TYPES.includes(node.type) && node.sketchObject.shouldBreakMaskChain() ? true : undefined,
 			smartLayout: node.type === 'Group' || node.type === 'SymbolMaster' ? smartLayoutName(node) : undefined,
 			resizing: node.type === 'Page' ? undefined : resizingSpec(node),
 			booleanOperation: parentType === 'Shape' ? booleanOperationName(node) : undefined,
