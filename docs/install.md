@@ -10,8 +10,10 @@
 
 ```sh
 docker compose run --rm dev pnpm install
-docker compose run --rm dev pnpm build
+docker compose run --rm offline pnpm build
 ```
+
+The `dev` service has network access for `pnpm install`, and the `offline` service has none. Both run as the `node` user. A `node_modules` volume filled by an earlier version of the image belongs to root, so `pnpm install` fails with `EACCES` until the volume is removed with `docker volume rm sketch-agent-bridge_node_modules`.
 
 This writes `server/dist/server.js`, which has to be rebuilt after any change in `server/src/`. Changes to the plugin need no build.
 

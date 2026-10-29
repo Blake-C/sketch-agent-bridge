@@ -44,6 +44,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Changed the Docker setup to pin the Node and gitleaks images by digest, run as the `node` user with every Linux capability dropped, and add an `offline` service with no network for build, test, lint, and format.
 - Changed `fetch_images` to refuse a photo larger than 25 MB, and a download that redirects away from `images.unsplash.com`.
 - Changed the plugin to read image and SVG files only from `~/.sketch-agent-bridge/` and the folders in the new `SKETCH_AGENT_BRIDGE_ASSET_DIRS` variable. Before, an agent could read any image or SVG file on the Mac into a document.
 - Changed the server to delete folders in `images/` and `inbox/` older than 7 days, and to keep only the newest 10 backups of each document. Before, those folders grew without limit.
@@ -99,6 +100,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Changed the Docker setup to pin the Node and gitleaks images by digest, run as the `node` user with every Linux capability dropped, and add an `offline` service with no network for build, test, lint, and format.
 - Changed `fetch_images` to refuse a photo larger than 25 MB, and a download that redirects away from `images.unsplash.com`.
 - Changed the plugin to read image and SVG files only from `~/.sketch-agent-bridge/` and the folders in the new `SKETCH_AGENT_BRIDGE_ASSET_DIRS` variable. Before, an agent could read any image or SVG file on the Mac into a document.
 - Changed the server to delete folders in `images/` and `inbox/` older than 7 days, and to keep only the newest 10 backups of each document. Before, those folders grew without limit.

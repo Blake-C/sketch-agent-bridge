@@ -1,10 +1,17 @@
 services:
-    dev:
+    dev: &dev
         build: .
         volumes:
             - .:/repo
             - node_modules:/repo/node_modules
         working_dir: /repo
+        cap_drop:
+            - ALL
+        security_opt:
+            - no-new-privileges:true
+    offline:
+        <<: *dev
+        network_mode: none
 
 volumes:
     node_modules:

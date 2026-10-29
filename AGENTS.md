@@ -22,15 +22,15 @@ The plugin refuses any `requestDir` outside `~/.sketch-agent-bridge/`. Write ops
 
 No package manager that manages JavaScript dependencies should ever be run on the local host machine. Always create a Dockerfile for any given project and tooling that is needed for that project, and initialize and execute PNPM, NPM, YARN, or any package manager tooling inside that container. This is done to keep the host machine safe.
 
-These commands all run through Docker:
+These commands all run through Docker. The `dev` service has network access and is only for `pnpm install`. The `offline` service has no network, so a build or test step cannot download or send anything. Both run as the `node` user with every Linux capability dropped.
 
 - `docker compose run --rm dev pnpm install`
-- `docker compose run --rm dev pnpm build`
-- `docker compose run --rm dev pnpm test`
-- `docker compose run --rm dev pnpm lint`
-- `docker compose run --rm dev pnpm check`, which runs lint, typecheck, and test
-- `docker compose run --rm dev pnpm format`
-- `docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:latest git /repo`
+- `docker compose run --rm offline pnpm build`
+- `docker compose run --rm offline pnpm test`
+- `docker compose run --rm offline pnpm lint`
+- `docker compose run --rm offline pnpm check`, which runs lint, typecheck, and test
+- `docker compose run --rm offline pnpm format`
+- `docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f git /repo`
 
 Docker's socket is blocked by the Claude Code sandbox, so Docker commands need the sandbox turned off for that one command.
 
