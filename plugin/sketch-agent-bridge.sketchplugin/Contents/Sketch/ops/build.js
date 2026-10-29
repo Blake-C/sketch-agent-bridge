@@ -4,6 +4,8 @@ const {
 	draftsPage,
 	assertContainer,
 	createNode,
+	moveInto,
+	fillGroup,
 	summary,
 	renderFiles,
 	renderRequest,
@@ -12,41 +14,74 @@ const {
 const MAX_BUILD_NODES = 2000
 const PARENT_KINDS = ['group', 'artboard']
 
+// Sketch refits a group as soon as a styled text layer inside it changes size, which shifts every sibling built after it.
+// So layers are built in the nearest artboard or page, offset to where their group will be, and moved into groups at the end.
+function stagingContainer(parent) {
+	let stage = parent
+	while (stage.type === 'Group') stage = stage.parent
+	return stage
+}
+
+function originIn(stage, layer) {
+	if (layer.id === stage.id) return { x: 0, y: 0 }
+	const frame = layer.frame.changeBasis({ from: layer.parent, to: stage })
+	return { x: frame.x, y: frame.y }
+}
+
 function build(args, request) {
 	const document = editableDocument(args)
 	const parent = args.parentId ? findLayer(document, args.parentId) : draftsPage(document)
 	assertContainer(parent)
+	const stage = stagingContainer(parent)
+	const parentOrigin = originIn(stage, parent)
 	const refs = {}
 	const roots = []
-	let count = 0
+	const created = []
 	let deferRender = false
 
-	function make(container, node, isRoot) {
-		count++
-		if (count > MAX_BUILD_NODES) throw new Error('A build can create at most ' + MAX_BUILD_NODES + ' layers')
+	function make(container, node, offset) {
+		if (created.length >= MAX_BUILD_NODES)
+			throw new Error('A build can create at most ' + MAX_BUILD_NODES + ' layers')
 		const layer = createNode(document, container, node)
-		if (isRoot) roots.push(layer)
+		created.push(layer)
+		if (offset.x || offset.y) {
+			const frame = layer.frame
+			frame.x += offset.x
+			frame.y += offset.y
+			layer.frame = frame
+		}
 		if (node.ref) refs[node.ref] = layer.id
 		if (node.overrides || node.kind === 'symbol') deferRender = true
 		const children = node.children || []
 		if (children.length > 0) {
 			if (!PARENT_KINDS.includes(node.kind)) throw new Error('Only groups and artboards can have children')
-			children.forEach(child => make(layer, child, false))
-			if (node.kind === 'group') layer.adjustToFit()
+			if (node.kind === 'artboard') {
+				children.forEach(child => make(layer, child, { x: 0, y: 0 }))
+			} else {
+				const origin = { x: layer.frame.x, y: layer.frame.y }
+				fillGroup(
+					layer,
+					children.map(child => make(container, child, origin))
+				)
+			}
 		}
 		return layer
 	}
 
 	try {
-		args.nodes.forEach(node => make(parent, node, true))
+		args.nodes.forEach(node => roots.push(make(stage, node, parentOrigin)))
+		if (parent.id !== stage.id) {
+			roots.forEach(root => moveInto(root, parent, parentOrigin.x, parentOrigin.y))
+			parent.adjustToFit()
+		}
 	} catch (error) {
-		roots.forEach(root => root.remove())
+		created.reverse().forEach(layer => layer.remove())
 		throw error
 	}
 
 	const shown = roots.length === 1 || parent.type === 'Page' ? roots[0] : parent
 	const options = Object.assign({ render: 'artboard' }, args)
-	const reply = { result: { created: count, roots: roots.map(summary), refs } }
+	const reply = { result: { created: created.length, roots: roots.map(summary), refs } }
 	if (deferRender) return Object.assign(reply, { files: [], render: renderRequest(shown, options) })
 	return Object.assign(reply, { files: renderFiles(shown, options, request) })
 }

@@ -124,7 +124,7 @@ Assigning a library text style with `syncWithSharedStyle` links the style withou
 - the layout fields `smartLayout` for `group`, and `rotation`, `flipHorizontal`, and `flipVertical` for every kind
 - `flow` and `exportFormats` for every kind, and `flowStartPoint` for `artboard`
 
-The kinds are `artboard`, `rectangle`, `oval`, `triangle`, `polygon`, `star`, `path`, `text`, `group`, `symbol`, `svg`, and `image`. An artboard node needs a page as its parent. Child frames are relative to their parent, and each group shrinks to fit its children once they are all created. If any node fails, `build` removes everything it created in that call.
+The kinds are `artboard`, `rectangle`, `oval`, `triangle`, `polygon`, `star`, `path`, `text`, `group`, `symbol`, `svg`, and `image`. An artboard node needs a page as its parent. Child frames are relative to their parent's requested frame, and each group shrinks to fit its children once they are all created. Sketch refits a group as soon as a styled text layer inside it changes size, which would shift the siblings built after it. So `build` creates every layer in the nearest artboard or page, offset to where its group will be, and moves the layers into their groups at the end. When `parentId` is a group, the new layers move into it the same way, and it shrinks to fit. If any node fails, `build` removes everything it created in that call.
 
 ## Write ops
 

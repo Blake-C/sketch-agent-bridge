@@ -17,6 +17,10 @@ All notable changes to this project will be documented in this file.
 - Added `sharedStyleOutOfSync` to layer specs.
 - Added a warning on write replies when Sketch has stopped recording undo history for the document, and `undoStuck` in `sketch_status`.
 
+### Fixed
+
+- Fixed `build_layers` placing layers in the wrong spot when a group held a text layer with a `textStyle`. Sketch refit the group as soon as the text changed size, and every layer built after it was offset by the group's new origin.
+
 ## [0.3.0] - 2026-10-27
 
 ### Added

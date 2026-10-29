@@ -6,6 +6,9 @@ const {
 	rightOfContent,
 	tagCreated,
 	setFrame,
+	bounds,
+	moveInto,
+	fillGroup,
 	summary,
 	renderFiles,
 	result,
@@ -19,40 +22,12 @@ function siblings(document, ids) {
 	return { layers: layers.sort((a, b) => a.index - b.index), parent }
 }
 
-function bounds(layers) {
-	const left = Math.min.apply(
-		null,
-		layers.map(layer => layer.frame.x)
-	)
-	const top = Math.min.apply(
-		null,
-		layers.map(layer => layer.frame.y)
-	)
-	const right = Math.max.apply(
-		null,
-		layers.map(layer => layer.frame.x + layer.frame.width)
-	)
-	const bottom = Math.max.apply(
-		null,
-		layers.map(layer => layer.frame.y + layer.frame.height)
-	)
-	return new sketch.Rectangle(left, top, right - left, bottom - top)
-}
-
-function moveInto(layer, container, offsetX, offsetY) {
-	const frame = layer.frame
-	layer.parent = container
-	layer.frame = new sketch.Rectangle(frame.x - offsetX, frame.y - offsetY, frame.width, frame.height)
-}
-
 function groupLayers(args, request) {
 	const document = editableDocument(args)
 	const { layers, parent } = siblings(document, args.ids)
-	const box = bounds(layers)
-	const group = new sketch.Group({ name: args.name || 'Group', parent, frame: box })
+	const group = new sketch.Group({ name: args.name || 'Group', parent, frame: bounds(layers) })
 	group.index = layers[layers.length - 1].index
-	layers.forEach(layer => moveInto(layer, group, box.x, box.y))
-	group.adjustToFit()
+	fillGroup(group, layers)
 	tagCreated(group)
 	return result(document, group, args, request)
 }

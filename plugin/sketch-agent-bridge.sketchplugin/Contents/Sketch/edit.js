@@ -119,6 +119,41 @@ function setOrder(layer, order) {
 	else throw new Error('Unknown order: ' + order)
 }
 
+function bounds(layers) {
+	const left = Math.min.apply(
+		null,
+		layers.map(layer => layer.frame.x)
+	)
+	const top = Math.min.apply(
+		null,
+		layers.map(layer => layer.frame.y)
+	)
+	const right = Math.max.apply(
+		null,
+		layers.map(layer => layer.frame.x + layer.frame.width)
+	)
+	const bottom = Math.max.apply(
+		null,
+		layers.map(layer => layer.frame.y + layer.frame.height)
+	)
+	return new sketch.Rectangle(left, top, right - left, bottom - top)
+}
+
+function moveInto(layer, container, offsetX, offsetY) {
+	const frame = layer.frame
+	layer.parent = container
+	layer.frame = new sketch.Rectangle(frame.x - offsetX, frame.y - offsetY, frame.width, frame.height)
+}
+
+// The group is sized to its children before they move in, so Sketch has no reason to refit it and shift them.
+function fillGroup(group, layers) {
+	if (layers.length === 0) return
+	const box = bounds(layers)
+	group.frame = box
+	layers.forEach(layer => moveInto(layer, group, box.x, box.y))
+	group.adjustToFit()
+}
+
 function applyLayout(layer, input) {
 	if (input.smartLayout !== undefined) setSmartLayout(layer, input.smartLayout)
 	if (input.rotation !== undefined) layer.transform.rotation = input.rotation
@@ -345,6 +380,9 @@ module.exports = {
 	setFrame,
 	setCornerRadius,
 	setOrder,
+	bounds,
+	moveInto,
+	fillGroup,
 	setFixedWidth,
 	setLineSpacing,
 	setPath,
