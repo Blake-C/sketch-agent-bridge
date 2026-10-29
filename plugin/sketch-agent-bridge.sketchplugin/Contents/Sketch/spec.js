@@ -13,6 +13,7 @@ const RESIZING_EDGES = {
 	fixWidth: 'Width',
 	fixHeight: 'Height',
 }
+const BOOLEAN_OPERATIONS = { none: -1, union: 0, subtract: 1, intersect: 2, difference: 3 }
 
 function swatchNames(document) {
 	const names = {}
@@ -210,6 +211,11 @@ function resizingSpec(layer) {
 	return spec
 }
 
+function booleanOperationName(layer) {
+	const value = Number(layer.sketchObject.booleanOperation())
+	return Object.keys(BOOLEAN_OPERATIONS).find(name => name !== 'none' && BOOLEAN_OPERATIONS[name] === value)
+}
+
 function flowSpec(flow) {
 	if (!flow) return undefined
 	if (flow.isBackAction()) return { target: 'back', animation: flow.animationType }
@@ -241,7 +247,7 @@ function layerSpec(layer, options) {
 	const includeHidden = Boolean(options.includeHidden)
 	const counter = { nodes: 0, truncated: false }
 
-	function walk(node, level) {
+	function walk(node, level, parentType) {
 		counter.nodes++
 		const isText = node.type === 'Text'
 		const spec = {
@@ -258,6 +264,7 @@ function layerSpec(layer, options) {
 			breaksMask: node.sketchObject.shouldBreakMaskChain() ? true : undefined,
 			smartLayout: node.type === 'Group' || node.type === 'SymbolMaster' ? smartLayoutName(node) : undefined,
 			resizing: node.type === 'Page' ? undefined : resizingSpec(node),
+			booleanOperation: parentType === 'Shape' ? booleanOperationName(node) : undefined,
 			shapeType: node.type === 'ShapePath' ? node.shapeType : undefined,
 			cornerRadius: cornerRadius(node),
 			path: pathSpec(node),
@@ -285,13 +292,13 @@ function layerSpec(layer, options) {
 				spec.childCount = children.length
 				counter.truncated = true
 			} else {
-				spec.children = children.map(child => walk(child, level + 1))
+				spec.children = children.map(child => walk(child, level + 1, node.type))
 			}
 		}
 		return compact(spec)
 	}
 
-	const spec = walk(layer, 0)
+	const spec = walk(layer, 0, layer.parent ? layer.parent.type : undefined)
 	if (counter.truncated) spec.truncated = true
 	return spec
 }
@@ -306,4 +313,5 @@ module.exports = {
 	smartLayoutName,
 	resizingOf,
 	RESIZING_EDGES,
+	BOOLEAN_OPERATIONS,
 }

@@ -79,3 +79,11 @@ The style is named Bold, and the text still renders at a regular weight. The sty
 Date: 2026-10-27, Sketch 88.1 on macOS 27.2, with Apple's iOS UI library.
 
 A `build_layers` call that placed two switches from the iOS library returned a PNG with no switches, and an `export_layers` call right after it showed both. An `update_layer` call that swapped an instance to a library variant returned an empty PNG, and a later export showed the new variant. `build` and `createLayer` now render in a second plugin run whenever they place a symbol, and `updateLayer` does the same when it swaps the symbol.
+
+## Shapes deleted after the plugin run
+
+Date: 2026-10-28, Sketch 88.1 on macOS 27.2.
+
+A `build_layers` call with a `shape` node replied with the new Shape and its parts, and a `get_layer` call on the artboard right after it showed no Shape. The same happened to the Shape that `combine_shapes` made, and both created the Shape with `new sketch.Shape({ parent, frame, layers: [] })`. Without `layers: []`, Sketch's API adds a default rectangle as the Shape's first part, and a Shape created that way was kept.
+
+`createPathLayer` in `edit.js` already made Shapes that were kept, and it creates the Shape with only `layers: []` and sets `parent` afterward. Creating the Shape that way and then setting `parent` and `frame` kept the Shape in both `build_layers` and `combine_shapes`.

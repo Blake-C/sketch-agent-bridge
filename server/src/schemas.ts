@@ -227,6 +227,12 @@ export const layout = {
 		),
 }
 
+export const booleanOperation = z
+	.enum(['none', 'union', 'subtract', 'intersect', 'difference'])
+	.describe(
+		'How a part of a combined shape joins the parts below it. The bottom part is the base, so subtract cuts each part from the parts below it.'
+	)
+
 export const order = z
 	.union([
 		z.enum(['front', 'back', 'forward', 'backward']),
@@ -285,21 +291,23 @@ export const fixedWidth = z
 	.boolean()
 	.describe('For text. true wraps text at the frame width, false makes the layer grow with its text.')
 
+const layerKinds = [
+	'artboard',
+	'rectangle',
+	'oval',
+	'triangle',
+	'polygon',
+	'star',
+	'path',
+	'text',
+	'group',
+	'symbol',
+	'svg',
+	'image',
+] as const
+
 const layerFields = {
-	kind: z.enum([
-		'artboard',
-		'rectangle',
-		'oval',
-		'triangle',
-		'polygon',
-		'star',
-		'path',
-		'text',
-		'group',
-		'symbol',
-		'svg',
-		'image',
-	]),
+	kind: z.enum(layerKinds),
 	name: z.string().optional(),
 	frame: frame
 		.optional()
@@ -346,13 +354,24 @@ const layerFields = {
 
 export const layerInput = z.object(layerFields)
 
-export type BuildNode = z.infer<typeof layerInput> & { ref?: string; children?: BuildNode[] }
+export type BuildNode = Omit<z.infer<typeof layerInput>, 'kind'> & {
+	kind: (typeof layerKinds)[number] | 'shape'
+	ref?: string
+	booleanOperation?: z.infer<typeof booleanOperation>
+	children?: BuildNode[]
+}
 
 export const buildNode: z.ZodType<BuildNode> = z.lazy(() =>
 	z.object({
 		...layerFields,
+		kind: z
+			.enum([...layerKinds, 'shape'])
+			.describe(
+				'"shape" combines its children, which must be shapes or paths, into one shape with boolean operations.'
+			),
 		ref: z.string().optional().describe('A label. The reply maps each ref to the created layer id.'),
-		children: z.array(buildNode).optional().describe('Child layers, for kind "group" or "artboard".'),
+		booleanOperation: booleanOperation.optional().describe('For a child of a shape node. Default none.'),
+		children: z.array(buildNode).optional().describe('Child layers, for kind "group", "artboard", or "shape".'),
 	})
 )
 

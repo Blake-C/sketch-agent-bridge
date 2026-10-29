@@ -3,6 +3,8 @@ const { findLayer } = require('../document.js')
 const {
 	editableDocument,
 	symbolsPage,
+	assertContainer,
+	SHAPE_PART_TYPES,
 	rightOfContent,
 	tagCreated,
 	setFrame,
@@ -13,6 +15,9 @@ const {
 	renderFiles,
 	result,
 } = require('../edit.js')
+const { BOOLEAN_OPERATIONS } = require('../spec.js')
+
+const MIN_SHAPE_PARTS = 2
 
 function siblings(document, ids) {
 	if (!ids || ids.length === 0) throw new Error('Pass at least one layer id')
@@ -30,6 +35,30 @@ function groupLayers(args, request) {
 	fillGroup(group, layers)
 	tagCreated(group)
 	return result(document, group, args, request)
+}
+
+// Sketch draws a combined shape with the Shape's own style, so the Shape takes the style of the bottom part.
+function combineShapes(args, request) {
+	const document = editableDocument(args)
+	const { layers, parent } = siblings(document, args.ids)
+	if (layers.length < MIN_SHAPE_PARTS) throw new Error('Pass at least two shape layers')
+	const others = layers.filter(layer => !SHAPE_PART_TYPES.includes(layer.type))
+	if (others.length > 0) {
+		throw new Error('Only shapes and paths can be combined: ' + others.map(layer => layer.name).join(', '))
+	}
+	assertContainer(parent)
+	const operation = BOOLEAN_OPERATIONS[args.operation]
+	if (operation === undefined) throw new Error('Unknown boolean operation: ' + args.operation)
+	const shape = new sketch.Shape({ name: args.name || layers[0].name, layers: [] })
+	shape.parent = parent
+	shape.frame = bounds(layers)
+	shape.style = layers[0].style
+	shape.index = layers[layers.length - 1].index
+	fillGroup(shape, layers)
+	layers.forEach(layer => layer.sketchObject.setBooleanOperation(operation))
+	shape.adjustToFit()
+	tagCreated(shape)
+	return result(document, shape, args, request)
 }
 
 function ungroupLayer(args, request) {
@@ -110,4 +139,4 @@ function duplicateLayers(args, request) {
 	}
 }
 
-module.exports = { groupLayers, ungroupLayer, createSymbol, duplicate: duplicateLayers }
+module.exports = { groupLayers, combineShapes, ungroupLayer, createSymbol, duplicate: duplicateLayers }

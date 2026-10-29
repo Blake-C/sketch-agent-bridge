@@ -16,6 +16,7 @@ An agent connected to the MCP server can:
 - edit layers, move them into other artboards, groups, or pages, lock them, group and ungroup them, and apply shared styles
 - duplicate layers, change their stacking order, rotate and flip them, and set Smart Layout on groups and symbols
 - use a shape or image as a clipping mask for the layers above it in its group
+- combine shapes with union, subtract, intersect, and difference
 - pin layers to the edges of their group, artboard, or symbol and fix their width or height, which sets how they change when a symbol instance is resized
 - turn layers into symbols, place instances, set their overrides, swap them between symbols, and detach them
 - turn artboards into symbols and back, and see which layers no longer match their shared style

@@ -1,7 +1,7 @@
 const sketch = require('sketch')
 const Settings = require('sketch/settings')
 const { resolveDocument, findLayer } = require('./document.js')
-const { layerSpec, swatchNames, frameSpec, resizingOf, RESIZING_EDGES } = require('./spec.js')
+const { layerSpec, swatchNames, frameSpec, resizingOf, RESIZING_EDGES, BOOLEAN_OPERATIONS } = require('./spec.js')
 const { exportLayers } = require('./export.js')
 const { applyStyle, loadImage, nativeColor, isColorValue } = require('./style.js')
 const { findLocalOrImport } = require('./libraries.js')
@@ -16,6 +16,7 @@ const GROUP_TYPES = ['Group', 'Shape']
 const STYLE_OVERRIDES = ['textStyle', 'layerStyle']
 const SMART_LAYOUT_TYPES = ['Group', 'SymbolMaster']
 const MASK_TYPES = ['ShapePath', 'Shape', 'Image']
+const SHAPE_PART_TYPES = ['ShapePath', 'Shape']
 const SHAPE_KINDS = { rectangle: 'Rectangle', oval: 'Oval', triangle: 'Triangle', polygon: 'Polygon', star: 'Star' }
 const LINE_SPACINGS = ['natural', 'system', 'variable', 'constantBaseline']
 const ORDER_MOVES = { front: 'moveToFront', back: 'moveToBack', forward: 'moveForward', backward: 'moveBackward' }
@@ -233,6 +234,17 @@ function setResizing(layer, resizing) {
 	})
 }
 
+// A Shape is sized to the result of its boolean operations, which Sketch only recalculates on a refit.
+function setBooleanOperation(layer, name) {
+	if (!layer.parent || layer.parent.type !== 'Shape') {
+		throw new Error('Only a part of a combined shape has a boolean operation')
+	}
+	if (!SHAPE_PART_TYPES.includes(layer.type)) throw new Error('Only shapes and paths can be part of a combined shape')
+	if (BOOLEAN_OPERATIONS[name] === undefined) throw new Error('Unknown boolean operation: ' + name)
+	layer.sketchObject.setBooleanOperation(BOOLEAN_OPERATIONS[name])
+	layer.parent.adjustToFit()
+}
+
 function applyLayout(layer, input) {
 	if (input.smartLayout !== undefined) setSmartLayout(layer, input.smartLayout)
 	if (input.resizing !== undefined) setResizing(layer, input.resizing)
@@ -447,6 +459,11 @@ function createNode(document, parent, node) {
 		if (frame.width !== undefined) layer.fixedWidth = true
 	} else if (node.kind === 'group') {
 		layer = new sketch.Group({ parent, frame: rectangle })
+	} else if (node.kind === 'shape') {
+		// Sketch deletes a Shape at the end of the plugin run when it gets its parent and an empty layers list in the constructor, so the parent is set after.
+		layer = new sketch.Shape({ layers: [] })
+		layer.parent = parent
+		layer.frame = rectangle
 	} else if (node.kind === 'image') {
 		layer = new sketch.Image({ parent, image: loadImage(node.image), frame: rectangle })
 	} else if (node.kind === 'svg') {
@@ -569,6 +586,7 @@ module.exports = {
 	assertContainer,
 	tagCreated,
 	wasCreatedByAgent,
+	SHAPE_PART_TYPES,
 	setParent,
 	setFrame,
 	setCornerRadius,
@@ -579,6 +597,7 @@ module.exports = {
 	setFixedWidth,
 	setLineSpacing,
 	setPath,
+	setBooleanOperation,
 	applyLayout,
 	applyPrototypeAndExport,
 	linkSharedStyle,

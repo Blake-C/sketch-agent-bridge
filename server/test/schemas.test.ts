@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { z } from 'zod'
-import { findInput, layerInput, order, relativeTo } from '../src/schemas.ts'
+import { buildNode, findInput, layerInput, order, relativeTo } from '../src/schemas.ts'
 
 const node = (fields: Record<string, unknown>) => layerInput.safeParse({ kind: 'group', ...fields })
 
@@ -125,6 +125,16 @@ test('layer nodes take resizing as booleans for each edge and size', () => {
 	assert.ok(node({ resizing: { pinLeft: true, pinRight: true, fixHeight: true } }).success)
 	assert.ok(node({ resizing: {} }).success)
 	assert.equal(node({ resizing: { pinLeft: 'yes' } }).success, false)
+})
+
+test('build nodes take shape kind and boolean operations, and create_layer nodes do not', () => {
+	const shape = {
+		kind: 'shape',
+		children: [{ kind: 'rectangle' }, { kind: 'oval', booleanOperation: 'subtract' }],
+	}
+	assert.ok(buildNode.safeParse(shape).success)
+	assert.equal(buildNode.safeParse({ kind: 'oval', booleanOperation: 'cut' }).success, false)
+	assert.equal(layerInput.safeParse({ kind: 'shape' }).success, false)
 })
 
 test('find takes a shared style and a swatch', () => {

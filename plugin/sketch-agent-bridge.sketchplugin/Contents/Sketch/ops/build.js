@@ -11,10 +11,13 @@ const {
 	summary,
 	renderFiles,
 	renderRequest,
+	setBooleanOperation,
 } = require('../edit.js')
 
 const MAX_BUILD_NODES = 2000
-const PARENT_KINDS = ['group', 'artboard']
+const PARENT_KINDS = ['group', 'artboard', 'shape']
+const SHAPE_PART_KINDS = ['rectangle', 'oval', 'triangle', 'polygon', 'star', 'path', 'shape']
+const MIN_SHAPE_PARTS = 2
 
 function build(args, request) {
 	const document = editableDocument(args)
@@ -31,9 +34,19 @@ function build(args, request) {
 	const groups = []
 	let deferRender = false
 
-	function make(container, node, offset) {
+	function make(container, node, offset, inShape) {
 		if (created.length >= MAX_BUILD_NODES)
 			throw new Error('A build can create at most ' + MAX_BUILD_NODES + ' layers')
+		if (node.booleanOperation !== undefined && !inShape) {
+			throw new Error('booleanOperation only applies to the children of a shape node')
+		}
+		const children = node.children || []
+		if (node.kind === 'shape') {
+			if (children.length < MIN_SHAPE_PARTS) throw new Error('A shape node needs at least two children')
+			if (children.some(child => !SHAPE_PART_KINDS.includes(child.kind))) {
+				throw new Error('A shape node can only hold ' + SHAPE_PART_KINDS.join(', ') + ' nodes')
+			}
+		}
 		const layer = createNode(document, container, node)
 		created.push(layer)
 		if (offset.x || offset.y) {
@@ -43,26 +56,27 @@ function build(args, request) {
 			layer.frame = frame
 		}
 		if (node.ref) refs[node.ref] = layer.id
-		if (node.kind === 'group') groups.push(layer)
+		if (node.kind === 'group' || node.kind === 'shape') groups.push(layer)
 		if (node.overrides || node.kind === 'symbol') deferRender = true
-		const children = node.children || []
 		if (children.length > 0) {
 			if (!PARENT_KINDS.includes(node.kind)) throw new Error('Only groups and artboards can have children')
 			if (node.kind === 'artboard') {
-				children.forEach(child => make(layer, child, { x: 0, y: 0 }))
+				children.forEach(child => make(layer, child, { x: 0, y: 0 }, false))
 			} else {
 				const origin = { x: layer.frame.x, y: layer.frame.y }
-				fillGroup(
-					layer,
-					children.map(child => make(container, child, origin))
-				)
+				const isShape = node.kind === 'shape'
+				const parts = children.map(child => make(container, child, origin, isShape))
+				fillGroup(layer, parts)
+				children.forEach((child, index) => {
+					if (child.booleanOperation !== undefined) setBooleanOperation(parts[index], child.booleanOperation)
+				})
 			}
 		}
 		return layer
 	}
 
 	try {
-		args.nodes.forEach(node => roots.push(make(stage, node, rootOffset)))
+		args.nodes.forEach(node => roots.push(make(stage, node, rootOffset, false)))
 		if (parent.id !== stage.id) {
 			roots.forEach(root => moveInto(root, parent, parentOrigin.x, parentOrigin.y))
 			parent.adjustToFit()

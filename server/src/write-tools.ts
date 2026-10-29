@@ -4,6 +4,7 @@ import { z } from 'zod'
 import type { Backups } from './backup.ts'
 import { errorResult, replyResult } from './content.ts'
 import {
+	booleanOperation,
 	buildNode,
 	documentId,
 	fixedWidth,
@@ -78,7 +79,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Build layers',
 			description:
-				'Creates a whole tree of layers in one call: artboards, groups, shapes, paths, text, SVG, images, and symbol instances, with children nested inside groups and artboards. Prefer this over create_layer for anything with more than a few layers. Child frames are relative to the frame given for their parent. Groups shrink to fit their children, so the reply lists each group with its final frame, and later frames inside a group are relative to that final frame. A path with several subpaths becomes a Shape with one part per subpath. Renders once at the end. If any layer fails, nothing is kept.',
+				'Creates a whole tree of layers in one call: artboards, groups, shapes, paths, text, SVG, images, and symbol instances, with children nested inside groups and artboards. Prefer this over create_layer for anything with more than a few layers. Child frames are relative to the frame given for their parent. Groups shrink to fit their children, so the reply lists each group with its final frame, and later frames inside a group are relative to that final frame. A path with several subpaths becomes a Shape with one part per subpath. A shape node combines its shape and path children with the booleanOperation set on each child. Renders once at the end. If any layer fails, nothing is kept.',
 			inputSchema: {
 				documentId,
 				parentId: z
@@ -145,7 +146,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Update layer',
 			description:
-				'Changes an existing layer: parent, name, visibility, lock, frame, text, line spacing, corner radius, path, which symbol an instance uses, symbol overrides, style, text style, smart layout, resizing, rotation, flips, masks, stacking order, prototype links, and export presets.',
+				'Changes an existing layer: parent, name, visibility, lock, frame, text, line spacing, corner radius, path, which symbol an instance uses, symbol overrides, style, text style, smart layout, resizing, rotation, flips, masks, boolean operations, stacking order, prototype links, and export presets.',
 			inputSchema: {
 				documentId,
 				id: z.string(),
@@ -179,6 +180,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 				style,
 				textStyle,
 				...layout,
+				booleanOperation: booleanOperation.optional().describe('For a part of a combined shape.'),
 				...prototypeAndExport,
 				order: order.optional(),
 				...render,
@@ -202,6 +204,24 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 			annotations: additive,
 		},
 		write('groupLayers')
+	)
+
+	server.registerTool(
+		'combine_shapes',
+		{
+			title: 'Combine shapes',
+			description:
+				"Combines shapes and paths that share a parent into one shape with a boolean operation, the way Sketch's Union, Subtract, Intersect, and Difference commands do. The bottom layer is the base, and the shape takes its style and name.",
+			inputSchema: {
+				documentId,
+				ids: z.array(z.string()).min(2),
+				operation: booleanOperation.exclude(['none']),
+				name: z.string().optional(),
+				...render,
+			},
+			annotations: additive,
+		},
+		write('combineShapes')
 	)
 
 	server.registerTool(

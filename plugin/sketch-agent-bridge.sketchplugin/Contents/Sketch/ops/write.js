@@ -13,6 +13,7 @@ const {
 	setFixedWidth,
 	setLineSpacing,
 	setPath,
+	setBooleanOperation,
 	applyLayout,
 	applyPrototypeAndExport,
 	linkSharedStyle,
@@ -50,6 +51,7 @@ function createArtboard(args, request) {
 
 function createLayer(args, request) {
 	const document = editableDocument(args)
+	if (args.kind === 'shape') throw new Error('A shape needs children, so build it with build_layers')
 	const parent = findLayer(document, args.parentId)
 	assertContainer(parent)
 	const layer = createNode(document, parent, args)
@@ -88,6 +90,7 @@ function updateLayer(args, request) {
 	if (args.overrides) setOverrides(document, layer, args.overrides)
 	applyStyle(document, layer, args.style, args.textStyle)
 	applyLayout(layer, args)
+	if (args.booleanOperation !== undefined) setBooleanOperation(layer, args.booleanOperation)
 	applyPrototypeAndExport(document, layer, args)
 	if (args.fixedWidth !== undefined) setFixedWidth(layer, args.fixedWidth)
 	if (args.lineSpacing !== undefined) setLineSpacing(layer, args.lineSpacing)
