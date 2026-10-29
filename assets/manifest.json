@@ -1,0 +1,58 @@
+[
+	{
+		"file": "textures/grain.png",
+		"kind": "texture",
+		"width": 512,
+		"height": 512,
+		"description": "Fine film grain on mid gray. Fill a rectangle with it in tile mode and set blendingMode Overlay or SoftLight with opacity 0.1 to 0.3."
+	},
+	{
+		"file": "textures/paper.png",
+		"kind": "texture",
+		"width": 512,
+		"height": 512,
+		"description": "Soft paper or felt texture on mid gray. Fill a rectangle with it in tile mode and set blendingMode Overlay or SoftLight with opacity 0.2 to 0.5."
+	},
+	{
+		"file": "textures/contours.png",
+		"kind": "texture",
+		"width": 1024,
+		"height": 1024,
+		"description": "White topographic contour lines on a clear background. Fill a rectangle with it in tile mode and set opacity 0.05 to 0.2."
+	},
+	{
+		"file": "leaves/leaf-broad-green.svg",
+		"kind": "svg",
+		"width": 206,
+		"height": 462,
+		"description": "Broad green leaf with a lit left half and a shaded right half. Points up with the stem at the bottom. Place it with svgFile and turn it with rotation."
+	},
+	{
+		"file": "leaves/leaf-narrow-green.svg",
+		"kind": "svg",
+		"width": 123,
+		"height": 462,
+		"description": "Long narrow green leaf, like eucalyptus or willow, with a slight curve. Points up with the stem at the bottom. Place it with svgFile and turn it with rotation."
+	},
+	{
+		"file": "leaves/leaf-serrated-brown.svg",
+		"kind": "svg",
+		"width": 224,
+		"height": 462,
+		"description": "Dry brown leaf with a serrated edge, like elm or beech, with faint spots. Points up with the stem at the bottom. Place it with svgFile and turn it with rotation."
+	},
+	{
+		"file": "leaves/leaf-dry-tan.svg",
+		"kind": "svg",
+		"width": 150,
+		"height": 462,
+		"description": "Pale tan dried leaf, narrow, with faint spots. Points up with the stem at the bottom. Place it with svgFile and turn it with rotation."
+	},
+	{
+		"file": "leaves/leaf-bright-green.svg",
+		"kind": "svg",
+		"width": 178,
+		"height": 462,
+		"description": "Fresh bright green leaf for a highlight or a leaf floating on its own. Points up with the stem at the bottom. Place it with svgFile and turn it with rotation."
+	}
+]

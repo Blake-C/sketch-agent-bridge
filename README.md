@@ -15,6 +15,7 @@ An agent connected to the MCP server can:
 - edit the points of a path, and set line spacing and variable font axes on text
 - edit layers, move them into other artboards, groups, or pages, lock them, group and ungroup them, and apply shared styles
 - duplicate layers, change their stacking order, rotate and flip them, and set Smart Layout on groups and symbols
+- use a shape or image as a clipping mask for the layers above it in its group
 - turn layers into symbols, place instances, set their overrides, swap them between symbols, and detach them
 - turn artboards into symbols and back, and see which layers no longer match their shared style
 - use symbols, shared styles, and swatches from enabled libraries by name, sync or unlink them, and add libraries or turn them on and off
@@ -23,6 +24,7 @@ An agent connected to the MCP server can:
 - fill layers with colors, gradients, or images, and add inner shadows, blurs, blend modes, dashed borders, and arrowheads
 - add or change swatches and shared styles
 - download the Unsplash photos most relevant to a query, filtered by orientation or color, through a local shell function, for use as image layers and fills
+- use the textures and leaf drawings in `assets/`, which `list_assets` lists with their paths
 
 For agents without MCP support, the plugin menu command **Plugins > Agent Bridge > Send Selection to Agent** exports the selection to a folder and copies the folder path to the clipboard, so the path can be pasted into any agent.
 

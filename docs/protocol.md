@@ -29,7 +29,7 @@ On failure it writes `{ "ok": false, "error": "<message>" }`. Exported files go 
 
 A successful reply can also carry `"render": { "ids": [...], "scale": 1 }`. The plugin sends it from `build` and `createLayer` when they place a symbol instance or set overrides, and from `updateLayer` when it sets overrides or swaps the symbol. An export in the same plugin run still shows the instance's previous overrides and the size it had before Smart Layout resized it, and it leaves out symbols imported from a library during that run. The server then runs the `export` op in a second plugin run and returns that PNG.
 
-A successful reply can also carry `"warnings": ["..."]` when the op finished but Sketch did not do exactly what was asked. The server puts each warning at the top of the tool result, prefixed with `Warning:`. After applying a text style that sets `fontFamily` or `fontWeight`, the plugin reads both back, because Sketch uses the closest installed font without reporting it. It warns when the family is not installed, or when the family has no face at the requested weight, and the weight warning lists the weights the family does have.
+A successful reply can also carry `"warnings": ["..."]` when the op finished but Sketch did not do exactly what was asked. The server puts each warning at the top of the tool result, prefixed with `Warning:`. After applying a text style that sets `fontFamily` or `fontWeight`, the plugin reads both back, because Sketch uses the closest installed font without reporting it. The plugin warns when the family is not installed, or when the family has no face at the requested weight, and the weight warning lists the weights the family does have.
 
 ## Ops
 
@@ -73,6 +73,7 @@ These tools do not call the plugin:
 
 - `list_inbox` and `get_inbox_item` read `~/.sketch-agent-bridge/inbox/`.
 - `fetch_images` runs the `get_images` shell function. See [Fetching images](#fetching-images).
+- `list_assets` reads `assets/manifest.json`. See [Assets](#assets).
 
 ## Finding layers
 
@@ -118,7 +119,7 @@ Assigning a library text style with `syncWithSharedStyle` links the style withou
 - `cornerRadius` for `rectangle`
 - `text`, `fixedWidth`, and `lineSpacing` for `text`. A text node with a frame width gets a fixed width unless `fixedWidth` is false. `lineSpacing` is `natural`, `system`, `variable`, or `constantBaseline`.
 - `path` for `path`, as SVG path data in the parent's coordinates. The layer's frame fits the path, and a `frame` moves or resizes it with only the keys given. Sketch's `ShapePath.fromSVGPath` keeps only the first subpath, so the plugin splits path data at each moveto. Data with one subpath becomes a `ShapePath`, and data with several becomes a `Shape` that holds one `ShapePath` per subpath with no boolean operation and a nonzero fill rule, which is how Sketch imports an SVG path. A relative moveto that starts a later subpath is made absolute first, because it depends on where the previous subpath ended.
-- `svg` for `svg`, as SVG markup. The frame width and height are written onto the root `<svg>` tag, so the viewBox scales to that size. Sketch trims the empty space around imported SVG content, so the plugin adds an invisible rect the size of the viewBox, uses it to place the drawing where it sits in the viewBox, and then removes it. The layer's frame ends up the size of the drawing, which can be smaller than the requested frame.
+- `svg` for `svg`, as SVG markup. The frame width and height are written onto the root `<svg>` tag, so the viewBox scales to that size. Sketch trims the empty space around imported SVG content, so the plugin adds an invisible rect the size of the viewBox, uses it to place the drawing where it sits in the viewBox, and then removes it. The layer's frame ends up the size of the drawing, which can be smaller than the requested frame. When the frame gives only a width or only a height, the plugin sets the other from the viewBox's aspect ratio. `svgFile` takes an absolute path to a `.svg` file in place of `svg`, and the plugin reads the markup from that file.
 - `image` for `image`, as an absolute path to an image file
 - `symbol` and `overrides` for `symbol`
 - `children` for `group` and `artboard`
@@ -178,7 +179,7 @@ Sketch 88.1 writes text alignment with the raw values AppKit uses on Intel Macs.
 
 `smartLayout` is one of `LeftToRight`, `HorizontallyCenter`, `RightToLeft`, `TopToBottom`, `VerticallyCenter`, or `BottomToTop`, and `null` turns it off. It applies to groups and symbol masters. After `setOverrides` changes an instance whose master has a smart layout, the plugin calls `resizeWithSmartLayout()` on the instance, so the instance grows or shrinks to fit its new override text.
 
-`mask: true` makes a shape path, shape, or image a clipping mask by calling `setHasClippingMask` on the native layer, and `mask: false` turns it off. Sketch clips every layer above the mask in the same group or artboard to the mask's outline, so a mask normally sits first in a group with the layers it clips. A group holding a mask is sized to the mask instead of the full size of the layers it clips. Sketch only recalculates that size when the group is refit, so `updateLayer` refits the parent group after it changes `mask` or `breaksMask`. `breaksMask: true` calls `setShouldBreakMaskChain`, which stops the mask from clipping that layer and the layers above it. The plugin refuses `mask: true` on any other layer type.
+`mask: true` makes a shape path, shape, or image a clipping mask by calling `setHasClippingMask` on the native layer, and `mask: false` turns it off. Sketch clips every layer above the mask in the same group or artboard to the mask's outline, so a mask normally sits at the back of a group, below the layers it clips. A group holding a mask is sized to the mask instead of the full size of the layers it clips. Sketch only recalculates the group's size when the group is refit, so `updateLayer` refits the parent group after it changes `mask` or `breaksMask`. `breaksMask: true` calls `setShouldBreakMaskChain`, which stops the mask from clipping that layer and the layers above it. The plugin refuses `mask: true` on any layer that is not a shape path, shape, or image.
 
 `updateLayer` takes `parentId` to move a layer into another artboard, group, or page. The layer keeps its place on the canvas, and a `frame` in the same request is relative to the new parent. An artboard can only move to a page, and a layer cannot move into itself or one of its children. A group that the layer leaves or joins is resized to fit its children.
 
@@ -224,6 +225,14 @@ Write replies are sized to keep the agent's context small:
 `orientation` is `landscape`, `portrait`, `squarish`, or `any`, and `get_images` picks it from the width and height when it is left out. `color` is one of the 11 colors `get_images` accepts, such as `blue` or `black_and_white`. When no photo matches a filter, `get_images` searches again without it and prints a line that starts with `Warning:`, and the server returns those lines in `warnings`.
 
 The server runs the function with `/bin/zsh -f -c`, and the search text, sizes, orientation, and color go in as separate shell parameters, so text from the agent is never parsed as shell code. The shell gets only `HOME`, `USER`, and `PATH` from the environment.
+
+## Assets
+
+`assets/` holds textures and SVG drawings for agents to use, and `assets/manifest.json` lists each one with its `file`, `kind`, `width`, `height`, and a `description` of how to use it. `list_assets` returns the manifest with each `file` turned into an absolute `path`, and with an optional `kind` it returns only `texture` or only `svg` entries. It drops any entry whose path would fall outside `assets/`.
+
+The textures are PNGs that tile without a seam. `paper` and `contours` are drawn from value noise on a lattice that wraps at the tile edge, and `grain` is random noise for each pixel. `grain` and `paper` are gray around the middle value, so they go on their own layer above a color, filled in `tile` mode, with `blendingMode` set to `Overlay` or `SoftLight` and a low `opacity`. The `fills` input has no blend mode field, so a texture added as a second fill on the colored layer covers the color. `contours` is white lines on a clear background and needs only a low `opacity`.
+
+The leaf drawings point up with the stem at the bottom, so a `rotation` angle sets the direction the leaf points. Each leaf has a lit half and a shaded half, a tapered midrib, and curved veins. `pnpm assets` regenerates every asset and the manifest from `scripts/generate-assets.ts`, and the output is the same on every run because the random numbers come from a fixed seed.
 
 ## Layer spec
 

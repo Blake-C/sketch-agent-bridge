@@ -2,11 +2,36 @@ import { readFile } from 'node:fs/promises'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import { z } from 'zod'
+import { ASSETS_DIR, ASSET_KINDS, listAssets } from './assets.ts'
 import { errorResult } from './content.ts'
 import { COLORS, ORIENTATIONS, fetchImages } from './images.ts'
 import type { SketchBridge } from './sketch.ts'
 
-export function registerImageTools(server: McpServer, bridge: SketchBridge) {
+export function registerImageTools(server: McpServer, bridge: SketchBridge, assetsDir = ASSETS_DIR) {
+	server.registerTool(
+		'list_assets',
+		{
+			title: 'List assets',
+			description:
+				'Lists the textures and SVG drawings that come with the bridge, with absolute paths and how to use each one. Textures are tiling PNGs for an image fill in tile mode. SVG drawings go in an svg layer through svgFile.',
+			inputSchema: {
+				kind: z.enum(ASSET_KINDS).optional().describe('Only list this kind.'),
+			},
+			annotations: { readOnlyHint: true, openWorldHint: false },
+		},
+		async (args): Promise<CallToolResult> => {
+			try {
+				return {
+					content: [
+						{ type: 'text', text: JSON.stringify({ assets: await listAssets(assetsDir, args.kind) }) },
+					],
+				}
+			} catch (error) {
+				return errorResult(error)
+			}
+		}
+	)
+
 	server.registerTool(
 		'fetch_images',
 		{

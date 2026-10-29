@@ -341,9 +341,22 @@ function svgViewBox(tag) {
 	return width > 0 && height > 0 ? [0, 0, width, height] : null
 }
 
-function svgWithSize(svg, width, height) {
+function readSvgFile(path) {
+	if (!String(path).startsWith('/') || !/\.svg$/i.test(path)) {
+		throw new Error('svgFile must be an absolute path to a .svg file')
+	}
+	const svg = NSString.stringWithContentsOfFile_encoding_error(path, NSUTF8StringEncoding, null)
+	if (!svg) throw new Error('Could not read the SVG at ' + path)
+	return String(svg)
+}
+
+function svgWithSize(svg, givenWidth, givenHeight) {
 	return svg.replace(/<svg\b[^>]*>/, tag => {
 		const box = svgViewBox(tag)
+		let width = givenWidth
+		let height = givenHeight
+		if (box && width !== undefined && height === undefined) height = (width * box[3]) / box[2]
+		if (box && height !== undefined && width === undefined) width = (height * box[2]) / box[3]
 		let next = tag
 		if (width !== undefined)
 			next = next.replace(/\swidth\s*=\s*["'][^"']*["']/, '').replace('<svg', '<svg width="' + width + '"')
@@ -419,8 +432,8 @@ function createNode(document, parent, node) {
 	} else if (node.kind === 'image') {
 		layer = new sketch.Image({ parent, image: loadImage(node.image), frame: rectangle })
 	} else if (node.kind === 'svg') {
-		if (!node.svg) throw new Error('An svg layer needs svg markup')
-		layer = createSvgLayer(parent, node.svg, frame)
+		if (!node.svg && !node.svgFile) throw new Error('An svg layer needs svg markup or svgFile')
+		layer = createSvgLayer(parent, node.svgFile ? readSvgFile(node.svgFile) : node.svg, frame)
 	} else if (node.kind === 'symbol') {
 		const master = findSymbolMaster(document, node.symbol)
 		layer = master.createNewInstance()
