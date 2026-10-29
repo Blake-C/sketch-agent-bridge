@@ -1,7 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { errorResult, replyResult } from './content.ts'
-import { findInput } from './schemas.ts'
+import { findInput, hex } from './schemas.ts'
 import { listInbox, readInboxItem } from './inbox.ts'
 import type { SketchBridge } from './sketch.ts'
 
@@ -219,15 +219,24 @@ export function registerReadTools(server: McpServer, bridge: SketchBridge) {
 		{
 			title: 'Export layers',
 			description:
-				'Exports layers as PNG and/or SVG. PNGs are returned as images and SVGs as markup. Files stay on disk for 24 hours at the returned paths.',
+				"Exports layers as PNG, SVG, or JSON. PNGs are returned as images, and SVG and JSON as text. The JSON is the layer in Sketch's file format, which is longer and more detailed than the spec from get_layer. Files stay on disk for 24 hours at the returned paths.",
 			inputSchema: {
 				documentId,
 				ids: z.array(z.string()).min(1).max(50).describe('Layer ids.'),
 				formats: z
-					.array(z.enum(['png', 'svg']))
+					.array(z.enum(['png', 'svg', 'json']))
 					.optional()
 					.describe('Default png.'),
 				scale,
+				trimmed: z
+					.boolean()
+					.optional()
+					.describe(
+						'Crops a PNG to its visible content. Default true. false keeps the transparent space of the full frame.'
+					),
+				background: hex
+					.optional()
+					.describe('Color painted behind the content of a PNG. SVG and JSON ignore it.'),
 			},
 			annotations: readOnly,
 		},

@@ -80,7 +80,10 @@ function exportOp(args, request) {
 	const layers = (args.ids || []).map(id => findLayer(document, id))
 	return {
 		result: { exported: layers.map(found => ({ id: found.id, name: found.name })) },
-		files: exportLayers(layers, request.replyDir + '/exports', args.formats, args.scale || 1),
+		files: exportLayers(layers, request.replyDir + '/exports', args.formats, args.scale || 1, {
+			trimmed: args.trimmed,
+			background: args.background,
+		}),
 	}
 }
 

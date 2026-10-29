@@ -7,6 +7,7 @@ Sketch Agent Bridge connects Sketch 88.1 to AI agents such as Claude Code. Sketc
 An agent connected to the MCP server can:
 
 - see the current selection as a PNG, an SVG, and a JSON spec of its layers
+- export layers as PNG, SVG, or Sketch's JSON file format, with a background color or the full frame
 - list pages and artboards, and read any layer by id
 - add, rename, reorder, and delete pages
 - find layers by type, name, text, symbol, shared style, or swatch, and list symbols with how many instances use each one

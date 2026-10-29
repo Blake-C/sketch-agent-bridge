@@ -42,7 +42,7 @@ Every op takes an optional `documentId`. Without it, the op uses the front docum
 | `artboards`         | `list_artboards`      | `pageId`                                                                                                                                                                                                                                                             |
 | `layer`             | `get_layer`           | `id`, `depth`, `includeHidden`, `textLines`                                                                                                                                                                                                                          |
 | `selection`         | `get_selection`       | `depth`, `includeHidden`, `textLines`, `scale`, `svg`, `export`                                                                                                                                                                                                      |
-| `export`            | `export_layers`       | `ids`, `formats`, `scale`                                                                                                                                                                                                                                            |
+| `export`            | `export_layers`       | `ids`, `formats`, `scale`, `trimmed`, `background`                                                                                                                                                                                                                   |
 | `tokens`            | `get_design_tokens`   | none                                                                                                                                                                                                                                                                 |
 | `find`              | `find_layers`         | `pageId`, `type`, `name`, `nameMatch`, `text`, `symbol`, `sharedStyle`, `swatch`, `limit`                                                                                                                                                                            |
 | `symbols`           | `list_symbols`        | `includeOverrides`                                                                                                                                                                                                                                                   |
@@ -106,6 +106,12 @@ With `includeDisabled`, `libraries` lists every library Sketch knows, and each o
 There is no separate import op. When a write op looks up a symbol, shared style, or swatch by name or id and the document does not have it, the plugin searches the enabled libraries and imports the first match in the same plugin run. Sketch removes an imported library swatch from the document when no layer uses it, so a swatch imported in one run and used in a later run can be gone by then. Symbols and shared styles are imported the same way. A library symbol brings the nested symbols it uses with it, and `symbols` reports each one with `library` and no `page`.
 
 Assigning a library text style with `syncWithSharedStyle` links the style without changing the text layer's font, size, or frame, so for a text layer the plugin first copies the shared style onto the layer with `layer.style = shared.style` and then links it. `document.swatches` in Sketch's API lists only local swatches, so the plugin also reads the document's foreign swatches when it looks up a swatch.
+
+## Export
+
+`export` writes each layer as `png`, `svg`, or `json` into `replyDir/exports/<layerId>/`. The server returns a PNG as an image, and SVG markup when `svg` was asked for. JSON is the layer in Sketch's file format, which Sketch writes with `sketch.export`, and the server returns it as text when it is 100 KB or smaller and as a path otherwise. One artboard in the test document came to 510 KB of JSON.
+
+`trimmed` and `background` change PNGs only. Sketch crops a PNG to its visible content unless `trimmed` is false, and with `false` the PNG covers the layer's whole frame. `background` is a hex color painted behind the content, and Sketch ignores it for SVG.
 
 ## Reveal
 

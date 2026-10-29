@@ -47,3 +47,23 @@ test('replyResult marks plugin errors', async () => {
 	assert.equal(result.isError, true)
 	assert.deepEqual(result.content, [{ type: 'text', text: 'No layer has id X' }])
 })
+
+test('replyResult inlines JSON exports and gives the path of large ones', async () => {
+	const dir = await mkdtemp(path.join(tmpdir(), 'content-test-'))
+	const small = path.join(dir, 'a.json')
+	const large = path.join(dir, 'b.json')
+	await writeFile(small, '{"_class":"text"}')
+	await writeFile(large, JSON.stringify({ name: 'x'.repeat(200 * 1024) }))
+
+	const result = await replyResult({
+		ok: true,
+		result: {},
+		files: [
+			{ layerId: 'A', format: 'json', path: small },
+			{ layerId: 'B', format: 'json', path: large },
+		],
+	})
+
+	assert.deepEqual(result.content[1], { type: 'text', text: 'JSON for A:\n{"_class":"text"}' })
+	assert.deepEqual(result.content[2], { type: 'text', text: `JSON for B is too large to show inline: ${large}` })
+})

@@ -3,7 +3,7 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import type { Reply } from './sketch.ts'
 
 const MAX_INLINE_IMAGE_BYTES = 4 * 1024 * 1024
-const MAX_INLINE_SVG_BYTES = 100 * 1024
+const MAX_INLINE_TEXT_BYTES = 100 * 1024
 
 type Content = CallToolResult['content'][number]
 
@@ -32,9 +32,18 @@ export async function replyResult(reply: Reply, options: { inlineSvg?: boolean }
 			content.push({
 				type: 'text',
 				text:
-					svg.length > MAX_INLINE_SVG_BYTES
+					svg.length > MAX_INLINE_TEXT_BYTES
 						? `SVG for ${file.layerId} is too large to show inline: ${file.path}`
 						: `SVG for ${file.layerId}:\n${svg}`,
+			})
+		} else if (file.format === 'json') {
+			const json = await readFile(file.path, 'utf8')
+			content.push({
+				type: 'text',
+				text:
+					json.length > MAX_INLINE_TEXT_BYTES
+						? `JSON for ${file.layerId} is too large to show inline: ${file.path}`
+						: `JSON for ${file.layerId}:\n${json}`,
 			})
 		}
 	}
