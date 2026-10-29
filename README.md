@@ -20,6 +20,11 @@ An agent connected to the MCP server can do the things listed below in the open 
 - build a whole tree of artboards, groups, shapes, paths, text, SVG drawings, and images in one call
 - download the Unsplash photos most relevant to a query, filtered by orientation or color, with a credit for each photographer, for use as image layers and fills
 
+### Fonts
+
+- list the installed font families and the weights and styles of each one
+- download a family from Google Fonts into `~/Library/Fonts` and add it to a "Google Fonts" collection in Font Book
+
 ### Edit layers
 
 - edit layers, move them into other artboards, groups, or pages, lock them, group and ungroup them, and apply shared styles
@@ -73,8 +78,8 @@ Build the server in Docker, connect it to an agent, and optionally link the plug
 - Each edit is one step in Sketch's undo history. If Sketch stops recording undo history for the document, every edit reply starts with a warning until Sketch restarts.
 - The agent can only delete layers, detach symbol instances, delete pages, or turn symbol masters into artboards when it created them, unless it passes `force: true`.
 - `update_library` changes Sketch's library list for every document, outside the backup and Cmd+Z, and it can add or turn off a library but not remove one.
-- The bridge makes no network calls except through `fetch_images`, which calls `api.unsplash.com` and downloads photos from `images.unsplash.com`. The server reads the Unsplash key from the login keychain, or from `UNSPLASH_ACCESS_KEY` when the keychain has no key, and sends it only to `api.unsplash.com`.
-- Apart from the `.sketch` file that `save_document` saves, every file the bridge writes stays under `~/.sketch-agent-bridge/` on the Mac.
+- The bridge makes network calls only through two tools. `fetch_images` calls `api.unsplash.com` and downloads photos from `images.unsplash.com`, and `install_google_font` calls `fonts.googleapis.com` and downloads fonts from `fonts.gstatic.com`. The server reads the Unsplash key from the login keychain, or from `UNSPLASH_ACCESS_KEY` when the keychain has no key, and sends it only to `api.unsplash.com`.
+- Apart from the `.sketch` file that `save_document` saves, every file the bridge writes stays under `~/.sketch-agent-bridge/` on the Mac, except for the font files that `install_google_font` adds to `~/Library/Fonts` and the "Google Fonts" collection that macOS saves to `~/Library/FontCollections/`. `install_google_font` never replaces a font file that is already there.
 - The plugin reads image and SVG files only from `~/.sketch-agent-bridge/` and the folders listed in `SKETCH_AGENT_BRIDGE_ASSET_DIRS`. The folders under `~/.sketch-agent-bridge/` can be read only by the user who owns them.
 
 ## License

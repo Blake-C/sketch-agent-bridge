@@ -14,7 +14,8 @@ const ops = Object.assign(
 	require('./ops/inventory.js'),
 	require('./ops/library.js'),
 	require('./ops/pages.js'),
-	require('./ops/document.js')
+	require('./ops/document.js'),
+	require('./ops/fonts.js')
 )
 
 function requestDirFrom(context) {

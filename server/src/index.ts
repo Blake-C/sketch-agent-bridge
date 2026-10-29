@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import packageJson from '../../package.json' with { type: 'json' }
 import { Backups } from './backup.ts'
+import { registerFontTools } from './font-tools.ts'
 import { registerImageTools } from './image-tools.ts'
 import { registerReadTools } from './read-tools.ts'
 import { SketchBridge } from './sketch.ts'
@@ -13,5 +14,6 @@ const bridge = new SketchBridge()
 registerReadTools(server, bridge)
 registerWriteTools(server, bridge, new Backups(bridge.bridgeDir))
 registerImageTools(server, bridge)
+registerFontTools(server, bridge)
 
 await server.connect(new StdioServerTransport())

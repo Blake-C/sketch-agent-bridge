@@ -3,6 +3,7 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 const cocoaGlobals = {
+	CTFontManagerRegisterFontsForURL: 'readonly',
 	framework: 'readonly',
 	MOPointer: 'readonly',
 	MSColor: 'readonly',
@@ -12,6 +13,8 @@ const cocoaGlobals = {
 	NSTextAlignmentCenter: 'readonly',
 	NSArray: 'readonly',
 	NSFileManager: 'readonly',
+	NSFontCollection: 'readonly',
+	NSFontDescriptor: 'readonly',
 	NSFontItalicTrait: 'readonly',
 	NSFontManager: 'readonly',
 	NSHomeDirectory: 'readonly',

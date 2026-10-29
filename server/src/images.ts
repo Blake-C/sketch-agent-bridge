@@ -1,12 +1,10 @@
 import { execFile } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { mkdir, writeFile } from 'node:fs/promises'
-import { setDefaultAutoSelectFamilyAttemptTimeout } from 'node:net'
 import path from 'node:path'
+import { FETCH_TIMEOUT_MS, networkError, readLimited } from './http.ts'
 import { BridgeError } from './sketch.ts'
 
-const FETCH_TIMEOUT_MS = 120_000
-const CONNECT_ATTEMPT_TIMEOUT_MS = 1000
 const KEY_TIMEOUT_MS = 10_000
 const MAX_ERROR_CHARS = 300
 const MAX_IMAGE_BYTES = 25 * 1024 * 1024
@@ -21,9 +19,6 @@ const UTM = { utm_source: 'sketch_agent_bridge', utm_medium: 'referral' }
 // Unsplash sometimes sends raw control characters inside strings, which JSON.parse rejects.
 // eslint-disable-next-line no-control-regex
 const CONTROL_CHARS = /[\u0000-\u001f]/g
-
-// Node 24 gives each address 250 ms before trying the next. An IPv4 connection to images.unsplash.com can take about 240 ms, and on a network with no working IPv6 route the IPv6 attempt then fails with UND_ERR_CONNECT_TIMEOUT.
-setDefaultAutoSelectFamilyAttemptTimeout(CONNECT_ATTEMPT_TIMEOUT_MS)
 
 export const ORIENTATIONS = ['landscape', 'portrait', 'squarish', 'any'] as const
 export const COLORS = [
@@ -135,15 +130,6 @@ function apiHeaders(key: string): Record<string, string> {
 	return { 'Accept-Version': 'v1', 'Authorization': `Client-ID ${key}` }
 }
 
-// fetch rejects with the message "fetch failed" and puts the reason, such as ECONNRESET, in cause.
-function networkError(action: string, error: unknown): BridgeError {
-	if (error instanceof BridgeError) return error
-	const cause = error instanceof Error && error.cause instanceof Error ? error.cause : undefined
-	const reason = (cause as { code?: string } | undefined)?.code ?? cause?.message
-	const message = error instanceof Error ? error.message : String(error)
-	return new BridgeError(`${action} failed: ${reason ? `${message} (${reason})` : message}`)
-}
-
 // Unsplash sends JSON with an errors list for most failures, and may send plain text for others.
 async function errorDetail(response: Response, key: string): Promise<string> {
 	const text = await response.text().catch(() => '')
@@ -233,22 +219,8 @@ async function download(deps: FetchDeps, photo: Photo, request: FetchRequest, fi
 	if (response.url && new URL(response.url).hostname !== IMAGE_HOST) {
 		throw new BridgeError(`Downloading a photo was redirected to ${new URL(response.url).hostname}`)
 	}
-	await writeFile(file, await readLimited(response, MAX_IMAGE_BYTES), { mode: 0o600 })
-}
-
-async function readLimited(response: Response, maxBytes: number): Promise<Uint8Array> {
-	const tooLarge = () => new BridgeError(`Unsplash sent a photo larger than ${maxBytes / 1024 / 1024} MB`)
-	if (Number(response.headers.get('content-length') ?? 0) > maxBytes) throw tooLarge()
-	const chunks: Uint8Array[] = []
-	let total = 0
-	if (response.body) {
-		for await (const chunk of response.body) {
-			total += chunk.byteLength
-			if (total > maxBytes) throw tooLarge()
-			chunks.push(chunk)
-		}
-	}
-	return Buffer.concat(chunks)
+	const tooLarge = () => new BridgeError(`Unsplash sent a photo larger than ${MAX_IMAGE_BYTES / 1024 / 1024} MB`)
+	await writeFile(file, await readLimited(response, MAX_IMAGE_BYTES, tooLarge), { mode: 0o600 })
 }
 
 // Unsplash's API guidelines require a request to download_location for each photo the app uses.
