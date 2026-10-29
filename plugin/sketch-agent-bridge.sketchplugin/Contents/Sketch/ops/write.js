@@ -20,6 +20,7 @@ const {
 	linkSharedStyle,
 	findSymbolMaster,
 	setOverrides,
+	setEditableOverrides,
 	createNode,
 	artboardOf,
 	originIn,
@@ -89,6 +90,7 @@ function updateLayer(args, request) {
 		if (keepsMasterName && args.name === undefined) layer.name = master.name
 	}
 	if (args.overrides) setOverrides(document, layer, args.overrides)
+	if (args.editableOverrides) setEditableOverrides(layer, args.editableOverrides)
 	applyStyle(document, layer, args.style, args.textStyle)
 	applyLayout(layer, args)
 	if (args.booleanOperation !== undefined) setBooleanOperation(layer, args.booleanOperation)

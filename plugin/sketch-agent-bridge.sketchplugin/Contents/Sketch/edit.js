@@ -335,17 +335,19 @@ function pickOverride(instance, candidates, value) {
 	return content.find(item => !isLocked(instance, item)) || content[0] || candidates[0]
 }
 
+function matchesOverride(item, change) {
+	if (change.id) return item.id === change.id
+	return (
+		Boolean(item.affectedLayer) &&
+		item.affectedLayer.name === change.layer &&
+		(!change.property || item.property === change.property)
+	)
+}
+
 function setOverrides(document, instance, changes) {
 	if (instance.type !== 'SymbolInstance') throw new Error('Only symbol instances have overrides')
 	changes.forEach(change => {
-		const candidates = instance.overrides.filter(
-			item =>
-				(change.id && item.id === change.id) ||
-				(!change.id &&
-					item.affectedLayer &&
-					item.affectedLayer.name === change.layer &&
-					(!change.property || item.property === change.property))
-		)
+		const candidates = instance.overrides.filter(item => matchesOverride(item, change))
 		const override = pickOverride(instance, candidates, change.value)
 		if (!override) throw new Error('No override matches ' + (change.id || change.layer))
 		if (isLocked(instance, override)) {
@@ -355,6 +357,20 @@ function setOverrides(document, instance, changes) {
 		instance.setOverrideValue(override, overrideValue(document, override, change.value))
 	})
 	if (instance.master && instance.master.smartLayout) instance.resizeWithSmartLayout()
+}
+
+function setEditableOverrides(master, changes) {
+	if (master.type !== 'SymbolMaster') throw new Error('Only symbol masters set which overrides are editable')
+	if (master.getLibrary()) {
+		throw new Error(master.name + ' comes from a library. Unlink it with sync_library_item first.')
+	}
+	changes.forEach(change => {
+		const matches = master.overrides.filter(item => matchesOverride(item, change))
+		if (!matches.length) throw new Error('No override matches ' + (change.id || change.layer))
+		matches.forEach(override => {
+			override.editable = change.editable
+		})
+	})
 }
 
 function svgAttribute(tag, name) {
@@ -615,6 +631,7 @@ module.exports = {
 	linkSharedStyle,
 	findSymbolMaster,
 	setOverrides,
+	setEditableOverrides,
 	createNode,
 	artboardOf,
 	originIn,

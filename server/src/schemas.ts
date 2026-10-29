@@ -203,6 +203,22 @@ export const overrides = z
 	)
 	.describe('Overrides on a symbol instance, matched by override id or by layer name.')
 
+export const editableOverrides = z
+	.array(
+		z.object({
+			id: z.string().optional().describe('Override id. Use this or layer.'),
+			layer: z.string().optional().describe('Name of the layer inside the symbol master.'),
+			property: z
+				.enum(['stringValue', 'symbolID', 'image', 'layerStyle', 'textStyle', 'fillColor'])
+				.optional()
+				.describe('Without it, every override on the layer changes.'),
+			editable: z.boolean(),
+		})
+	)
+	.describe(
+		'For a symbol master. Sets whether instances can change each override, matched by override id or by layer name. list_symbols with includeOverrides lists the overrides.'
+	)
+
 export const render = {
 	render: z
 		.enum(['none', 'layer', 'artboard'])

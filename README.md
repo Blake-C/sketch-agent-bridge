@@ -22,6 +22,7 @@ An agent connected to the MCP server can:
 - combine shapes with union, subtract, intersect, and difference
 - pin layers to the edges of their group, artboard, or symbol and fix their width or height, which sets how they change when a symbol instance is resized
 - turn layers into symbols, place instances, set their overrides, swap them between symbols, and detach them
+- set which overrides a symbol lets its instances change
 - turn artboards into symbols and back, and see which layers no longer match their shared style
 - use symbols, shared styles, and swatches from enabled libraries by name, sync or unlink them, and add libraries or turn them on and off
 - link layers and hotspots to artboards for prototypes, add export presets, and add slices

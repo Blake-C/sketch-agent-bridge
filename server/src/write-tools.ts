@@ -9,6 +9,7 @@ import {
 	booleanOperation,
 	buildNode,
 	documentId,
+	editableOverrides,
 	fixedWidth,
 	frame,
 	hex,
@@ -173,7 +174,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Update layer',
 			description:
-				'Changes an existing layer: parent, name, visibility, lock, frame, text, styled runs of text, line spacing, corner radius, path, which symbol an instance uses, symbol overrides, style, text style, smart layout, resizing, rotation, flips, masks, boolean operations, stacking order, prototype links, and export presets.',
+				'Changes an existing layer: parent, name, visibility, lock, frame, text, styled runs of text, line spacing, corner radius, path, which symbol an instance uses, symbol overrides, style, text style, smart layout, resizing, rotation, flips, masks, boolean operations, stacking order, prototype links, export presets, and which overrides a symbol master lets instances change.',
 			inputSchema: {
 				documentId,
 				id: z.string(),
@@ -205,6 +206,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 						'Swap a symbol instance to another master, by name or id. Library symbol names work too.'
 					),
 				overrides: overrides.optional(),
+				editableOverrides: editableOverrides.optional(),
 				style,
 				textStyle,
 				...layout,
