@@ -346,16 +346,25 @@ function matchesOverride(item, change) {
 
 function setOverrides(document, instance, changes) {
 	if (instance.type !== 'SymbolInstance') throw new Error('Only symbol instances have overrides')
-	changes.forEach(change => {
-		const candidates = instance.overrides.filter(item => matchesOverride(item, change))
-		const override = pickOverride(instance, candidates, change.value)
-		if (!override) throw new Error('No override matches ' + (change.id || change.layer))
-		if (isLocked(instance, override)) {
-			const name = override.affectedLayer ? override.affectedLayer.name : override.id
-			throw new Error('The symbol master does not allow the ' + override.property + ' override on ' + name)
-		}
-		instance.setOverrideValue(override, overrideValue(document, override, change.value))
-	})
+	// A change can swap a nested symbol that later changes match inside, so changes apply in order and a failure restores the values from before.
+	// overrideValues returns the live mutable array, so the snapshot copies it and its items.
+	const before = NSArray.alloc().initWithArray_copyItems(instance.sketchObject.overrideValues(), true)
+	try {
+		changes.forEach(change => {
+			if (!change.id && !change.layer) throw new Error('Each override needs an id or a layer')
+			const candidates = instance.overrides.filter(item => matchesOverride(item, change))
+			const override = pickOverride(instance, candidates, change.value)
+			if (!override) throw new Error('No override matches ' + (change.id || change.layer))
+			if (isLocked(instance, override)) {
+				const name = override.affectedLayer ? override.affectedLayer.name : override.id
+				throw new Error('The symbol master does not allow the ' + override.property + ' override on ' + name)
+			}
+			instance.setOverrideValue(override, overrideValue(document, override, change.value))
+		})
+	} catch (error) {
+		instance.sketchObject.setOverrideValues(before)
+		throw error
+	}
 	if (instance.master && instance.master.smartLayout) instance.resizeWithSmartLayout()
 }
 

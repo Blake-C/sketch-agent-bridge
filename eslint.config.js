@@ -10,6 +10,7 @@ const cocoaGlobals = {
 	MSSimpleGrid: 'readonly',
 	NSImage: 'readonly',
 	NSTextAlignmentCenter: 'readonly',
+	NSArray: 'readonly',
 	NSFileManager: 'readonly',
 	NSFontItalicTrait: 'readonly',
 	NSFontManager: 'readonly',
