@@ -2,6 +2,7 @@ const sketch = require('sketch')
 const { BRIDGE_DIR, makeDir, writeText } = require('./files.js')
 const { layerSpec, swatchNames } = require('./spec.js')
 const { exportLayers } = require('./export.js')
+const { documentPath } = require('./document.js')
 
 function slug(text) {
 	return (
@@ -32,7 +33,7 @@ function onSendSelection() {
 	const options = { document, swatches: swatchNames(document) }
 	const files = exportLayers(layers, dir, ['png', 'svg'], 2)
 	const spec = {
-		document: document.path ? String(document.path) : null,
+		document: documentPath(document),
 		page: document.selectedPage.name,
 		sentAt: new Date().toISOString(),
 		layers: layers.map(layer => layerSpec(layer, options)),

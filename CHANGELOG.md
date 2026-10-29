@@ -15,6 +15,10 @@ All notable changes to this project will be documented in this file.
 - Changed the `rotation` description to say that rotation is clockwise.
 - Changed CI to run on pushes to `dev` as well as `main`, and Dependabot to open its pull requests against `dev`, where development now happens before it is merged into `main`.
 
+### Fixed
+
+- Fixed the document path in `sketch_status`, `save_document`, and Send Selection to Agent, which kept URL escapes such as `%20` for spaces, so the backup before each write could not find a file whose name has spaces.
+
 ## [0.4.0] - 2026-10-29
 
 ### Added

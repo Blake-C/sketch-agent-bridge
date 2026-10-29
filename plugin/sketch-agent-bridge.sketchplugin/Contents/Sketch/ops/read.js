@@ -1,5 +1,5 @@
 const sketch = require('sketch')
-const { resolveDocument, findLayer, findPage, documentName, undoIsStuck } = require('../document.js')
+const { resolveDocument, findLayer, findPage, documentName, documentPath, undoIsStuck } = require('../document.js')
 const { layerSpec, swatchNames, frameSpec } = require('../spec.js')
 const { exportLayers } = require('../export.js')
 const { rightOfContent } = require('../edit.js')
@@ -13,7 +13,7 @@ function status() {
 			documents: sketch.getDocuments().map(document => ({
 				id: document.id,
 				name: documentName(document),
-				path: document.path ? String(document.path) : null,
+				path: documentPath(document),
 				colorSpace: String(document.colorSpace),
 				selectedPage: document.selectedPage ? document.selectedPage.name : null,
 				selectionCount: document.selectedLayers.length,

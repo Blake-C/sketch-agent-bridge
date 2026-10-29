@@ -39,6 +39,12 @@ function documentName(document) {
 	return String(document.sketchObject.displayName())
 }
 
+// The JS API's document.path comes from the file URL's absoluteString, so it keeps percent escapes such as %20.
+function documentPath(document) {
+	const url = document.sketchObject.fileURL()
+	return url ? String(url.path()) : null
+}
+
 // Sketch 88.1 can leave a document's history maker partway through a moment, and then no edit becomes an undo step until Sketch restarts.
 function undoIsStuck(document) {
 	try {
@@ -48,4 +54,4 @@ function undoIsStuck(document) {
 	}
 }
 
-module.exports = { resolveDocument, findLayer, findPage, documentName, undoIsStuck }
+module.exports = { resolveDocument, findLayer, findPage, documentName, documentPath, undoIsStuck }
