@@ -60,6 +60,7 @@ All notable changes to this project will be documented in this file.
 
 - Changed the color, fill, shadow, style, text style, and text run schemas to appear once in each tool's `definitions` and be referenced with `$ref`. This change and the removal of `create_layer` and `update_layer` cut `tools/list` from 115,945 to 77,541 characters.
 - Changed the `build_layers` reply to leave root layers out of `groups`, because `roots` already lists them with their final frames.
+- Changed `list_fonts` and `install_google_font` to leave out each face's PostScript name.
 - Changed the `mask` description to say that Sketch draws the mask's fill, so a mask that should only clip needs `fills: []`.
 - Changed the Docker setup to pin the Node and gitleaks images by digest, run as the `node` user with every Linux capability dropped, and add an `offline` service with no network for build, test, lint, and format.
 - Changed `fetch_images` to refuse a photo larger than 25 MB, and a download that redirects away from `images.unsplash.com`.

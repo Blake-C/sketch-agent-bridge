@@ -318,7 +318,7 @@ The server downloads photos only from `https://images.unsplash.com` and sends do
 
 ## Fonts
 
-`list_fonts` runs the `fonts` op, which reads the installed families from `NSFontManager`. Without `family`, the reply lists every family name and, in `googleFonts`, the families in the "Google Fonts" collection. With `family`, the reply lists each family whose name contains it, matched without case, and each face's PostScript name, style name, italic flag, and weight on the Sketch scale, where 5 is regular and 9 is bold.
+`list_fonts` runs the `fonts` op, which reads the installed families from `NSFontManager`. Without `family`, the reply lists every family name and, in `googleFonts`, the families in the "Google Fonts" collection. With `family`, the reply lists each family whose name contains it, matched without case, and each face's style name, italic flag, and weight on the Sketch scale, where 5 is regular and 9 is bold.
 
 `install_google_font` runs these steps:
 

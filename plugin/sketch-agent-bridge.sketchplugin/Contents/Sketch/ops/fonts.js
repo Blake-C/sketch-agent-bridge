@@ -5,7 +5,6 @@ const FONTS_DIR = standardize('~/Library/Fonts')
 const USER_VISIBILITY = 2
 const PROCESS_SCOPE = 1
 const FAMILY_ATTRIBUTE = 'NSFontFamilyAttribute'
-const POSTSCRIPT_NAME = 0
 const STYLE_NAME = 1
 const WEIGHT = 2
 const TRAITS = 3
@@ -20,7 +19,6 @@ function toArray(list) {
 function faces(family) {
 	return toArray(NSFontManager.sharedFontManager().availableMembersOfFontFamily(family))
 		.map(member => ({
-			postscriptName: String(member.objectAtIndex(POSTSCRIPT_NAME)),
 			style: String(member.objectAtIndex(STYLE_NAME)),
 			weight: Number(member.objectAtIndex(WEIGHT)),
 			italic: Boolean(Number(member.objectAtIndex(TRAITS)) & NSFontItalicTrait) || undefined,
