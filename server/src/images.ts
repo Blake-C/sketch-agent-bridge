@@ -143,16 +143,22 @@ function networkError(action: string, error: unknown): BridgeError {
 	return new BridgeError(`${action} failed: ${reason ? `${message} (${reason})` : message}`)
 }
 
-async function apiError(response: Response, key: string): Promise<BridgeError> {
-	let detail = ''
+// Unsplash sends JSON with an errors list for most failures, and may send plain text for others.
+async function errorDetail(response: Response, key: string): Promise<string> {
+	const text = await response.text().catch(() => '')
+	let detail: string
 	try {
-		const body = JSON.parse((await response.text()).replace(CONTROL_CHARS, ' '))
-		if (Array.isArray(body?.errors)) detail = String(body.errors[0] ?? '')
+		const body = JSON.parse(text.replace(CONTROL_CHARS, ' '))
+		detail = Array.isArray(body?.errors) ? String(body.errors[0] ?? '') : ''
 	} catch {
-		// The status alone is the error when the body is not JSON.
+		detail = text.split('\n')[0].replace(CONTROL_CHARS, ' ')
 	}
-	const reason = detail ? `: ${detail.replaceAll(key, '<key>').slice(0, MAX_ERROR_CHARS)}` : ''
-	return new BridgeError(`Unsplash search failed with HTTP ${response.status}${reason}`)
+	return detail.trim().replaceAll(key, '<key>').slice(0, MAX_ERROR_CHARS)
+}
+
+async function apiError(response: Response, key: string): Promise<BridgeError> {
+	const detail = await errorDetail(response, key)
+	return new BridgeError(`Unsplash search failed with HTTP ${response.status}${detail ? `: ${detail}` : ''}`)
 }
 
 async function search(
@@ -234,7 +240,10 @@ async function trackDownload(deps: FetchDeps, key: string, photo: Photo): Promis
 			headers: apiHeaders(key),
 			signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
 		})
-		if (!response.ok) return `Unsplash did not record a download (HTTP ${response.status}).`
+		if (!response.ok) {
+			const detail = await errorDetail(response, key)
+			return `Unsplash did not record a download (HTTP ${response.status}${detail ? `: ${detail}` : ''}).`
+		}
 	} catch (error) {
 		return `Unsplash did not record a download: ${error instanceof Error ? error.message : String(error)}`
 	}

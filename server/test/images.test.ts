@@ -175,6 +175,29 @@ test('fetchImages reports the first Unsplash error and never the key', async () 
 	})
 })
 
+test('fetchImages keeps the photo and gives the Unsplash text when the download request fails', async () => {
+	const fake = fakeFetch([{ total: 1, results: [photo('1')] }])
+	const fetch = (async (input: URL | string, init?: RequestInit) => {
+		if (new URL(String(input)).pathname.endsWith('/download')) {
+			return new Response(`Rate Limit Exceeded\nkey ${KEY}`, { status: 403 })
+		}
+		return fake.fetch(input, init)
+	}) as typeof globalThis.fetch
+
+	const { images, warnings } = await fetchImages(await bridgeDir(), { ...request, count: 1 }, deps(fetch))
+
+	assert.equal(images.length, 1)
+	assert.deepEqual(warnings, ['Unsplash did not record a download (HTTP 403: Rate Limit Exceeded).'])
+})
+
+test('fetchImages reports a plain text search error', async () => {
+	const fetch = (async () => new Response(`Rate Limit Exceeded ${KEY}`, { status: 403 })) as typeof globalThis.fetch
+	await assert.rejects(fetchImages(await bridgeDir(), request, deps(fetch)), (error: Error) => {
+		assert.equal(error.message, 'Unsplash search failed with HTTP 403: Rate Limit Exceeded <key>')
+		return true
+	})
+})
+
 test('fetchImages passes the setup message through when there is no key', async () => {
 	const fake = fakeFetch([])
 	const missing: FetchDeps = {
