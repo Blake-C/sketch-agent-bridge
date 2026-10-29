@@ -83,3 +83,13 @@ test('errorDetail keeps only the first stderr line, up to 300 characters', () =>
 	assert.equal(errorDetail('', 'exit 1'), 'exit 1')
 	assert.equal(errorDetail('x'.repeat(500), '').length, 300)
 })
+
+test('errorDetail skips the warnings get_images prints before the failure', () => {
+	const stderr = [
+		'Warning: no black_and_white photos matched "zzqx", searching without --color.',
+		'Warning: no landscape photos matched "zzqx", searching without --orientation.',
+		'No photos matched "zzqx".',
+	].join('\n')
+	assert.equal(errorDetail(stderr, 'exit 1'), 'No photos matched "zzqx".')
+	assert.equal(errorDetail('Warning: no red photos matched "zzqx", searching without --color.\n', 'exit 1'), 'exit 1')
+})

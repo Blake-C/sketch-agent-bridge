@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Fixed `fetch_images` reporting a dropped filter as the reason it failed. `get_images` prints its `Warning:` lines before the line that says no photos matched, and the error kept only the first line. The error now skips the warnings.
 - Fixed path layers keeping only the first subpath of path data with several movetos, which turned five grid lines into one. Path data with several subpaths now becomes a compound shape with one part per subpath, and `update_layer` can replace the parts of that shape.
 - Fixed `build_layers` placing layers in the wrong spot when a group held a text layer with a `textStyle`. Sketch refit the group as soon as the text changed size, and every layer built after it was offset by the group's new origin.
 - Fixed SVG layers shifting up and to the left when the drawing did not fill its viewBox. The drawing now sits where it does in the viewBox.

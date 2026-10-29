@@ -36,8 +36,13 @@ export const COLORS = [
 	'blue',
 ] as const
 
+// get_images prints a warning for each filter it drops before the line that says why it failed.
 export function errorDetail(stderr: string, fallback: string): string {
-	return (stderr.trim().split('\n')[0] || fallback).slice(0, MAX_ERROR_CHARS)
+	const reason = stderr
+		.split('\n')
+		.map(line => line.trim())
+		.find(line => line && !WARNING_LINE.test(line))
+	return (reason || fallback).slice(0, MAX_ERROR_CHARS)
 }
 
 export type FetchRequest = {
