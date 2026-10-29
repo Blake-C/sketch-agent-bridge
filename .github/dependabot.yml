@@ -9,6 +9,10 @@ updates:
       groups:
           dev-dependencies:
               dependency-type: development
+      ignore:
+          # typescript-eslint 8.72.0 refuses to load with TypeScript 7.
+          - dependency-name: typescript
+            update-types: [version-update:semver-major]
     - package-ecosystem: github-actions
       directory: /
       schedule:
@@ -21,3 +25,7 @@ updates:
           interval: weekly
       cooldown:
           default-days: 7
+      ignore:
+          # The Node major also sets engines, the esbuild target, and setup-node in CI, so it changes by hand.
+          - dependency-name: node
+            update-types: [version-update:semver-major]
