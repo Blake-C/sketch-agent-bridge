@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Added a test that fails when `tools/list` grows past 80,000 characters.
 - Added an `install_google_font` tool, which downloads a family from Google Fonts into `~/Library/Fonts` as static TrueType files, registers them so Sketch can use them without a restart, and adds the family to a "Google Fonts" collection in Font Book.
 - Added a `list_fonts` tool, which lists the installed font families, the families in the "Google Fonts" collection, and each face's style and weight on the Sketch scale.
 - Added a `find_overlaps` tool, which lists the text layers in an artboard or group that another visible layer crosses, testing shapes against their outlines and skipping layers that hold the whole text or are hidden behind one that does.
@@ -51,6 +52,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Changed the color, fill, shadow, style, text style, and text run schemas to appear once in each tool's `definitions` and be referenced with `$ref`. This change and the removal of `create_layer` and `update_layer` cut `tools/list` from 115,945 to 77,541 characters.
 - Changed the `mask` description to say that Sketch draws the mask's fill, so a mask that should only clip needs `fills: []`.
 - Changed the Docker setup to pin the Node and gitleaks images by digest, run as the `node` user with every Linux capability dropped, and add an `offline` service with no network for build, test, lint, and format.
 - Changed `fetch_images` to refuse a photo larger than 25 MB, and a download that redirects away from `images.unsplash.com`.

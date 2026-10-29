@@ -16,6 +16,7 @@ export const color = z
 		z.object({ swatch: z.string().describe('Swatch name or id, from the document or an enabled library.') }),
 	])
 	.describe('A hex color, or { "swatch": "<name>" } to link a swatch from get_design_tokens.')
+	.meta({ id: 'color' })
 
 const point = z.object({ x: z.number(), y: z.number() })
 
@@ -40,14 +41,17 @@ export const fill = z
 		}),
 	])
 	.describe('A color, a gradient, or an image fill.')
+	.meta({ id: 'fill' })
 
-const shadow = z.object({
-	color,
-	x: z.number().optional(),
-	y: z.number().optional(),
-	blur: z.number().min(0).optional(),
-	spread: z.number().optional(),
-})
+const shadow = z
+	.object({
+		color,
+		x: z.number().optional(),
+		y: z.number().optional(),
+		blur: z.number().min(0).optional(),
+		spread: z.number().optional(),
+	})
+	.meta({ id: 'shadow' })
 
 const blendingModes = [
 	'Normal',
@@ -133,6 +137,7 @@ export const style = z
 			.describe('Dashes, line caps, joins, and arrowheads for every border. Keys left out are unchanged.'),
 		opacity: z.number().min(0).max(1).optional(),
 	})
+	.meta({ id: 'style' })
 	.optional()
 	.describe('Replaces the listed style parts. Parts left out are unchanged.')
 
@@ -165,6 +170,7 @@ export const textStyle = z
 		textUnderline: lineDecoration.optional(),
 		textStrikethrough: lineDecoration.optional(),
 	})
+	.meta({ id: 'textStyle' })
 	.optional()
 
 export const textRuns = z
@@ -194,6 +200,7 @@ export const textRuns = z
 	.describe(
 		'For text. Styles part of the text, such as one bold word. Setting text or textStyle restyles the whole text, so runs in the same request are applied after them.'
 	)
+	.meta({ id: 'textRuns' })
 
 export const frame = z.object({
 	x: z.number().optional(),
