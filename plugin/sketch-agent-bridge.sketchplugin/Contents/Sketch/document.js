@@ -12,10 +12,20 @@ function resolveDocument(args) {
 	return document
 }
 
+// A symbol master imported from a library sits on no page, so getLayerWithID does not find it.
 function findLayer(document, id) {
 	const layer = document.getLayerWithID(id)
-	if (!layer) throw new Error('No layer has id ' + id)
-	return layer
+	if (layer) return layer
+	const master = document.getSymbols().find(candidate => candidate.id === id && candidate.getLibrary())
+	if (master) {
+		throw new Error(
+			master.name +
+				' is a symbol master from the ' +
+				master.getLibrary().name +
+				' library and is on no page, so it cannot be read or changed by id. sync_library_item with action unlink makes it a local master.'
+		)
+	}
+	throw new Error('No layer has id ' + id)
 }
 
 function findPage(document, pageId) {

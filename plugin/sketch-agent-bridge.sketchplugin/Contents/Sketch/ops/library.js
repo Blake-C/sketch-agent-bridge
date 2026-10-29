@@ -53,8 +53,6 @@ function detach(args, request) {
 
 function convertSymbol(args, request) {
 	const document = editableDocument(args)
-	const foreign = document.getSymbols().find(master => master.id === args.id && master.getLibrary())
-	if (foreign) throw new Error(foreign.name + ' comes from a library. Unlink it with sync_library_item first.')
 	const layer = findLayer(document, args.id)
 	if (args.to === 'symbol') {
 		if (layer.type !== 'Artboard') throw new Error('Only artboards can become symbols')
