@@ -364,11 +364,16 @@ function setEditableOverrides(master, changes) {
 	if (master.getLibrary()) {
 		throw new Error(master.name + ' comes from a library. Unlink it with sync_library_item first.')
 	}
-	changes.forEach(change => {
-		const matches = master.overrides.filter(item => matchesOverride(item, change))
-		if (!matches.length) throw new Error('No override matches ' + (change.id || change.layer))
-		matches.forEach(override => {
-			override.editable = change.editable
+	// Every change is matched before any is applied, so a change that matches nothing leaves the master unchanged.
+	const matched = changes.map(change => {
+		if (!change.id && !change.layer) throw new Error('Each editableOverrides entry needs an id or a layer')
+		const overrides = master.overrides.filter(item => matchesOverride(item, change))
+		if (!overrides.length) throw new Error('No override matches ' + (change.id || change.layer))
+		return { overrides, editable: change.editable }
+	})
+	matched.forEach(match => {
+		match.overrides.forEach(override => {
+			override.editable = match.editable
 		})
 	})
 }
