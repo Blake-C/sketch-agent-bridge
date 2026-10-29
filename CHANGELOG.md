@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-29
+
 ### Added
 
 - Added `textStyle` to `build_layers` and to its group and artboard nodes, which sets default text style keys for the text nodes inside them.
