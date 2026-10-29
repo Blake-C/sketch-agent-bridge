@@ -149,7 +149,7 @@ test('layer nodes take resizing as booleans for each edge and size', () => {
 	assert.equal(node({ resizing: { pinLeft: 'yes' } }).success, false)
 })
 
-test('build nodes take shape kind and boolean operations, and create_layer nodes do not', () => {
+test('build nodes take shape kind and boolean operations, and plain layer nodes do not', () => {
 	const shape = {
 		kind: 'shape',
 		children: [{ kind: 'rectangle' }, { kind: 'oval', booleanOperation: 'subtract' }],

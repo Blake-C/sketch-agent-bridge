@@ -12,7 +12,6 @@ import {
 	buildOrder,
 	documentId,
 	hex,
-	layerInput,
 	relativeTo,
 	render,
 	style,
@@ -142,45 +141,11 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 	)
 
 	server.registerTool(
-		'create_layer',
-		{
-			title: 'Create layer',
-			description:
-				'Creates one layer inside an artboard, group, or page. Use build_layers for more than a few layers.',
-			inputSchema: {
-				documentId,
-				parentId: z
-					.string()
-					.describe(
-						"Id of an artboard, group, or page. Inside a group, frame is relative to the group's current frame, which moves when the group shrinks to fit, unless relativeTo is artboard."
-					),
-				...layerInput.shape,
-				relativeTo,
-				...render,
-			},
-			annotations: additive,
-		},
-		write('createLayer')
-	)
-
-	server.registerTool(
-		'update_layer',
-		{
-			title: 'Update layer',
-			description:
-				'Changes an existing layer: parent, name, visibility, lock, frame, text, styled runs of text, line spacing, corner radius, path, which symbol an instance uses, symbol overrides, style, text style, smart layout, resizing, rotation, flips, masks, boolean operations, stacking order, prototype links, export presets, and which overrides a symbol master lets instances change.',
-			inputSchema: { documentId, ...updateFields, ...render },
-			annotations: destructive,
-		},
-		write('updateLayer')
-	)
-
-	server.registerTool(
 		'update_layers',
 		{
 			title: 'Update layers',
 			description:
-				'Applies several update_layer changes in one call and renders once at the end. Each entry takes the same fields as update_layer. The layers are all looked up before any change, and if a change fails, the reply names its index and the changes before it stay applied.',
+				'Changes one or more existing layers and renders once at the end. Each entry can change the parent, name, visibility, lock, frame, text, styled runs of text, line spacing, corner radius, path, SVG drawing, which symbol an instance uses, symbol overrides, style, text style, smart layout, resizing, rotation, flips, masks, boolean operations, stacking order, prototype links, export presets, and which overrides a symbol master lets instances change. The layers are all looked up before any change, and if a change fails, the reply names its index and the changes before it stay applied.',
 			inputSchema: {
 				documentId,
 				updates: z.array(z.object(updateFields)).min(1).max(MAX_UPDATES),
@@ -281,7 +246,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Create symbol',
 			description:
-				'Turns layers that share a parent into a symbol master on the Symbols page. By default the layers are replaced with an instance of the new symbol. Name variants with slashes, such as "Feature Row/Left" and "Feature Row/Right", so they can be swapped with update_layer. The reply lists the overrides the symbol exposes.',
+				'Turns layers that share a parent into a symbol master on the Symbols page. By default the layers are replaced with an instance of the new symbol. Name variants with slashes, such as "Feature Row/Left" and "Feature Row/Right", so they can be swapped with update_layers. The reply lists the overrides the symbol exposes.',
 			inputSchema: {
 				documentId,
 				ids: z.array(z.string()).min(1),

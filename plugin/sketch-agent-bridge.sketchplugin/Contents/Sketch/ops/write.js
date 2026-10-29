@@ -4,7 +4,6 @@ const { applyStyle, hexToMSColor } = require('../style.js')
 const {
 	editableDocument,
 	draftsPage,
-	assertContainer,
 	wasCreatedByAgent,
 	setParent,
 	setFrame,
@@ -32,7 +31,6 @@ const {
 	renderFiles,
 	renderRequest,
 	result,
-	deferredResult,
 } = require('../edit.js')
 
 // Only the keys given change, so an artboard position converts x and y on their own.
@@ -55,18 +53,6 @@ function createArtboard(args, request) {
 		style: args.style,
 	})
 	return result(document, artboard, args, request)
-}
-
-function createLayer(args, request) {
-	const document = editableDocument(args)
-	if (args.kind === 'shape') throw new Error('A shape needs children, so build it with build_layers')
-	const parent = findLayer(document, args.parentId)
-	assertContainer(parent)
-	const layer = createNode(document, parent, args)
-	fromArtboardCoordinates(layer, args)
-	return args.overrides || args.kind === 'symbol'
-		? deferredResult(document, layer, args)
-		: result(document, layer, args, request)
 }
 
 const SVG_SOURCE_TYPES = ['Group', 'Shape', 'ShapePath']
@@ -136,12 +122,6 @@ function applyUpdate(document, found, args) {
 	if (args.textRuns) applyTextRuns(document, layer, args.textRuns)
 	if (args.order !== undefined) setOrder(document, layer, args.order)
 	return { layer, deferRender: args.overrides !== undefined || args.symbol !== undefined }
-}
-
-function updateLayer(args, request) {
-	const document = editableDocument(args)
-	const { layer, deferRender } = applyUpdate(document, findLayer(document, args.id), args)
-	return deferRender ? deferredResult(document, layer, args) : result(document, layer, args, request)
 }
 
 // Updates that ran before a failed one are not rolled back, so every id is checked before the first change.
@@ -239,8 +219,6 @@ function deleteLayer(args) {
 
 module.exports = {
 	createArtboard,
-	createLayer,
-	updateLayer,
 	updateLayers,
 	applySharedStyle,
 	upsertSwatch,

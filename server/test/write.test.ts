@@ -81,7 +81,7 @@ test('callWrite refuses unsaved documents without running the op', async () => {
 
 test('callWrite reports when the requested document is not open', async () => {
 	const { bridge, backups } = await setup([{ id: 'D1', name: 'System', path: '/tmp/System.sketch' }])
-	const result = await callWrite(bridge, backups, 'updateLayer', { documentId: 'D2', id: 'X' })
+	const result = await callWrite(bridge, backups, 'updateLayers', { documentId: 'D2', id: 'X' })
 	assert.equal(result.isError, true)
 	assert.match(firstText(result), /No matching document/)
 })
@@ -115,9 +115,9 @@ test('callWrite renders in a second call when the plugin asks for it', async () 
 	}
 	const bridge = new SketchBridge({ bridgeDir, run, isRunning: async () => true })
 
-	const result = await callWrite(bridge, new Backups(bridgeDir), 'updateLayer', { id: 'L1' })
+	const result = await callWrite(bridge, new Backups(bridgeDir), 'updateLayers', { id: 'L1' })
 
-	assert.deepEqual(ops, ['status', 'updateLayer', 'export'])
+	assert.deepEqual(ops, ['status', 'updateLayers', 'export'])
 	assert.equal(result.content.at(-1)?.type, 'image')
 })
 

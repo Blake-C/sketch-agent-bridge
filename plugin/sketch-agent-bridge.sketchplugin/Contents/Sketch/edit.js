@@ -610,14 +610,6 @@ function renderRequest(layer, args) {
 	return target ? { ids: [target.id], scale: args.scale || 1 } : undefined
 }
 
-function deferredResult(document, layer, args) {
-	return {
-		result: result(document, layer, Object.assign({}, args, { render: 'none' }), null).result,
-		files: [],
-		render: renderRequest(layer, args),
-	}
-}
-
 module.exports = {
 	editableDocument,
 	draftsPage,
@@ -655,5 +647,4 @@ module.exports = {
 	renderFiles,
 	renderRequest,
 	result,
-	deferredResult,
 }

@@ -62,6 +62,10 @@ All notable changes to this project will be documented in this file.
 - Changed svg layers given only a width or only a height to keep the viewBox's aspect ratio.
 - Changed gradient fills in `get_layer` and `get_design_tokens` to `{ "gradient": { "type", "from", "to", "stops" } }`, the same form `style` takes as input. The start and end points were missing before, so a gradient's direction could only be checked by exporting it.
 
+### Removed
+
+- Removed the `create_layer` and `update_layer` tools and the `createLayer` and `updateLayer` ops. `build_layers` with one node and `update_layers` with one entry do the same work, and each of the two tools repeated the whole layer schema in `tools/list`.
+
 ### Fixed
 
 - Fixed `fetch_images` reporting a dropped filter as the reason it failed. `get_images` prints its `Warning:` lines before the line that says no photos matched, and the error kept only the first line. The error now skips the warnings.
