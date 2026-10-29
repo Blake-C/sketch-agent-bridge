@@ -3,7 +3,7 @@ import { mkdtemp, readFile, stat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
-import { fetchImages, orientationFor, slug, type FetchDeps } from '../src/images.ts'
+import { fetchImages, orientationFor, shortPath, type FetchDeps } from '../src/images.ts'
 
 const KEY = 'secret-test-key'
 const request = { query: 'sea; rm -rf ~', count: 2, width: 800, height: 600 }
@@ -72,7 +72,7 @@ test('fetchImages searches, downloads cropped JPEGs, records downloads, and cred
 	assert.deepEqual(warnings, [])
 	assert.deepEqual(
 		images.map(image => path.basename(image.path)),
-		['sea-rm-rf-1.jpg', 'sea-rm-rf-2.jpg']
+		['1.jpg', '2.jpg']
 	)
 	assert.ok(images[0].path.startsWith(path.join(dir, 'images')))
 	assert.equal(await readFile(images[0].path, 'utf8'), 'jpeg /photo-1')
@@ -84,10 +84,20 @@ test('fetchImages searches, downloads cropped JPEGs, records downloads, and cred
 	})
 })
 
-test('fetchImages names a single photo without a number', async () => {
+test('fetchImages puts each call in a folder with a 12 character name', async () => {
 	const fake = fakeFetch([{ total: 1, results: [photo('1')] }])
 	const { images } = await fetchImages(await bridgeDir(), { ...request, count: 1 }, deps(fake.fetch))
-	assert.equal(path.basename(images[0].path), 'sea-rm-rf.jpg')
+	assert.match(path.basename(path.dirname(images[0].path)), /^[0-9a-f]{12}$/)
+	assert.equal(path.basename(images[0].path), '1.jpg')
+})
+
+test('shortPath writes the home folder as ~', () => {
+	assert.equal(
+		shortPath('/Users/a/.sketch-agent-bridge/images/x/1.jpg', '/Users/a'),
+		'~/.sketch-agent-bridge/images/x/1.jpg'
+	)
+	assert.equal(shortPath('/Users/ab/x.jpg', '/Users/a'), '/Users/ab/x.jpg')
+	assert.equal(shortPath('/tmp/x.jpg', '/Users/a'), '/tmp/x.jpg')
 })
 
 test('fetchImages warns when fewer photos match than were asked for', async () => {
@@ -187,7 +197,7 @@ test('fetchImages keeps the photos that downloaded and warns about one that fail
 
 	assert.deepEqual(
 		images.map(image => path.basename(image.path)),
-		['sea-rm-rf-1.jpg']
+		['1.jpg']
 	)
 	assert.deepEqual(warnings, ['Downloading a photo failed: fetch failed (ECONNRESET), so one photo is missing.'])
 })
@@ -254,9 +264,4 @@ test('orientationFor follows the shape of width and height', () => {
 	assert.equal(orientationFor(1600, 900), 'landscape')
 	assert.equal(orientationFor(900, 1600), 'portrait')
 	assert.equal(orientationFor(500, 500), 'squarish')
-})
-
-test('slug keeps file names to letters, numbers, and dashes', () => {
-	assert.equal(slug('Team Photo / Office!'), 'team-photo-office')
-	assert.equal(slug('***'), 'image')
 })

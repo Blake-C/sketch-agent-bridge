@@ -3,7 +3,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import { z } from 'zod'
 import { errorResult } from './content.ts'
-import { COLORS, ORIENTATIONS, fetchImages } from './images.ts'
+import { COLORS, ORIENTATIONS, fetchImages, shortPath } from './images.ts'
 import type { SketchBridge } from './sketch.ts'
 
 export function registerImageTools(server: McpServer, bridge: SketchBridge) {
@@ -48,7 +48,10 @@ export function registerImageTools(server: McpServer, bridge: SketchBridge) {
 				const content: CallToolResult['content'] = [
 					{
 						type: 'text',
-						text: JSON.stringify({ images, warnings: warnings.length ? warnings : undefined }),
+						text: JSON.stringify({
+							images: images.map(image => ({ ...image, path: shortPath(image.path) })),
+							warnings: warnings.length ? warnings : undefined,
+						}),
 					},
 				]
 				if (args.preview) {

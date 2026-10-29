@@ -6,6 +6,12 @@ function standardize(path) {
 	return String(NSString.stringWithString(path).stringByExpandingTildeInPath().stringByStandardizingPath())
 }
 
+// Only the current user's home is expanded, so ~otheruser/ stays a relative path and is refused.
+function expandHome(path) {
+	const text = String(path)
+	return text.startsWith('~/') ? String(NSString.stringWithString(text).stringByExpandingTildeInPath()) : text
+}
+
 function isInsideBridgeDir(path) {
 	return standardize(path).startsWith(BRIDGE_DIR + '/')
 }
@@ -72,6 +78,7 @@ function moveFile(from, to) {
 }
 
 module.exports = {
+	expandHome,
 	moveFile,
 	BRIDGE_DIR,
 	standardize,

@@ -36,7 +36,7 @@ export const fill = z
 		z.object({
 			image: z
 				.string()
-				.describe(`Absolute path to an image file, such as one from fetch_images. ${ASSET_PATH_RULE}`),
+				.describe(`Absolute or ~/ path to an image file, such as one from fetch_images. ${ASSET_PATH_RULE}`),
 			mode: z.enum(['fill', 'fit', 'tile', 'stretch']).optional(),
 		}),
 	])
@@ -457,8 +457,8 @@ const layerFields = {
 	svgFile: z
 		.string()
 		.optional()
-		.describe(`Absolute path to a .svg file, for kind "svg", used in place of svg. ${ASSET_PATH_RULE}`),
-	image: z.string().optional().describe(`Absolute path to an image file, for kind "image". ${ASSET_PATH_RULE}`),
+		.describe(`Absolute or ~/ path to a .svg file, for kind "svg", used in place of svg. ${ASSET_PATH_RULE}`),
+	image: z.string().optional().describe(`Absolute or ~/ path to an image file, for kind "image". ${ASSET_PATH_RULE}`),
 	symbol: z
 		.string()
 		.optional()
@@ -510,7 +510,10 @@ export const updateFields = {
 		.describe(
 			"Replaces the drawing of a layer made from SVG with new markup. The new layer takes the old one's place in the layer list, name, visibility, lock, and its own style, such as shadows, and gets a new id, which the reply gives. The viewBox maps onto the old layer's frame unless frame is given, and Sketch trims empty space the same way it does for a new svg layer."
 		),
-	svgFile: z.string().optional().describe(`Absolute path to a .svg file, used in place of svg. ${ASSET_PATH_RULE}`),
+	svgFile: z
+		.string()
+		.optional()
+		.describe(`Absolute or ~/ path to a .svg file, used in place of svg. ${ASSET_PATH_RULE}`),
 	symbol: z
 		.string()
 		.optional()

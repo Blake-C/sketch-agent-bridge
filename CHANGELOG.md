@@ -62,6 +62,7 @@ All notable changes to this project will be documented in this file.
 - Changed `find_overlaps` to compare the letters of each line, measured from the baseline, instead of the whole line box, so stacked headings no longer cross each other when their letters do not touch.
 - Changed `find_overlaps` to count a closed shape with a border and no fill as crossing text only when a line runs over its outline, so text inside an outline-only shape is not reported.
 - Changed the `build_layers` reply to leave root layers out of `groups`, because `roots` already lists them with their final frames.
+- Changed `fetch_images` to save photos as `1.jpg`, `2.jpg`, and so on in a folder with a 12-character name, and to return paths that start with `~/`. Image and SVG paths that start with `~/` are now accepted everywhere a file is taken.
 - Changed `list_fonts` and `install_google_font` to leave out each face's PostScript name.
 - Changed the `mask` description to say that Sketch draws the mask's fill, so a mask that should only clip needs `fills: []`.
 - Changed the Docker setup to pin the Node and gitleaks images by digest, run as the `node` user with every Linux capability dropped, and add an `offline` service with no network for build, test, lint, and format.

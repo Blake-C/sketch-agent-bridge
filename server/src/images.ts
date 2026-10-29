@@ -1,11 +1,13 @@
 import { execFile } from 'node:child_process'
-import { randomUUID } from 'node:crypto'
+import { randomBytes } from 'node:crypto'
 import { mkdir, writeFile } from 'node:fs/promises'
+import { homedir } from 'node:os'
 import path from 'node:path'
 import { FETCH_TIMEOUT_MS, networkError, readLimited } from './http.ts'
 import { BridgeError } from './sketch.ts'
 
 const KEY_TIMEOUT_MS = 10_000
+const FOLDER_NAME_BYTES = 6
 const MAX_ERROR_CHARS = 300
 const MAX_IMAGE_BYTES = 25 * 1024 * 1024
 const JPEG_QUALITY = '80'
@@ -81,16 +83,6 @@ export async function readAccessKey(): Promise<string> {
 }
 
 export const defaultDeps: FetchDeps = { fetch: globalThis.fetch, readKey: readAccessKey }
-
-export function slug(text: string): string {
-	return (
-		text
-			.toLowerCase()
-			.replace(/[^a-z0-9]+/g, '-')
-			.replace(/^-|-$/g, '')
-			.slice(0, 40) || 'image'
-	)
-}
 
 export function orientationFor(width: number, height: number): (typeof ORIENTATIONS)[number] {
 	if (width > height) return 'landscape'
@@ -248,12 +240,14 @@ export async function fetchImages(
 ): Promise<FetchResult> {
 	const key = await deps.readKey()
 	const { photos, warnings } = await searchWithFallback(deps, key, request)
-	const dir = path.join(bridgeDir, 'images', randomUUID())
-	await mkdir(dir, { recursive: true, mode: 0o700 })
-	const name = slug(request.query)
+	const imagesDir = path.join(bridgeDir, 'images')
+	await mkdir(imagesDir, { recursive: true, mode: 0o700 })
+	// The folder name is short because the agent sends each path again in every fill that uses it. mkdir without recursive throws if the name is taken.
+	const dir = path.join(imagesDir, randomBytes(FOLDER_NAME_BYTES).toString('hex'))
+	await mkdir(dir, { mode: 0o700 })
 	const settled = await Promise.allSettled(
 		photos.map(async (photo, index) => {
-			const file = path.join(dir, photos.length > 1 ? `${name}-${index + 1}.jpg` : `${name}.jpg`)
+			const file = path.join(dir, `${index + 1}.jpg`)
 			await download(deps, photo, request, file)
 			const trackWarning = await trackDownload(deps, key, photo)
 			if (trackWarning) warnings.push(trackWarning)
@@ -271,4 +265,9 @@ export async function fetchImages(
 		warnings.push(`${failure instanceof Error ? failure.message : String(failure)}, so one photo is missing.`)
 	}
 	return { images, warnings }
+}
+
+// The plugin expands ~, and the shorter path costs fewer tokens each time the agent sends it back.
+export function shortPath(file: string, home = homedir()): string {
+	return file.startsWith(home + path.sep) ? '~' + file.slice(home.length) : file
 }
