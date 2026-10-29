@@ -267,7 +267,10 @@ export const layout = {
 		.describe(
 			'Smart layout for a group or symbol master, so it resizes around its content. null turns it off. A symbol instance resizes when its overrides change.'
 		),
-	rotation: z.number().optional().describe('Rotation in degrees.'),
+	rotation: z
+		.number()
+		.optional()
+		.describe('Rotation in degrees, clockwise. -90 turns text to read from bottom to top.'),
 	flipHorizontal: z.boolean().optional(),
 	flipVertical: z.boolean().optional(),
 	mask: z
@@ -499,6 +502,12 @@ export const updateFields = {
 	fixedWidth: fixedWidth.optional(),
 	lineSpacing: lineSpacing.optional(),
 	cornerRadius: z.number().min(0).optional(),
+	image: z
+		.string()
+		.optional()
+		.describe(
+			`Replaces the picture of an image layer, keeping its frame and Color Adjust. Absolute or ~/ path to an image file. ${ASSET_PATH_RULE}`
+		),
 	path: svgPath
 		.optional()
 		.describe(

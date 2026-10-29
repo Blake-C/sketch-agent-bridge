@@ -157,7 +157,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Update layers',
 			description:
-				'Changes one or more existing layers and renders once at the end. Each entry can change the parent, name, visibility, lock, frame, text, styled runs of text, line spacing, corner radius, path, SVG drawing, which symbol an instance uses, symbol overrides, style, text style, smart layout, resizing, rotation, flips, masks, boolean operations, stacking order, prototype links, export presets, and which overrides a symbol master lets instances change. The layers are all looked up before any change, and if a change fails, the reply names its index and the changes before it stay applied.',
+				'Changes one or more existing layers and renders once at the end. Each entry can change the parent, name, visibility, lock, frame, text, styled runs of text, line spacing, corner radius, the picture of an image layer, path, SVG drawing, which symbol an instance uses, symbol overrides, style, text style, smart layout, resizing, rotation, flips, masks, boolean operations, stacking order, prototype links, export presets, and which overrides a symbol master lets instances change. The layers are all looked up before any change, and if a change fails, the reply names its index and the changes before it stay applied.',
 			inputSchema: {
 				documentId,
 				updates: z.array(z.object(updateFields)).min(1).max(MAX_UPDATES),

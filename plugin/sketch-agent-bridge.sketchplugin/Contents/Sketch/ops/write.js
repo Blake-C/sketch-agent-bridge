@@ -1,6 +1,6 @@
 const sketch = require('sketch')
 const { findLayer, findPage } = require('../document.js')
-const { applyStyle, hexToMSColor } = require('../style.js')
+const { applyStyle, hexToMSColor, loadImage } = require('../style.js')
 const {
 	editableDocument,
 	draftsPage,
@@ -104,6 +104,10 @@ function applyUpdate(document, found, args) {
 	}
 	if (args.name !== undefined) layer.name = args.name
 	if (args.cornerRadius !== undefined) setCornerRadius(layer, args.cornerRadius)
+	if (args.image !== undefined) {
+		if (layer.type !== 'Image') throw new Error('Only image layers have an image to replace')
+		layer.image = loadImage(args.image)
+	}
 	if (args.symbol !== undefined) {
 		if (layer.type !== 'SymbolInstance') throw new Error('Only symbol instances can swap symbols')
 		const master = findSymbolMaster(document, args.symbol)
