@@ -98,7 +98,19 @@ export function registerReadTools(server: McpServer, bridge: SketchBridge) {
 		{
 			title: 'Get layer',
 			description: 'Returns the JSON spec of one layer and its children.',
-			inputSchema: { documentId, id: z.string().describe('Layer id.'), depth, includeHidden, textLines },
+			inputSchema: {
+				documentId,
+				id: z.string().describe('Layer id.'),
+				depth,
+				includeHidden,
+				textLines,
+				summary: z
+					.boolean()
+					.optional()
+					.describe(
+						'Return only the id, name, type, frame, and text of each layer, and childCount where depth stops. Use it to find ids without reading styles and paths.'
+					),
+			},
 			annotations: readOnly,
 		},
 		async args => callOp(bridge, 'layer', args)

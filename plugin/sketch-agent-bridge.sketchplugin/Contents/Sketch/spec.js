@@ -262,10 +262,21 @@ function layerSpec(layer, options) {
 	const depth = options.depth === undefined ? DEFAULT_DEPTH : options.depth
 	const includeHidden = Boolean(options.includeHidden)
 	const textLines = Boolean(options.textLines)
+	const summaryOnly = Boolean(options.summary)
 	const counter = { nodes: 0, truncated: false }
 
-	function walk(node, level, parentType) {
-		counter.nodes++
+	function summarySpec(node) {
+		return {
+			id: node.id,
+			name: node.name,
+			type: node.type,
+			frame: frameSpec(node.frame),
+			hidden: node.hidden || undefined,
+			text: node.type === 'Text' ? node.text : undefined,
+		}
+	}
+
+	function fullSpec(node, parentType) {
 		const isText = node.type === 'Text'
 		const spec = {
 			id: node.id,
@@ -307,6 +318,12 @@ function layerSpec(layer, options) {
 		}
 		if (Object.keys(spec.style).length === 0) delete spec.style
 		if (isText && textLines) Object.assign(spec, textLinesSpec(node))
+		return spec
+	}
+
+	function walk(node, level, parentType) {
+		counter.nodes++
+		const spec = summaryOnly ? summarySpec(node) : fullSpec(node, parentType)
 		const children = (node.layers || []).filter(child => includeHidden || !child.hidden)
 		if (children.length > 0) {
 			const manyParts = node.type === 'Shape' && children.length > MAX_SHAPE_PARTS

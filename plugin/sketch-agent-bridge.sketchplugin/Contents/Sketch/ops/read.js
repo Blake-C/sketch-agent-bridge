@@ -54,6 +54,7 @@ function specOptions(document, args) {
 		depth: args.depth,
 		includeHidden: args.includeHidden,
 		textLines: args.textLines,
+		summary: args.summary,
 	}
 }
 

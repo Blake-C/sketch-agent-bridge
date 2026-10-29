@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - Added `textStyle` to `build_layers` and to its group and artboard nodes, which sets default text style keys for the text nodes inside them.
 - Added `copyOf` to `build_layers` nodes, which copies an earlier node in the same call by its `ref` and applies the fields given on the copy.
 - Added `region` to `export_layers`, which crops each PNG to a rectangle measured from the layer's top-left corner.
+- Added `summary` to `get_layer`, which returns only the id, name, type, frame, `hidden`, and text of each layer, and `childCount` where `depth` stops.
 - Added a test that fails when `tools/list` grows past 80,000 characters.
 - Added an `install_google_font` tool, which downloads a family from Google Fonts into `~/Library/Fonts` as static TrueType files, registers them so Sketch can use them without a restart, and adds the family to a "Google Fonts" collection in Font Book.
 - Added a `list_fonts` tool, which lists the installed font families, the families in the "Google Fonts" collection, and each face's style and weight on the Sketch scale.

@@ -350,4 +350,6 @@ Each layer has `id`, `name`, `type`, and `frame`. These keys appear only when th
 - `layoutGrid` with `columns` and `rows`, and `grid` with `size` and `thickEvery`, for artboards and symbol masters with a grid turned on
 - `exportFormats` with `fileFormat`, `size`, and `prefix` or `suffix` when set
 
+With `summary`, `layer` returns only the `id`, `name`, `type`, `frame`, `hidden`, and `text` of each layer, and `childCount` where `depth` stops, so an agent can find the ids in a tree without reading its styles and paths.
+
 With `textLines`, `layer` and `selection` add `lines` to each text layer, with the `text` and `frame` of each line the text wraps into, measured from the text layer's origin. The plugin reads the lines from `fragments` on Sketch's `Text` layer. A text layer whose last line ends below its frame also gets `overflows: true`, which happens to text with a fixed size in Sketch. Auto-height text grows to fit its lines. Reading the lines of the 388 text layers in the test document took 12.5 seconds, so the lines are only read when `textLines` is true.
