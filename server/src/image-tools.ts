@@ -37,7 +37,7 @@ export function registerImageTools(server: McpServer, bridge: SketchBridge, asse
 		{
 			title: 'Fetch images',
 			description:
-				'Downloads the most relevant Unsplash photos for a query, using the get_images shell function and the Unsplash key in the login keychain. Returns local file paths to use as image layers or image fills. When picking a hero or other prominent image, ask for count 3 or 4 with preview: true and choose one. Leave preview off otherwise, because each preview costs tokens.',
+				'Downloads the most relevant Unsplash photos for a query as JPEGs cropped to width and height. Returns each local file path to use as an image layer or image fill, with a credit for the photographer. Unsplash requires that credit wherever the photo is shown, so put credit.text near the photo or in the design notes. When picking a hero or other prominent image, ask for count 3 or 4 with preview: true and choose one. Leave preview off otherwise, because each preview costs tokens.',
 			inputSchema: {
 				query: z.string().min(1).max(100),
 				count: z.number().int().min(1).max(10).optional().describe('Default 1.'),
@@ -62,29 +62,25 @@ export function registerImageTools(server: McpServer, bridge: SketchBridge, asse
 		},
 		async (args): Promise<CallToolResult> => {
 			try {
-				const { files, warnings } = await fetchImages(
-					bridge.bridgeDir,
-					process.env.SKETCH_AGENT_BRIDGE_GET_IMAGES,
-					{
-						query: args.query,
-						count: args.count ?? 1,
-						width: args.width ?? 1600,
-						height: args.height ?? 900,
-						orientation: args.orientation,
-						color: args.color,
-					}
-				)
+				const { images, warnings } = await fetchImages(bridge.bridgeDir, {
+					query: args.query,
+					count: args.count ?? 1,
+					width: args.width ?? 1600,
+					height: args.height ?? 900,
+					orientation: args.orientation,
+					color: args.color,
+				})
 				const content: CallToolResult['content'] = [
 					{
 						type: 'text',
-						text: JSON.stringify({ images: files, warnings: warnings.length ? warnings : undefined }),
+						text: JSON.stringify({ images, warnings: warnings.length ? warnings : undefined }),
 					},
 				]
 				if (args.preview) {
-					for (const file of files) {
+					for (const image of images) {
 						content.push({
 							type: 'image',
-							data: (await readFile(file)).toString('base64'),
+							data: (await readFile(image.path)).toString('base64'),
 							mimeType: 'image/jpeg',
 						})
 					}

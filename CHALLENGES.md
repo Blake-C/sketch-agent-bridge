@@ -50,6 +50,8 @@ Date: 2026-10-27.
 
 Two of eight `fetch_images` calls failed with "Could not extract image URLs from Unsplash response (HTTP 200)". In both responses the photographer's bio held a literal newline, and `jq` rejects a string with a raw control character, so `get_images` found no URLs. Retrying with a different query worked. The fix belongs in `get_images` in the system setup repo. The bridge now returns only the first line of the error so the full response does not land in the agent's context.
 
+Update, 2026-10-29: `fetch_images` now calls the Unsplash API from the server and no longer uses `get_images`. Before parsing a reply, the server replaces each raw control character with a space.
+
 ## Imported library swatches disappeared before they were used
 
 Date: 2026-10-27, Sketch 88.1 on macOS 27.2.
@@ -87,3 +89,11 @@ Date: 2026-10-28, Sketch 88.1 on macOS 27.2.
 A `build_layers` call with a `shape` node replied with the new Shape and its parts, and a `get_layer` call on the artboard right after it showed no Shape. The same happened to the Shape that `combine_shapes` made, and both created the Shape with `new sketch.Shape({ parent, frame, layers: [] })`. Without `layers: []`, Sketch's API adds a default rectangle as the Shape's first part, and a Shape created that way was kept.
 
 `createPathLayer` in `edit.js` already made Shapes that were kept, and it creates the Shape with only `layers: []` and sets `parent` afterward. Creating the Shape that way and then setting `parent` and `frame` kept the Shape in both `build_layers` and `combine_shapes`.
+
+## Photo downloads timed out in Node and not in curl
+
+Date: 2026-10-29, Node 24.22.1 on macOS 27.2.
+
+After `fetch_images` moved from `curl` to Node's `fetch`, some downloads from `images.unsplash.com` failed with `UND_ERR_CONNECT_TIMEOUT` after about 10 seconds. `images.unsplash.com` resolves to one IPv4 and one IPv6 address. On the network used for testing, every IPv6 connection timed out and every IPv4 connection took about 240 ms. [Node 24 tries each address for 250 ms](https://nodejs.org/docs/latest-v24.x/api/net.html#netgetdefaultautoselectfamilyattempttimeout) before moving to the next one, so when an IPv4 attempt took longer than 250 ms, Node stopped it and tried the IPv6 address, which never answered.
+
+In 8 runs of 6 parallel downloads each, every run with Node's defaults had failures. With the attempt timeout raised to 1 second, none of the 8 runs did. `images.ts` sets the attempt timeout to 1 second with `setDefaultAutoSelectFamilyAttemptTimeout`, which keeps the fallback to IPv6 on a network where IPv4 is the broken one.

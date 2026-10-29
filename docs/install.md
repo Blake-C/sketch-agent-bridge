@@ -34,12 +34,16 @@ Add the server to Claude Code with this command:
 claude mcp add --scope user sketch -- node "$PWD/server/dist/server.js"
 ```
 
-To let the agent fetch photos from Unsplash, also pass the path to the file that defines the `get_images` shell function. The function reads its Unsplash key from the login keychain, so the key is not part of this command:
+To let the agent fetch photos from Unsplash, create an app at [unsplash.com/developers](https://unsplash.com/developers) and add its access key to the login keychain:
 
 ```sh
-claude mcp add --scope user sketch \
-	-e SKETCH_AGENT_BRIDGE_GET_IMAGES="$HOME/Home/Studio/Production/Repositories/digitalblake-system-setup/.custom-scripts/functions/get-images.sh" \
-	-- node "$PWD/server/dist/server.js"
+security add-generic-password -a "$USER" -s unsplash_access_key -w
+```
+
+The command asks for the key, so the key doesn't end up in the shell history. The server can also read the key from an environment variable, but Claude Code then stores the key as plain text in its config file:
+
+```sh
+claude mcp add --scope user sketch -e UNSPLASH_ACCESS_KEY=<key> -- node "$PWD/server/dist/server.js"
 ```
 
 If the server is already registered, run `claude mcp remove --scope user sketch` first. After rebuilding the server, reconnect it from `/mcp` in Claude Code or start a new session, so the new build is the one running.

@@ -75,7 +75,7 @@ Every op takes an optional `documentId`. Without it, the op uses the front docum
 These tools do not call the plugin:
 
 - `list_inbox` and `get_inbox_item` read `~/.sketch-agent-bridge/inbox/`.
-- `fetch_images` runs the `get_images` shell function. See [Fetching images](#fetching-images).
+- `fetch_images` calls the Unsplash API. See [Fetching images](#fetching-images).
 - `list_assets` reads `assets/manifest.json`. See [Assets](#assets).
 
 ## Finding layers
@@ -256,11 +256,13 @@ Write replies are sized to keep the agent's context small:
 
 ## Fetching images
 
-`fetch_images` runs the `get_images` shell function from the file named by the `SKETCH_AGENT_BRIDGE_GET_IMAGES` environment variable. The function asks Unsplash's search endpoint for the photos most relevant to the query, using the access key it reads from the login keychain, under the service name `unsplash_access_key`, and downloads the photos as JPEGs into a new folder under `~/.sketch-agent-bridge/images/`. The server never reads the key.
+`fetch_images` asks the Unsplash search endpoint for the photos most relevant to the query and downloads each one as a JPEG, cropped to `width` and `height`, into a new folder under `~/.sketch-agent-bridge/images/`. The server reads the Unsplash access key from the login keychain item with the service name `unsplash_access_key`, using `/usr/bin/security`, and falls back to the `UNSPLASH_ACCESS_KEY` environment variable when the keychain has no such item. The key goes only in the `Authorization` header of requests to `api.unsplash.com`, and the server replaces it with `<key>` in any Unsplash error text before returning the error.
 
-`orientation` is `landscape`, `portrait`, `squarish`, or `any`, and `get_images` picks it from the width and height when it is left out. `color` is one of the 11 colors `get_images` accepts, such as `blue` or `black_and_white`. When no photo matches a filter, `get_images` searches again without it and prints a line that starts with `Warning:`, and the server returns those lines in `warnings`.
+`orientation` is `landscape`, `portrait`, `squarish`, or `any`, and the server picks it from the width and height when it is left out. `color` is one of the 11 colors the [Unsplash search endpoint](https://unsplash.com/documentation#search-photos) accepts, such as `blue` or `black_and_white`. When no photo matches, the server searches again without `color`, then without `orientation`, and adds a line to `warnings` for each filter it dropped.
 
-The server runs the function with `/bin/zsh -f -c`, and the search text, sizes, orientation, and color go in as separate shell parameters, so text from the agent is never parsed as shell code. The shell gets only `HOME`, `USER`, and `PATH` from the environment.
+The reply has an `images` list, where each entry has the file `path` and a `credit` with `photographer`, `profileUrl`, and `text`, such as "Photo by Annie Spratt on Unsplash". The [Unsplash API guidelines](https://help.unsplash.com/en/articles/2511245-unsplash-api-guidelines) require crediting the photographer and Unsplash with a link to the photographer's profile, and `profileUrl` carries the `utm_source` and `utm_medium` parameters that the [attribution guideline](https://help.unsplash.com/en/articles/2511315-guideline-attribution) asks for. The same API guidelines require a request to each photo's `download_location`, which the server sends after saving the photo. When the `download_location` request fails, the photo is kept and the failure goes in `warnings`.
+
+The server downloads photos only from `https://images.unsplash.com` and sends download requests only to `https://api.unsplash.com`, so a link in the Unsplash reply that points anywhere else is refused. A download also has to come back with an `image/` content type. When some downloads fail and others succeed, the reply has the photos that downloaded and a warning for each one that did not.
 
 ## Assets
 
