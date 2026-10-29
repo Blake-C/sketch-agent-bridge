@@ -29,7 +29,7 @@ The plugin writes `reply.json` into `replyDir`:
 { "ok": true, "result": {}, "files": [{ "layerId": "...", "format": "png", "path": "..." }] }
 ```
 
-On failure it writes `{ "ok": false, "error": "<message>" }`. Exported files go in `replyDir/exports/<layerId>/`. The server drops any file path outside `replyDir`, and it deletes request folders older than 24 hours.
+On failure it writes `{ "ok": false, "error": "<message>" }`. Exported files go in `replyDir/exports/<layerId>/`. The server drops any file path outside `replyDir`. At the start of each request, it deletes request folders older than 24 hours, and folders in `images/` and `inbox/` older than 7 days.
 
 A successful reply can also carry `"render": { "ids": [...], "scale": 1 }`. The plugin sends it from `build` and `createLayer` when they place a symbol instance or set overrides, and from `updateLayer` when it sets overrides or swaps the symbol. An export in the same plugin run still shows the instance's previous overrides and the size it had before Smart Layout resized it, and it leaves out symbols imported from a library during that run. The server then runs the `export` op in a second plugin run and returns that PNG.
 
@@ -149,7 +149,7 @@ The kinds are `artboard`, `rectangle`, `oval`, `triangle`, `polygon`, `star`, `p
 ## Write ops
 
 - Every write op refuses a document that has never been saved.
-- Before the first write op on a document in a server session, the server runs `status` to find the document's file and copies it to `~/.sketch-agent-bridge/backups/<name>-<timestamp>.sketch`. The copy is of the file on disk, so edits made in Sketch since the last save are not in it.
+- Before the first write op on a document in a server session, the server runs `status` to find the document's file and copies it to `~/.sketch-agent-bridge/backups/<name>-<timestamp>.sketch`. The copy is of the file on disk, so edits made in Sketch since the last save are not in it. The server keeps the newest 10 backups of each document name and deletes older ones.
 - Each write op is one step in Sketch's undo history, so Cmd+Z in Sketch undoes the whole op.
 - Sketch 88.1 can stop recording a document's undo history, for manual edits as well as plugin edits, until Sketch restarts. `status` then reports `undoStuck: true` for that document, which it reads from `isMakingHistory()` on the document's history maker. The server puts a warning at the top of every write reply for that document.
 - Layers created by a write op get the layer setting `createdByAgent`, which `deleteLayer` checks unless `force` is true.
@@ -273,7 +273,7 @@ Write replies are sized to keep the agent's context small:
 
 ## Fetching images
 
-`fetch_images` asks the Unsplash search endpoint for the photos most relevant to the query and downloads each one as a JPEG, cropped to `width` and `height`, into a new folder under `~/.sketch-agent-bridge/images/`. The server reads the Unsplash access key from the login keychain item with the service name `unsplash_access_key`, using `/usr/bin/security`, and falls back to the `UNSPLASH_ACCESS_KEY` environment variable when the keychain has no such item. The key goes only in the `Authorization` header of requests to `api.unsplash.com`, and the server replaces it with `<key>` in any Unsplash error text before returning the error.
+`fetch_images` asks the Unsplash search endpoint for the photos most relevant to the query and downloads each one as a JPEG, cropped to `width` and `height`, into a new folder under `~/.sketch-agent-bridge/images/`. The server deletes that folder after 7 days, so an agent that wants a photo later has to fetch it again. A layer made from the photo keeps the image, because Sketch stores the image data in the document. The server reads the Unsplash access key from the login keychain item with the service name `unsplash_access_key`, using `/usr/bin/security`, and falls back to the `UNSPLASH_ACCESS_KEY` environment variable when the keychain has no such item. The key goes only in the `Authorization` header of requests to `api.unsplash.com`, and the server replaces it with `<key>` in any Unsplash error text before returning the error.
 
 `orientation` is `landscape`, `portrait`, `squarish`, or `any`, and the server picks it from the width and height when it is left out. `color` is one of the 11 colors the [Unsplash search endpoint](https://unsplash.com/documentation#search-photos) accepts, such as `blue` or `black_and_white`. When no photo matches, the server searches again without `color`, then without `orientation`, and adds a line to `warnings` for each filter it dropped.
 

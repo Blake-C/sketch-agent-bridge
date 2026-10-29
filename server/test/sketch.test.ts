@@ -108,17 +108,28 @@ test('call passes runner failures through', async () => {
 	await assert.rejects(bridge.call('status'), /timed out/)
 })
 
-test('pruneRequests removes request folders older than a day', async () => {
+test('prune removes requests older than a day and images and inbox items older than a week', async () => {
 	const bridgeDir = await tempBridgeDir()
 	const bridge = new SketchBridge({ bridgeDir })
-	const oldDir = path.join(bridge.requestsDir, 'old')
-	const newDir = path.join(bridge.requestsDir, 'new')
-	await mkdir(oldDir, { recursive: true })
-	await mkdir(newDir, { recursive: true })
 	const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-	await utimes(oldDir, twoDaysAgo, twoDaysAgo)
+	const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
+	const entries = [
+		{ parent: 'requests', name: 'old', time: twoDaysAgo },
+		{ parent: 'requests', name: 'new', time: new Date() },
+		{ parent: 'images', name: 'old', time: tenDaysAgo },
+		{ parent: 'images', name: 'recent', time: twoDaysAgo },
+		{ parent: 'inbox', name: 'old', time: tenDaysAgo },
+		{ parent: 'inbox', name: 'recent', time: twoDaysAgo },
+	]
+	for (const entry of entries) {
+		const dir = path.join(bridgeDir, entry.parent, entry.name)
+		await mkdir(dir, { recursive: true })
+		await utimes(dir, entry.time, entry.time)
+	}
 
-	await bridge.pruneRequests()
+	await bridge.prune()
 
-	assert.deepEqual(await readdir(bridge.requestsDir), ['new'])
+	assert.deepEqual(await readdir(path.join(bridgeDir, 'requests')), ['new'])
+	assert.deepEqual(await readdir(path.join(bridgeDir, 'images')), ['recent'])
+	assert.deepEqual(await readdir(path.join(bridgeDir, 'inbox')), ['recent'])
 })

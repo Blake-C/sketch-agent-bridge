@@ -68,7 +68,7 @@ Build the server in Docker, connect it to an agent, and optionally link the plug
 ## Safety
 
 - `build_layers` and `create_artboard` put new layers on a page named "Agent Drafts" unless the agent names another parent or page.
-- Before the first edit in a session, the server copies the `.sketch` file to `~/.sketch-agent-bridge/backups/`.
+- Before the first edit in a session, the server copies the `.sketch` file to `~/.sketch-agent-bridge/backups/` and keeps the newest 10 copies of each file.
 - Each edit is one step in Sketch's undo history. If Sketch stops recording undo history for the document, every edit reply starts with a warning until Sketch restarts.
 - The agent can only delete layers, detach symbol instances, delete pages, or turn symbol masters into artboards when it created them, unless it passes `force: true`.
 - `update_library` changes Sketch's library list for every document, outside the backup and Cmd+Z, and it can add or turn off a library but not remove one.

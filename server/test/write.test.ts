@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, readFile, readdir, utimes, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, readdir, utimes, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
@@ -146,4 +146,26 @@ test('callWrite reports a save that Sketch never wrote', async () => {
 
 	assert.equal(result.isError, true)
 	assert.match(firstText(result), /did not write/)
+})
+
+test('Backups keeps the newest backups of each document', async () => {
+	const root = await mkdtemp(path.join(tmpdir(), 'backup-test-'))
+	const documentPath = path.join(root, 'System.sketch')
+	await writeFile(documentPath, 'zip')
+	const backups = new Backups(root)
+	await mkdir(backups.dir, { recursive: true })
+	const older = Array.from(
+		{ length: 10 },
+		(_, day) => `System-2026-01-${String(day + 1).padStart(2, '0')}T00-00-00-000Z.sketch`
+	)
+	const otherDocument = 'System-old-2026-01-01T00-00-00-000Z.sketch'
+	for (const name of [...older, otherDocument]) await writeFile(path.join(backups.dir, name), 'zip')
+
+	const made = await backups.ensure(documentPath, new Date('2026-02-01T00:00:00.000Z'))
+
+	const left = await readdir(backups.dir)
+	assert.equal(left.includes(older[0]), false)
+	assert.ok(made && left.includes(path.basename(made)))
+	assert.ok(left.includes(otherDocument))
+	assert.equal(left.length, 11)
 })

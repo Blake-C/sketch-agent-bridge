@@ -14,7 +14,7 @@ Sketch Agent Bridge is a Sketch 88.1 plugin and a local MCP server that let AI a
 1. The server makes `~/.sketch-agent-bridge/requests/<uuid>/` and writes the op and its args to `request.json` in it.
 2. The server runs `/Applications/Sketch.app/Contents/MacOS/sketchtool run <plugin> bridge --context='{"requestDir":"<dir>"}' --without-activating` with `execFile`, never through a shell.
 3. The plugin does the op and writes `reply.json` and any exports into that folder.
-4. The server reads the reply and returns it to the agent. Request folders older than 24 hours are deleted at the start of the next request.
+4. The server reads the reply and returns it to the agent. At the start of each request, the server deletes request folders older than 24 hours, and photo folders and inbox items older than 7 days.
 
 The plugin refuses any `requestDir` outside `~/.sketch-agent-bridge/`. Write ops refuse unsaved documents, and the server backs up the `.sketch` file before the first write in a session.
 

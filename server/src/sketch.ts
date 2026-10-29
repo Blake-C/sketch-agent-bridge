@@ -13,7 +13,10 @@ export const PLUGIN_PATH =
 	fileURLToPath(new URL('../../plugin/sketch-agent-bridge.sketchplugin', import.meta.url))
 
 const DEFAULT_TIMEOUT_MS = 60_000
-const REQUEST_MAX_AGE_MS = 24 * 60 * 60 * 1000
+const DAY_MS = 24 * 60 * 60 * 1000
+const REQUEST_MAX_AGE_MS = DAY_MS
+const IMAGE_MAX_AGE_MS = 7 * DAY_MS
+const INBOX_MAX_AGE_MS = 7 * DAY_MS
 
 const fileSchema = z.object({ layerId: z.string(), format: z.string(), path: z.string() })
 const replySchema = z.discriminatedUnion('ok', [
@@ -49,6 +52,22 @@ export function parseReply(text: string): Reply {
 export function isInside(child: string, parent: string): boolean {
 	const relative = path.relative(path.resolve(parent), path.resolve(child))
 	return relative !== '' && !relative.startsWith('..') && !path.isAbsolute(relative)
+}
+
+export async function pruneOlderThan(dir: string, maxAgeMs: number, now = Date.now()): Promise<void> {
+	let names: string[]
+	try {
+		names = await readdir(dir)
+	} catch {
+		return
+	}
+	await Promise.all(
+		names.map(async name => {
+			const entry = path.join(dir, name)
+			const info = await stat(entry).catch(() => null)
+			if (info && now - info.mtimeMs > maxAgeMs) await rm(entry, { recursive: true, force: true })
+		})
+	)
 }
 
 export const execRunner: Runner = (file, args, timeoutMs) =>
@@ -103,7 +122,7 @@ export class SketchBridge {
 
 	async call(op: string, args: Record<string, unknown> = {}): Promise<CallResult> {
 		if (!(await this.isRunning())) throw new BridgeError('Sketch is not running. Open Sketch and a document first.')
-		await this.pruneRequests()
+		await this.prune()
 		const dir = path.join(this.requestsDir, randomUUID())
 		await mkdir(dir, { recursive: true, mode: 0o700 })
 		// The plugin's Send Selection command can create the bridge folder before the server ever runs.
@@ -133,19 +152,11 @@ export class SketchBridge {
 		return { reply, dir }
 	}
 
-	async pruneRequests(now = Date.now()): Promise<void> {
-		let names: string[]
-		try {
-			names = await readdir(this.requestsDir)
-		} catch {
-			return
-		}
-		await Promise.all(
-			names.map(async name => {
-				const dir = path.join(this.requestsDir, name)
-				const info = await stat(dir).catch(() => null)
-				if (info && now - info.mtimeMs > REQUEST_MAX_AGE_MS) await rm(dir, { recursive: true, force: true })
-			})
-		)
+	async prune(now = Date.now()): Promise<void> {
+		await Promise.all([
+			pruneOlderThan(this.requestsDir, REQUEST_MAX_AGE_MS, now),
+			pruneOlderThan(path.join(this.bridgeDir, 'images'), IMAGE_MAX_AGE_MS, now),
+			pruneOlderThan(path.join(this.bridgeDir, 'inbox'), INBOX_MAX_AGE_MS, now),
+		])
 	}
 }

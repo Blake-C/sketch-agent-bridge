@@ -44,6 +44,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Changed the server to delete folders in `images/` and `inbox/` older than 7 days, and to keep only the newest 10 backups of each document. Before, those folders grew without limit.
 - Changed the plugin to create folders with mode 0700 and write files with mode 0600, and the server to set `~/.sketch-agent-bridge` to 0700 on each request. Folders made by Send Selection could be read by other users on the Mac.
 - Changed the server to write each request to `request.json` in the request folder and pass only the folder path to `sketchtool`. Other users on the Mac could read the request, including layer text, in the process list, and a large request could go over the system's limit on argument size.
 - Changed `fetch_images` to call the Unsplash API from the server, so it no longer needs the `get_images` shell function or `SKETCH_AGENT_BRIDGE_GET_IMAGES`. The key comes from the `unsplash_access_key` keychain item or `UNSPLASH_ACCESS_KEY`. Each entry in `images` is now an object with `path` and a `credit` for the photographer. The server sends Unsplash the download request its API guidelines require. A failed download leaves out that photo with a warning instead of failing the whole call, and the reply warns when Unsplash returns fewer photos than `count`. Errors and warnings include the text Unsplash sent with a failed request.
@@ -96,6 +97,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Changed the server to delete folders in `images/` and `inbox/` older than 7 days, and to keep only the newest 10 backups of each document. Before, those folders grew without limit.
 - Changed the plugin to create folders with mode 0700 and write files with mode 0600, and the server to set `~/.sketch-agent-bridge` to 0700 on each request. Folders made by Send Selection could be read by other users on the Mac.
 - Changed the server to write each request to `request.json` in the request folder and pass only the folder path to `sketchtool`. Other users on the Mac could read the request, including layer text, in the process list, and a large request could go over the system's limit on argument size.
 - Changed write tools to return only id, name, type, and frame by default.
