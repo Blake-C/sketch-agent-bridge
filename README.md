@@ -28,6 +28,7 @@ An agent connected to the MCP server can:
 - switch Sketch to a layer's page, select layers, and scroll the canvas to a layer
 - fill layers with colors, gradients, or images, and add inner shadows, blurs, blend modes, dashed borders, and arrowheads
 - add or change swatches and shared styles
+- save the document when asked to
 - download the Unsplash photos most relevant to a query, filtered by orientation or color, through a local shell function, for use as image layers and fills
 - use the textures and leaf drawings in `assets/`, which `list_assets` lists with their paths
 

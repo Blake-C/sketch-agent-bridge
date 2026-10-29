@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises'
+import { mkdtemp, readFile, readdir, utimes, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
@@ -7,15 +7,18 @@ import { Backups } from '../src/backup.ts'
 import { SketchBridge, type Runner } from '../src/sketch.ts'
 import { UNDO_STUCK_WARNING, callWrite } from '../src/write-tools.ts'
 
+const QUICK_SAVE_WAIT = { timeoutMs: 200, intervalMs: 10 }
+
 type Document = { id: string; name: string; path: string | null; undoStuck?: boolean }
 
-async function setup(documents: Document[]) {
+async function setup(documents: Document[], onOp?: (op: string) => Promise<void>) {
 	const bridgeDir = await mkdtemp(path.join(tmpdir(), 'write-test-'))
 	const calls: { op: string; args: Record<string, unknown> }[] = []
 	const run: Runner = async (_file, args) => {
 		const context = args.find(arg => arg.startsWith('--context=')) ?? ''
 		const request = JSON.parse(JSON.parse(context.slice('--context='.length)).request)
 		calls.push({ op: request.op, args: request.args })
+		await onOp?.(request.op)
 		const result =
 			request.op === 'status' ? { selectedDocumentId: documents[0]?.id ?? null, documents } : { done: true }
 		await writeFile(path.join(request.replyDir, 'reply.json'), JSON.stringify({ ok: true, result }))
@@ -117,4 +120,31 @@ test('callWrite renders in a second call when the plugin asks for it', async () 
 
 	assert.deepEqual(ops, ['status', 'updateLayer', 'export'])
 	assert.equal(result.content.at(-1)?.type, 'image')
+})
+
+test('callWrite backs up the file before saving and waits for Sketch to write it', async () => {
+	const documentPath = await sketchFile('before save')
+	const { bridge, backups, bridgeDir } = await setup([{ id: 'D1', name: 'System', path: documentPath }], async op => {
+		if (op !== 'save') return
+		setTimeout(() => {
+			const later = new Date(Date.now() + 60_000)
+			void utimes(documentPath, later, later)
+		}, 30)
+	})
+
+	const result = await callWrite(bridge, backups, 'save', {}, { saveWait: QUICK_SAVE_WAIT })
+
+	assert.equal(result.isError, undefined)
+	const [backup] = await readdir(path.join(bridgeDir, 'backups'))
+	assert.equal(await readFile(path.join(bridgeDir, 'backups', backup), 'utf8'), 'before save')
+})
+
+test('callWrite reports a save that Sketch never wrote', async () => {
+	const documentPath = await sketchFile()
+	const { bridge, backups } = await setup([{ id: 'D1', name: 'System', path: documentPath }])
+
+	const result = await callWrite(bridge, backups, 'save', {}, { saveWait: QUICK_SAVE_WAIT })
+
+	assert.equal(result.isError, true)
+	assert.match(firstText(result), /did not write/)
 })

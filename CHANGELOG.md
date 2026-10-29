@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Added a `save_document` tool, which saves the document to its file and waits until Sketch has written it.
 - Added `parentId` and `locked` to `update_layer`, so a layer can move into another artboard, group, or page and keep its place on the canvas.
 - Added a `select_layers` tool.
 - Added `create_page`, `update_page`, and `delete_page` tools.

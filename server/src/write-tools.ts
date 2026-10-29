@@ -1,4 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import { stat } from 'node:fs/promises'
+import { setTimeout as sleep } from 'node:timers/promises'
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import { z } from 'zod'
 import type { Backups } from './backup.ts'
@@ -35,11 +37,33 @@ const statusSchema = z.object({
 export const UNDO_STUCK_WARNING =
 	'Warning: Sketch has stopped recording undo history for this document, so Cmd+Z cannot undo this edit. Restart Sketch to fix it.'
 
+export type SaveWait = { timeoutMs: number; intervalMs: number }
+
+const SAVE_WAIT: SaveWait = { timeoutMs: 30_000, intervalMs: 250 }
+
+async function modifiedTime(file: string): Promise<number> {
+	return (await stat(file)).mtimeMs
+}
+
+// Sketch writes the file after the plugin run that asked it to save has ended.
+export async function waitForSave(file: string, before: number, wait: SaveWait = SAVE_WAIT): Promise<void> {
+	const deadline = Date.now() + wait.timeoutMs
+	while ((await modifiedTime(file)) === before) {
+		if (Date.now() >= deadline) {
+			throw new BridgeError(
+				`Sketch did not write ${file} within ${wait.timeoutMs / 1000} seconds of being asked to save.`
+			)
+		}
+		await sleep(wait.intervalMs)
+	}
+}
+
 export async function callWrite(
 	bridge: SketchBridge,
 	backups: Backups,
 	op: string,
-	args: Record<string, unknown>
+	args: Record<string, unknown>,
+	options: { saveWait?: SaveWait } = {}
 ): Promise<CallToolResult> {
 	try {
 		const { reply: statusReply } = await bridge.call('status', {})
@@ -52,7 +76,9 @@ export async function callWrite(
 			throw new BridgeError(`Save "${document.name}" before an agent edits it, so a backup can be made first.`)
 		}
 		const backup = await backups.ensure(document.path)
+		const savedBefore = options.saveWait ? await modifiedTime(document.path) : 0
 		const { reply } = await bridge.call(op, { ...args, documentId: document.id })
+		if (reply.ok && options.saveWait) await waitForSave(document.path, savedBefore, options.saveWait)
 		if (reply.ok && reply.render) {
 			const { reply: rendered } = await bridge.call('export', {
 				...reply.render,
@@ -409,6 +435,18 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 			annotations: destructive,
 		},
 		write('deletePage')
+	)
+
+	server.registerTool(
+		'save_document',
+		{
+			title: 'Save document',
+			description:
+				'Saves the document to its file, so the file holds the edits made since the last save. Only call this when the user asks to save. A backup of the file as it was is made first, if this session has not made one yet. Documents that were never saved cannot be saved this way.',
+			inputSchema: { documentId },
+			annotations: destructive,
+		},
+		args => callWrite(bridge, backups, 'save', args, { saveWait: SAVE_WAIT })
 	)
 
 	server.registerTool(

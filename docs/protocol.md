@@ -69,6 +69,7 @@ Every op takes an optional `documentId`. Without it, the op uses the front docum
 | `createPage`        | `create_page`         | `name`                                                                                                                                                                                                                                                               |
 | `updatePage`        | `update_page`         | `id`, `name`                                                                                                                                                                                                                                                         |
 | `deletePage`        | `delete_page`         | `id`, `force`                                                                                                                                                                                                                                                        |
+| `save`              | `save_document`       | none                                                                                                                                                                                                                                                                 |
 
 These tools do not call the plugin:
 
@@ -212,6 +213,10 @@ Sketch 88.1 writes text alignment with the raw values AppKit uses on Intel Macs.
 ### Pages
 
 `createPage` adds a page at the end of the document and gives it the `createdByAgent` setting. `updatePage` renames a page. `deletePage` removes a page and every layer on it. It refuses the last page, the Symbols page unless `force` is true, and a page without the `createdByAgent` setting unless `force` is true. To switch pages, use `reveal` with a page id.
+
+### Saving
+
+`save` calls `document.save()` on a document that already has a file. Sketch 88.1 writes the file about 3 seconds after the plugin run ends for a 28 MB document, and it calls the save callback before it writes the file, so the plugin returns as soon as it asks Sketch to save. The server reads the file's modification time before the op and checks it every 250 milliseconds afterward. It returns an error when the time has not changed after 30 seconds. Like every write op, `save` makes the session's backup first, so the backup holds the file from before the agent saved it. The `save_document` tool's description tells the agent to call it only when the user asks to save.
 
 ### Symbols
 
