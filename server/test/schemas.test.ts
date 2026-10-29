@@ -70,6 +70,18 @@ test('style takes inner shadows, blur, blending, and border options', () => {
 	assert.equal(node({ style: { blur: { type: 'Box' } } }).success, false)
 })
 
+test('style takes color controls within their ranges, and null', () => {
+	assert.ok(
+		node({ kind: 'image', style: { colorControls: { hue: -180, saturation: 0, brightness: 1, contrast: 4 } } })
+			.success
+	)
+	assert.ok(node({ kind: 'image', style: { colorControls: { saturation: 0 } } }).success)
+	assert.ok(node({ kind: 'image', style: { colorControls: null } }).success)
+	for (const bad of [{ hue: 181 }, { saturation: -0.1 }, { brightness: 1.5 }, { contrast: 5 }]) {
+		assert.equal(node({ kind: 'image', style: { colorControls: bad } }).success, false, JSON.stringify(bad))
+	}
+})
+
 test('text takes underline, strikethrough, and fixed width', () => {
 	assert.ok(node({ kind: 'text', fixedWidth: false, textStyle: { textUnderline: 'single' } }).success)
 	assert.ok(node({ textStyle: { textStrikethrough: 'none' } }).success)

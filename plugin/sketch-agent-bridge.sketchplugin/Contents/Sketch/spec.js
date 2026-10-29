@@ -77,6 +77,17 @@ function blurSpec(blur) {
 	})
 }
 
+function colorControlsSpec(style) {
+	const controls = style.sketchObject && style.sketchObject.colorControls()
+	if (!controls || !controls.isEnabled()) return undefined
+	return {
+		hue: Math.round(((Number(controls.hue()) * 180) / Math.PI) * 100) / 100,
+		saturation: Number(controls.saturation()),
+		brightness: Number(controls.brightness()),
+		contrast: Number(controls.contrast()),
+	}
+}
+
 function borderOptionsSpec(options) {
 	if (!options) return undefined
 	const spec = compact({
@@ -118,6 +129,7 @@ function styleSpec(style, swatches) {
 			spread: shadow.spread,
 		})),
 		blur: style.blur && style.blur.enabled ? blurSpec(style.blur) : undefined,
+		colorControls: colorControlsSpec(style),
 		blendingMode: style.blendingMode !== 'Normal' ? style.blendingMode : undefined,
 		borderOptions: borderOptionsSpec(style.borderOptions),
 	}

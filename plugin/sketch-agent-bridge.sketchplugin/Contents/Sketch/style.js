@@ -163,6 +163,25 @@ function blurFromInput(blur) {
 	}
 }
 
+// The JS API has no Color Adjust, so it is set on the native MSStyleColorControls. Sketch stores hue in radians and draws Color Adjust only on image layers.
+const COLOR_CONTROL_DEFAULTS = { hue: 0, saturation: 1, brightness: 0, contrast: 1 }
+
+function setColorControls(layer, input) {
+	if (layer.type !== 'Image')
+		throw new Error('colorControls only changes image layers, and ' + layer.name + ' is a ' + layer.type)
+	const controls = layer.sketchObject.style().colorControls()
+	if (input === null) {
+		controls.setIsEnabled(false)
+		return
+	}
+	const values = Object.assign({}, COLOR_CONTROL_DEFAULTS, input)
+	controls.setHue((values.hue * Math.PI) / 180)
+	controls.setSaturation(values.saturation)
+	controls.setBrightness(values.brightness)
+	controls.setContrast(values.contrast)
+	controls.setIsEnabled(true)
+}
+
 function setFontAxes(layer, values) {
 	const axes = layer.style.fontAxes
 	if (!axes) throw new Error(layer.style.fontFamily + ' is not a variable font')
@@ -238,6 +257,7 @@ function applyStyle(document, layer, style, textStyle) {
 			layer.style.innerShadows = style.innerShadows.map(shadow => shadowFromInput(document, shadow))
 		}
 		if (style.blur !== undefined) layer.style.blur = blurFromInput(style.blur)
+		if (style.colorControls !== undefined) setColorControls(layer, style.colorControls)
 		if (style.borderOptions) setBorderOptions(layer, style.borderOptions)
 		if (style.blendingMode !== undefined) layer.style.blendingMode = style.blendingMode
 		if (style.opacity !== undefined) layer.style.opacity = style.opacity

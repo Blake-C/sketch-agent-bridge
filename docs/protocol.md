@@ -171,9 +171,23 @@ An artboard takes a single color fill, which the plugin writes to the artboard's
 - `innerShadows`, in the same form as `shadows`
 - `blur`, as `{ "type": "Background", "radius": 12 }`, where `type` is `Gaussian`, `Motion`, `Zoom`, or `Background`, and `motionAngle` sets the angle of a `Motion` blur. `null` turns blur off.
 - `blendingMode`, which is one of the names in Sketch's `Style.BlendingMode`, such as `Multiply` or `Screen`
+- `colorControls`, as `{ "hue": 30, "saturation": 0.5, "brightness": 0.1, "contrast": 1.2 }`, which sets Sketch's Color Adjust on an image layer. See [Color Adjust](#color-adjust).
 - `borderOptions`, with `dashPattern`, `lineEnd` (`Butt`, `Round`, `Projecting`), `lineJoin` (`Miter`, `Round`, `Bevel`), `startArrowhead`, and `endArrowhead`. Arrowheads are `None`, `OpenArrow`, `FilledArrow`, `Line`, `OpenCircle`, `FilledCircle`, `OpenSquare`, or `FilledSquare`, and they draw on open paths such as a line from an SVG.
 
 Assigning `style.borderOptions` in Sketch's API resets every key left out to its default, so the plugin sets each key that is given and leaves the others unchanged.
+
+### Color Adjust
+
+Sketch's JS API has no Color Adjust, so the plugin sets it on the native `MSStyleColorControls` of the layer's style. Sketch draws Color Adjust only on image layers, and a rectangle with an image fill showed no change in a test at saturation 0, so the plugin refuses `colorControls` on any other layer type. `upsert_shared_style` builds its style on a rectangle, so it refuses `colorControls` too.
+
+| Key          | Range       | Default | Effect                                            |
+| ------------ | ----------- | ------- | ------------------------------------------------- |
+| `hue`        | -180 to 180 | 0       | Rotates hue by this many degrees                  |
+| `saturation` | 0 to 2      | 1       | 0 is gray and 2 doubles the saturation            |
+| `brightness` | -1 to 1     | 0       | -1 is black and 1 is white                        |
+| `contrast`   | 0 to 4      | 1       | Below 1 flattens the image, above 1 adds contrast |
+
+Sketch stores hue in radians, and the plugin converts degrees to radians and back. Sketch does not clamp the stored values, so the ranges are the bridge's own limits. Keys left out of `colorControls` are reset to their defaults, and `null` turns Color Adjust off and keeps the stored values.
 
 `textStyle` also takes `textUnderline` and `textStrikethrough`, which are `none`, `single`, `double`, or `thick`, and `fontStretch`, which is `compressed`, `condensed`, `narrow`, `expanded`, or `poster`.
 
@@ -285,7 +299,7 @@ Each layer has `id`, `name`, `type`, and `frame`. These keys appear only when th
 - `lines` and `overflows` for text layers when `textLines` is true, described below
 - `textRuns` for text layers with more than one style, listing each run that differs from the layer's `textStyle`, which describes the first character. Each run has `text`, `start`, `length`, and the keys that differ from the first run, which can include `swatch` with the name of a linked swatch. Reading the runs of the 388 text layers in the test document took 134 milliseconds.
 - `text`, `textStyle`, `fixedWidth`, and `lineSpacing` for text layers, where `lineSpacing` is left out when it is `natural`, `textStyle` has `fontAxes` for a variable font, where `alignment` is left out when it is `left` and `verticalAlignment` is left out when it is `top`
-- `style` with `opacity`, `fills`, `borders`, `borderOptions`, `shadows`, `innerShadows`, `blur`, and `blendingMode`. A color linked to a swatch also has `swatch`, a gradient fill is `{ "gradient": { "type", "from", "to", "stops" } }` in the same form `style` takes as input, and an image fill is `{ "image": true }`. `borderOptions` and `blendingMode` appear only when they differ from Sketch's defaults.
+- `style` with `opacity`, `fills`, `borders`, `borderOptions`, `shadows`, `innerShadows`, `blur`, `colorControls`, and `blendingMode`. A color linked to a swatch also has `swatch`, a gradient fill is `{ "gradient": { "type", "from", "to", "stops" } }` in the same form `style` takes as input, and an image fill is `{ "image": true }`. `borderOptions` and `blendingMode` appear only when they differ from Sketch's defaults, and `colorControls` appears only when Color Adjust is turned on.
 - `sharedStyle` with the shared style name, and `sharedStyleOutOfSync: true` when the layer's style no longer matches the shared style
 - `symbol`, `symbolId`, and `overrides` for symbol instances, where `overrides` lists only overrides changed from the default, and a `fillColor` value is `{ "color": "#rrggbbaa" }` with `swatch` when it is linked to one
 - `flow` with `target`, `targetName`, and `animation`, where `target` is `back` for a back link

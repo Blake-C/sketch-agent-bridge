@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Added `colorControls` to `style`, which sets Sketch's Color Adjust (hue, saturation, brightness, and contrast) on an image layer, and to the layer spec when it is turned on.
 - Added `order` to `build_layers`, which places the new root layers at the back, at an index, or next to a sibling, so a mask can be added to the back of an existing group in one call.
 - Added `editableOverrides` to `update_layer`, which sets whether instances of a symbol master can change each override.
 - Added `colorSpace` to `sketch_status`, and an `update_document` tool that changes the document's color space.

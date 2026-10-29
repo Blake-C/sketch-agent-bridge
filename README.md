@@ -28,7 +28,7 @@ An agent connected to the MCP server can:
 - link layers and hotspots to artboards for prototypes, add export presets, and add slices
 - set the column, row, and square grids on artboards and symbol masters
 - switch Sketch to a layer's page, select layers, and scroll the canvas to a layer
-- fill layers with colors, gradients, or images, and add inner shadows, blurs, blend modes, dashed borders, and arrowheads
+- fill layers with colors, gradients, or images, add inner shadows, blurs, blend modes, dashed borders, and arrowheads, and set Sketch's Color Adjust on image layers
 - add or change swatches and shared styles
 - read and change the document's color space
 - save the document when the user asks

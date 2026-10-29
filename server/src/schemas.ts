@@ -99,6 +99,18 @@ export const style = z
 			.nullable()
 			.optional()
 			.describe('Layer blur. Background blurs what is behind the layer. null turns blur off.'),
+		colorControls: z
+			.object({
+				hue: z.number().min(-180).max(180).optional().describe('Hue rotation in degrees. Default 0.'),
+				saturation: z.number().min(0).max(2).optional().describe('0 is gray, 1 is unchanged. Default 1.'),
+				brightness: z.number().min(-1).max(1).optional().describe('-1 is black, 0 is unchanged. Default 0.'),
+				contrast: z.number().min(0).max(4).optional().describe('1 is unchanged. Default 1.'),
+			})
+			.nullable()
+			.optional()
+			.describe(
+				"Sketch's Color Adjust, for image layers only. It stays editable in Sketch. Keys left out are reset to their defaults, and null turns it off."
+			),
 		blendingMode: z.enum(blendingModes).optional(),
 		borderOptions: z
 			.object({
