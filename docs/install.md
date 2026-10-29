@@ -56,6 +56,14 @@ By default, the plugin only reads image and SVG files inside `~/.sketch-agent-br
 claude mcp add --scope user sketch -e SKETCH_AGENT_BRIDGE_ASSET_DIRS="$HOME/Design/Assets:$HOME/Downloads" -- node "$PWD/server/dist/server.js"
 ```
 
+An agent that runs shell commands in a sandbox, such as Claude Code with its sandbox turned on, cannot write to `~/.sketch-agent-bridge/`, so it cannot save an SVG or image it generated where the plugin reads it. The server creates `~/.sketch-agent-bridge/assets/` before each request, and the plugin reads files there because the folder is inside `~/.sketch-agent-bridge/`. To let the sandbox write to that folder and nothing else in `~/.sketch-agent-bridge/`, add it to [`sandbox.filesystem.allowWrite`](https://code.claude.com/docs/en/sandboxing) in `~/.claude/settings.json`:
+
+```json
+{ "sandbox": { "filesystem": { "allowWrite": ["~/.sketch-agent-bridge/assets"] } } }
+```
+
+The server never deletes files in `assets/`, so generated files stay there until they are removed by hand.
+
 Other MCP clients take the same command in their own config format:
 
 ```json

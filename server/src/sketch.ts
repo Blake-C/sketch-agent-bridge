@@ -132,6 +132,10 @@ export class SketchBridge {
 		return path.join(this.bridgeDir, 'requests')
 	}
 
+	get assetsDir(): string {
+		return path.join(this.bridgeDir, 'assets')
+	}
+
 	async call(op: string, args: Record<string, unknown> = {}): Promise<CallResult> {
 		if (!(await this.isRunning())) throw new BridgeError('Sketch is not running. Open Sketch and a document first.')
 		await this.prune()
@@ -139,6 +143,8 @@ export class SketchBridge {
 		await mkdir(dir, { recursive: true, mode: 0o700 })
 		// The plugin's Send Selection command can create the bridge folder before the server ever runs.
 		await chmod(this.bridgeDir, 0o700)
+		// A sandboxed agent can be allowed to write to assets/ but not to the bridge folder, so it cannot make assets/ itself.
+		await mkdir(this.assetsDir, { recursive: true, mode: 0o700 })
 		await writeFile(path.join(dir, 'request.json'), JSON.stringify({ op, args, assetDirs: this.assetDirs }), {
 			mode: 0o600,
 		})
