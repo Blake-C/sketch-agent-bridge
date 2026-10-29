@@ -225,6 +225,45 @@ export const layout = {
 		.describe(
 			'How the layer resizes when its group, artboard, or symbol instance is resized. pin keeps the distance to that edge, and fix keeps the size. A layer pinned to both sides cannot also fix that size. Keys left out are unchanged.'
 		),
+	layoutGrid: z
+		.object({
+			columns: z
+				.object({
+					count: z.number().int().min(1),
+					gutterWidth: z.number().min(0),
+					columnWidth: z
+						.number()
+						.positive()
+						.optional()
+						.describe('Give this or totalWidth. Without either, the columns fill the artboard width.'),
+					totalWidth: z.number().positive().optional(),
+					offset: z.number().optional().describe('Distance from the left edge. Default centers the columns.'),
+					guttersOutside: z
+						.boolean()
+						.optional()
+						.describe('Adds half a gutter outside the first and last columns. Default false.'),
+				})
+				.optional(),
+			rows: z
+				.object({
+					gutterHeight: z.number().positive(),
+					rowHeightMultiplier: z.number().int().min(1).describe('Each row is this many gutter heights tall.'),
+				})
+				.optional(),
+		})
+		.nullable()
+		.optional()
+		.describe(
+			'For artboards and symbol masters. The column and row layout grid shown in Sketch. Replaces the whole layout grid, and null turns it off.'
+		),
+	grid: z
+		.object({
+			size: z.number().positive(),
+			thickEvery: z.number().int().min(0).optional().describe('Draws a thick line every this many cells.'),
+		})
+		.nullable()
+		.optional()
+		.describe('For artboards and symbol masters. The square grid shown in Sketch. null turns it off.'),
 }
 
 export const booleanOperation = z

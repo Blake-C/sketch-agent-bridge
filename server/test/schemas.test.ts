@@ -145,3 +145,14 @@ test('find takes a shared style and a swatch', () => {
 test('layer nodes take the hotspot kind', () => {
 	assert.ok(layerInput.safeParse({ kind: 'hotspot', flow: { target: 'back' } }).success)
 })
+
+test('layer nodes take a layout grid and a square grid', () => {
+	const layoutGrid = {
+		columns: { count: 12, gutterWidth: 24, totalWidth: 1200 },
+		rows: { gutterHeight: 8, rowHeightMultiplier: 3 },
+	}
+	assert.ok(node({ kind: 'artboard', layoutGrid, grid: { size: 8, thickEvery: 10 } }).success)
+	assert.ok(node({ kind: 'artboard', layoutGrid: null, grid: null }).success)
+	assert.equal(node({ layoutGrid: { columns: { count: 0, gutterWidth: 24 } } }).success, false)
+	assert.equal(node({ layoutGrid: { rows: { gutterHeight: 8, rowHeightMultiplier: 1.5 } } }).success, false)
+})

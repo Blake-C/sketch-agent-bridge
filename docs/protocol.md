@@ -127,7 +127,7 @@ Assigning a library text style with `syncWithSharedStyle` links the style withou
 - `symbol` and `overrides` for `symbol`
 - `children` for `group` and `artboard`
 - `ref`, a label the `build` reply maps to the new layer's id
-- the layout fields `smartLayout` for `group`, `mask` for shapes and images, and `rotation`, `flipHorizontal`, `flipVertical`, `breaksMask`, and `resizing` for every kind
+- the layout fields `smartLayout` for `group`, `mask` for shapes and images, and `rotation`, `flipHorizontal`, `flipVertical`, `breaksMask`, and `resizing` for every kind, and `layoutGrid` and `grid` for `artboard`
 - `booleanOperation` for the children of a `shape` node, in `build` only
 - `flow` and `exportFormats` for every kind, and `flowStartPoint` for `artboard`
 
@@ -188,6 +188,8 @@ Sketch 88.1 writes text alignment with the raw values AppKit uses on Intel Macs.
 `resizing` sets how a layer changes when its group, artboard, or symbol instance is resized. It takes `pinLeft`, `pinRight`, `pinTop`, and `pinBottom`, which keep the layer's distance to that edge, and `fixWidth` and `fixHeight`, which keep its size. Keys left out are unchanged. Sketch 88.1's JavaScript API has no resizing constraints, so the plugin calls `setHasFixedLeft:` and the other setters on the native layer. The plugin refuses a layer pinned left and right with a fixed width, and a layer pinned top and bottom with a fixed height.
 
 `booleanOperation` is `none`, `union`, `subtract`, `intersect`, or `difference`, and sets how a part of a Shape joins the parts below it. The bottom part is the base, so with `subtract` each part above it cuts its outline out of the parts below. Sketch sizes a Shape to the result of its boolean operations, so `updateLayer` refits the Shape after it changes `booleanOperation`, and it refuses a layer whose parent is not a Shape. `combineShapes` puts shapes and paths that share a parent into a new Shape, sets every part to `operation`, and gives the Shape the name and style of the bottom layer. Sketch deleted a Shape at the end of the plugin run when the Shape got its parent and an empty `layers` list in its constructor, so the plugin creates each Shape with only the empty `layers` list and sets its parent after.
+
+`layoutGrid` sets the column and row grid that Sketch draws over an artboard or symbol master, and `grid` sets the square grid. Both replace the whole grid, and `null` turns it off. `layoutGrid.columns` takes `count`, `gutterWidth`, and either `columnWidth` or `totalWidth`. Without either, the columns fill the artboard width. `offset` is the distance from the left edge and defaults to centering the columns, and `guttersOutside` adds half a gutter outside the first and last columns. `layoutGrid.rows` takes `gutterHeight` and `rowHeightMultiplier`, which is how many gutter heights tall each row is. `grid` takes `size` and `thickEvery`, which draws a thick line every that many cells. Sketch's layout grid setters recalculate the values that were not set, so the plugin sets the number of columns and the total width before the gutter width, and Sketch works out the column width from them. Groups have no grids in Sketch 88.1, so the plugin refuses both on any layer that is not an artboard or symbol master.
 
 `updateLayer` takes `parentId` to move a layer into another artboard, group, or page. The layer keeps its place on the canvas, and a `frame` in the same request is relative to the new parent. An artboard can only move to a page, and a layer cannot move into itself or one of its children. A group that the layer leaves or joins is resized to fit its children.
 
@@ -258,4 +260,5 @@ Each layer has `id`, `name`, `type`, and `frame`. These keys appear only when th
 - `symbol`, `symbolId`, and `overrides` for symbol instances, where `overrides` lists only overrides changed from the default, and a `fillColor` value is `{ "color": "#rrggbbaa" }` with `swatch` when it is linked to one
 - `flow` with `target`, `targetName`, and `animation`, where `target` is `back` for a back link
 - `flowStartPoint` for artboards
+- `layoutGrid` with `columns` and `rows`, and `grid` with `size` and `thickEvery`, for artboards and symbol masters with a grid turned on
 - `exportFormats` with `fileFormat`, `size`, and `prefix` or `suffix` when set

@@ -6,6 +6,7 @@ const { exportLayers } = require('./export.js')
 const { applyStyle, loadImage, nativeColor, isColorValue } = require('./style.js')
 const { findLocalOrImport } = require('./libraries.js')
 const { splitSubpaths } = require('./path.js')
+const { setLayoutGrid, setGrid } = require('./grids.js')
 
 const DRAFTS_PAGE = 'Agent Drafts'
 const CREATED_KEY = 'createdByAgent'
@@ -248,6 +249,8 @@ function setBooleanOperation(layer, name) {
 function applyLayout(layer, input) {
 	if (input.smartLayout !== undefined) setSmartLayout(layer, input.smartLayout)
 	if (input.resizing !== undefined) setResizing(layer, input.resizing)
+	if (input.layoutGrid !== undefined) setLayoutGrid(layer, input.layoutGrid)
+	if (input.grid !== undefined) setGrid(layer, input.grid)
 	if (input.rotation !== undefined) layer.transform.rotation = input.rotation
 	if (input.flipHorizontal !== undefined) layer.transform.flippedHorizontally = input.flipHorizontal
 	if (input.flipVertical !== undefined) layer.transform.flippedVertically = input.flipVertical

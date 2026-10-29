@@ -5,6 +5,8 @@ import tseslint from 'typescript-eslint'
 const cocoaGlobals = {
 	framework: 'readonly',
 	MSColor: 'readonly',
+	MSLayoutGrid: 'readonly',
+	MSSimpleGrid: 'readonly',
 	NSImage: 'readonly',
 	NSTextAlignmentCenter: 'readonly',
 	NSFileManager: 'readonly',

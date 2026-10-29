@@ -1,5 +1,6 @@
 const sketch = require('sketch')
 const { fromSketchAlignment, allSwatches, hexFromNative } = require('./style.js')
+const { layoutGridSpec, gridSpec } = require('./grids.js')
 
 const DEFAULT_DEPTH = 8
 const MAX_NODES = 2000
@@ -285,6 +286,8 @@ function layerSpec(layer, options) {
 			overrides: node.type === 'SymbolInstance' ? overridesSpec(node, swatches) : undefined,
 			flow: flowSpec(node.flow),
 			flowStartPoint: node.type === 'Artboard' && node.flowStartPoint ? true : undefined,
+			layoutGrid: layoutGridSpec(node),
+			grid: gridSpec(node),
 			exportFormats: exportFormatsSpec(node.exportFormats),
 		}
 		if (Object.keys(spec.style).length === 0) delete spec.style
