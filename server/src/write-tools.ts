@@ -457,7 +457,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Update document',
 			description:
-				"Changes the document's color space. sketch_status shows the current one. Changing it changes how every color in the document renders.",
+				"Changes the document's color space. sketch_status shows the current one. Changing it changes how every color in the document renders. Converting from P3 to Unmanaged or sRGB rewrites every color value, and converting back does not restore them, so only change the color space when the user asks.",
 			inputSchema: {
 				documentId,
 				colorSpace: z.enum(['Unmanaged', 'sRGB', 'P3']),

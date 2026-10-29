@@ -7,7 +7,7 @@ Sketch Agent Bridge connects Sketch 88.1 to AI agents such as Claude Code. Sketc
 An agent connected to the MCP server can:
 
 - see the current selection as a PNG, an SVG, and a JSON spec of its layers
-- export layers as PNG, SVG, or Sketch's JSON file format, with a background color or the full frame
+- export layers as PNG, SVG, or Sketch's JSON file format, with a background color or without cropping to the visible content
 - list pages and artboards, and read any layer by id
 - add, rename, reorder, and delete pages
 - find layers by type, name, text, symbol, shared style, or swatch, and list symbols with how many instances use each one
@@ -31,7 +31,7 @@ An agent connected to the MCP server can:
 - fill layers with colors, gradients, or images, and add inner shadows, blurs, blend modes, dashed borders, and arrowheads
 - add or change swatches and shared styles
 - read and change the document's color space
-- save the document when asked to
+- save the document when the user asks
 - download the Unsplash photos most relevant to a query, filtered by orientation or color, through a local shell function, for use as image layers and fills
 - use the textures and leaf drawings in `assets/`, which `list_assets` lists with their paths
 
