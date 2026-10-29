@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { z } from 'zod'
-import { findInput, layerInput, order } from '../src/schemas.ts'
+import { findInput, layerInput, order, relativeTo } from '../src/schemas.ts'
 
 const node = (fields: Record<string, unknown>) => layerInput.safeParse({ kind: 'group', ...fields })
 
@@ -106,4 +106,10 @@ test('overrides take a hex color or swatch for fillColor', () => {
 	assert.ok(node({ kind: 'symbol', overrides }).success)
 	assert.equal(node({ kind: 'symbol', overrides: [{ layer: 'X', value: { color: '#fff' } }] }).success, false)
 	assert.equal(node({ kind: 'symbol', overrides: [{ layer: 'X', property: 'fill', value: '#fff' }] }).success, false)
+})
+
+test('relativeTo takes parent or artboard', () => {
+	const schema = z.object({ relativeTo })
+	for (const value of ['parent', 'artboard', undefined]) assert.ok(schema.safeParse({ relativeTo: value }).success)
+	assert.equal(schema.safeParse({ relativeTo: 'page' }).success, false)
 })

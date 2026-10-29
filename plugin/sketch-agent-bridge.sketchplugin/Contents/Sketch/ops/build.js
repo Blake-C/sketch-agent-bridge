@@ -6,6 +6,8 @@ const {
 	createNode,
 	moveInto,
 	fillGroup,
+	artboardOf,
+	originIn,
 	summary,
 	renderFiles,
 	renderRequest,
@@ -14,26 +16,15 @@ const {
 const MAX_BUILD_NODES = 2000
 const PARENT_KINDS = ['group', 'artboard']
 
-// Sketch refits a group as soon as a styled text layer inside it changes size, which shifts every sibling built after it.
-// So layers are built in the nearest artboard or page, offset to where their group will be, and moved into groups at the end.
-function stagingContainer(parent) {
-	let stage = parent
-	while (stage.type === 'Group') stage = stage.parent
-	return stage
-}
-
-function originIn(stage, layer) {
-	if (layer.id === stage.id) return { x: 0, y: 0 }
-	const frame = layer.frame.changeBasis({ from: layer.parent, to: stage })
-	return { x: frame.x, y: frame.y }
-}
-
 function build(args, request) {
 	const document = editableDocument(args)
 	const parent = args.parentId ? findLayer(document, args.parentId) : draftsPage(document)
 	assertContainer(parent)
-	const stage = stagingContainer(parent)
+	// Sketch refits a group as soon as a styled text layer inside it changes size, which shifts every sibling built after it.
+	// So layers are built in the nearest artboard or page, offset to where their group will be, and moved into groups at the end.
+	const stage = artboardOf(parent)
 	const parentOrigin = originIn(stage, parent)
+	const rootOffset = args.relativeTo === 'artboard' ? { x: 0, y: 0 } : parentOrigin
 	const refs = {}
 	const roots = []
 	const created = []
@@ -71,7 +62,7 @@ function build(args, request) {
 	}
 
 	try {
-		args.nodes.forEach(node => roots.push(make(stage, node, parentOrigin)))
+		args.nodes.forEach(node => roots.push(make(stage, node, rootOffset)))
 		if (parent.id !== stage.id) {
 			roots.forEach(root => moveInto(root, parent, parentOrigin.x, parentOrigin.y))
 			parent.adjustToFit()

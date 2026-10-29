@@ -12,6 +12,7 @@ const CREATED_KEY = 'createdByAgent'
 const ARTBOARD_GAP = 100
 const VERBOSE_DEPTH = 3
 const CONTAINER_TYPES = ['Artboard', 'Group', 'SymbolMaster', 'Page']
+const GROUP_TYPES = ['Group', 'Shape']
 const STYLE_OVERRIDES = ['textStyle', 'layerStyle']
 const SMART_LAYOUT_TYPES = ['Group', 'SymbolMaster']
 const SHAPE_KINDS = { rectangle: 'Rectangle', oval: 'Oval', triangle: 'Triangle', polygon: 'Polygon', star: 'Star' }
@@ -440,8 +441,47 @@ function createNode(document, parent, node) {
 	return layer
 }
 
+// The nearest container whose children are not refit around them: an artboard, symbol master, or page.
+function artboardOf(container) {
+	let space = container
+	while (GROUP_TYPES.includes(space.type)) space = space.parent
+	return space
+}
+
+function originIn(space, layer) {
+	if (layer.id === space.id) return { x: 0, y: 0 }
+	const frame = layer.frame.changeBasis({ from: layer.parent, to: space })
+	return { x: frame.x, y: frame.y }
+}
+
+function artboardFrame(layer) {
+	return frameSpec(layer.frame.changeBasis({ from: layer.parent, to: artboardOf(layer.parent) }))
+}
+
+function insideGroup(layer) {
+	return Boolean(layer.parent) && GROUP_TYPES.includes(layer.parent.type)
+}
+
+// With relativeTo "artboard", positions were given in the artboard's coordinates, so the layer moves back by its parent's origin there.
+function fromArtboardCoordinates(layer, args) {
+	if (args.relativeTo !== 'artboard' || !insideGroup(layer)) return
+	const origin = originIn(artboardOf(layer.parent), layer.parent)
+	const frame = layer.frame
+	frame.x -= origin.x
+	frame.y -= origin.y
+	layer.frame = frame
+}
+
 function summary(layer) {
-	return { id: layer.id, name: layer.name, type: layer.type, frame: frameSpec(layer.frame) }
+	const spec = { id: layer.id, name: layer.name, type: layer.type, frame: frameSpec(layer.frame) }
+	if (insideGroup(layer)) spec.artboardFrame = artboardFrame(layer)
+	return spec
+}
+
+function parentSummary(layer) {
+	if (!insideGroup(layer)) return undefined
+	const parent = layer.parent
+	return { id: parent.id, name: parent.name, type: parent.type, artboardFrame: artboardFrame(parent) }
 }
 
 function renderTarget(layer, render) {
@@ -459,7 +499,7 @@ function result(document, layer, args, request) {
 	return {
 		result: args.verbose
 			? layerSpec(layer, { document, swatches: swatchNames(document), depth: VERBOSE_DEPTH })
-			: summary(layer),
+			: Object.assign(summary(layer), { parent: parentSummary(layer) }),
 		files: renderFiles(layer, args, request),
 	}
 }
@@ -502,6 +542,9 @@ module.exports = {
 	findSymbolMaster,
 	setOverrides,
 	createNode,
+	artboardOf,
+	originIn,
+	fromArtboardCoordinates,
 	summary,
 	renderFiles,
 	renderRequest,

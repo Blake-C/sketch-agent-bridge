@@ -18,6 +18,8 @@ All notable changes to this project will be documented in this file.
 - Added a warning on write replies when Sketch has stopped recording undo history for the document, and `undoStuck` in `sketch_status`.
 - Added `{ above: id }` and `{ below: id }` to `order` in `update_layer`, so a layer can be placed directly next to a sibling without knowing its index.
 - Added `groups` to the `build_layers` reply, which lists every group the build created with its final frame. A group shrinks to fit its children, so its origin can differ from the origin of the requested frame, and later frames inside it are relative to the new origin.
+- Added `relativeTo` to `build_layers`, `create_layer`, and `update_layer`. With `"artboard"`, frame positions and path coordinates are measured from the artboard, so the origins of nested groups do not have to be added up.
+- Added `artboardFrame` to layer summaries when the parent is a group or compound shape, and `parent` with the parent's `artboardFrame` to the replies of `create_artboard`, `create_layer`, `update_layer`, `apply_shared_style`, `group_layers`, and `detach`.
 
 ### Changed
 

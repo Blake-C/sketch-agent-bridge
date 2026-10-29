@@ -19,9 +19,22 @@ const {
 	findSymbolMaster,
 	setOverrides,
 	createNode,
+	artboardOf,
+	originIn,
+	fromArtboardCoordinates,
 	result,
 	deferredResult,
 } = require('../edit.js')
+
+// Only the keys given change, so an artboard position converts x and y on their own.
+function frameInParent(layer, args) {
+	if (args.relativeTo !== 'artboard') return args.frame
+	const origin = originIn(artboardOf(layer.parent), layer.parent)
+	const frame = Object.assign({}, args.frame)
+	if (frame.x !== undefined) frame.x -= origin.x
+	if (frame.y !== undefined) frame.y -= origin.y
+	return frame
+}
 
 function createArtboard(args, request) {
 	const document = editableDocument(args)
@@ -40,6 +53,7 @@ function createLayer(args, request) {
 	const parent = findLayer(document, args.parentId)
 	assertContainer(parent)
 	const layer = createNode(document, parent, args)
+	fromArtboardCoordinates(layer, args)
 	return args.overrides || args.kind === 'symbol'
 		? deferredResult(document, layer, args)
 		: result(document, layer, args, request)
@@ -51,8 +65,11 @@ function updateLayer(args, request) {
 	if (args.parentId !== undefined) setParent(document, layer, args.parentId)
 	if (args.hidden !== undefined) layer.hidden = args.hidden
 	if (args.locked !== undefined) layer.locked = args.locked
-	if (args.path !== undefined) setPath(layer, args.path)
-	if (args.frame) setFrame(layer, args.frame)
+	if (args.path !== undefined) {
+		setPath(layer, args.path)
+		fromArtboardCoordinates(layer, args)
+	}
+	if (args.frame) setFrame(layer, frameInParent(layer, args))
 	if (args.text !== undefined) {
 		if (layer.type !== 'Text') throw new Error('Only text layers have text')
 		const customName = layer.name !== layer.text ? layer.name : undefined

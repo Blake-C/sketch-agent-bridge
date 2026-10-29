@@ -184,6 +184,13 @@ export const render = {
 	verbose: z.boolean().optional().describe('Return the full layer spec instead of id, name, type, and frame.'),
 }
 
+export const relativeTo = z
+	.enum(['parent', 'artboard'])
+	.optional()
+	.describe(
+		'What frame positions and path coordinates are measured from. "artboard" uses the artboard or symbol master holding the parent, or the page when there is none, so nested group origins do not need adding up. Default parent.'
+	)
+
 export const layout = {
 	smartLayout: z
 		.enum(['LeftToRight', 'HorizontallyCenter', 'RightToLeft', 'TopToBottom', 'VerticallyCenter', 'BottomToTop'])

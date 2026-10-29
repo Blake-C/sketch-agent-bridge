@@ -15,6 +15,7 @@ import {
 	order,
 	overrides,
 	prototypeAndExport,
+	relativeTo,
 	render,
 	style,
 	svgPath,
@@ -84,6 +85,9 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 					.string()
 					.optional()
 					.describe('Artboard, group, or page id. Defaults to the "Agent Drafts" page.'),
+				relativeTo: relativeTo.describe(
+					'What the root nodes\' frames and paths are measured from. "artboard" uses the artboard or symbol master holding parentId, or the page when there is none. Children of a group node stay relative to that group\'s requested frame. Default parent.'
+				),
 				nodes: z.array(buildNode).min(1),
 				...render,
 			},
@@ -125,9 +129,10 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 				parentId: z
 					.string()
 					.describe(
-						"Id of an artboard, group, or page. Inside a group, frame is relative to the group's current frame, which moves when the group shrinks to fit."
+						"Id of an artboard, group, or page. Inside a group, frame is relative to the group's current frame, which moves when the group shrinks to fit, unless relativeTo is artboard."
 					),
 				...layerInput.shape,
+				relativeTo,
 				...render,
 			},
 			annotations: additive,
@@ -154,6 +159,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 				hidden: z.boolean().optional(),
 				locked: z.boolean().optional(),
 				frame: frame.optional().describe('Only the given keys change.'),
+				relativeTo,
 				text: z.string().optional(),
 				fixedWidth: fixedWidth.optional(),
 				lineSpacing: lineSpacing.optional(),
