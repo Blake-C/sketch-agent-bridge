@@ -8,6 +8,12 @@ import type { SketchBridge } from './sketch.ts'
 const documentId = z.string().optional().describe('Document id from sketch_status. Defaults to the front document.')
 const depth = z.number().int().min(0).max(20).optional().describe('How many levels of children to include. Default 8.')
 const includeHidden = z.boolean().optional().describe('Include hidden layers. Default false.')
+const textLines = z
+	.boolean()
+	.optional()
+	.describe(
+		'Also return each line a text layer wraps into, and overflows: true when the text is taller than its frame. Slow on large trees, about 30 ms per text layer.'
+	)
 const scale = z.number().min(0.25).max(4).optional().describe('PNG scale. Default 1.')
 const readOnly = { readOnlyHint: true, openWorldHint: false }
 
@@ -52,6 +58,7 @@ export function registerReadTools(server: McpServer, bridge: SketchBridge) {
 				documentId,
 				depth,
 				includeHidden,
+				textLines,
 				scale,
 				svg: z.boolean().optional().describe('Also export and return SVG markup.'),
 				export: z.boolean().optional().describe('Set false to skip image export and return only the spec.'),
@@ -91,7 +98,7 @@ export function registerReadTools(server: McpServer, bridge: SketchBridge) {
 		{
 			title: 'Get layer',
 			description: 'Returns the JSON spec of one layer and its children.',
-			inputSchema: { documentId, id: z.string().describe('Layer id.'), depth, includeHidden },
+			inputSchema: { documentId, id: z.string().describe('Layer id.'), depth, includeHidden, textLines },
 			annotations: readOnly,
 		},
 		async args => callOp(bridge, 'layer', args)

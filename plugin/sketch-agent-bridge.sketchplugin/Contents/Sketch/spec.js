@@ -1,6 +1,7 @@
 const sketch = require('sketch')
 const { fromSketchAlignment, allSwatches, hexFromNative } = require('./style.js')
 const { layoutGridSpec, gridSpec } = require('./grids.js')
+const { textLinesSpec } = require('./text.js')
 
 const DEFAULT_DEPTH = 8
 const MAX_NODES = 2000
@@ -248,6 +249,7 @@ function layerSpec(layer, options) {
 	const swatches = options.swatches || swatchNames(document)
 	const depth = options.depth === undefined ? DEFAULT_DEPTH : options.depth
 	const includeHidden = Boolean(options.includeHidden)
+	const textLines = Boolean(options.textLines)
 	const counter = { nodes: 0, truncated: false }
 
 	function walk(node, level, parentType) {
@@ -291,6 +293,7 @@ function layerSpec(layer, options) {
 			exportFormats: exportFormatsSpec(node.exportFormats),
 		}
 		if (Object.keys(spec.style).length === 0) delete spec.style
+		if (isText && textLines) Object.assign(spec, textLinesSpec(node))
 		const children = (node.layers || []).filter(child => includeHidden || !child.hidden)
 		if (children.length > 0) {
 			const manyParts = node.type === 'Shape' && children.length > MAX_SHAPE_PARTS

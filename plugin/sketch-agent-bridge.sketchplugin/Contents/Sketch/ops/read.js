@@ -47,7 +47,13 @@ function artboards(args) {
 }
 
 function specOptions(document, args) {
-	return { document, swatches: swatchNames(document), depth: args.depth, includeHidden: args.includeHidden }
+	return {
+		document,
+		swatches: swatchNames(document),
+		depth: args.depth,
+		includeHidden: args.includeHidden,
+		textLines: args.textLines,
+	}
 }
 
 function layer(args) {
