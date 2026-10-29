@@ -223,6 +223,10 @@ function applyLayout(layer, input) {
 	if (input.flipVertical !== undefined) layer.transform.flippedVertically = input.flipVertical
 	if (input.mask !== undefined) setMask(layer, input.mask)
 	if (input.breaksMask !== undefined) layer.sketchObject.setShouldBreakMaskChain(input.breaksMask)
+	// A group holding a mask is sized to the mask, which Sketch only recalculates on a refit.
+	if ((input.mask !== undefined || input.breaksMask !== undefined) && layer.parent.type === 'Group') {
+		layer.parent.adjustToFit()
+	}
 }
 
 function setFlow(document, layer, flow) {
