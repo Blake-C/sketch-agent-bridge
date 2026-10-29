@@ -646,6 +646,8 @@ module.exports = {
 	setOverrides,
 	setEditableOverrides,
 	createNode,
+	createSvgLayer,
+	readSvgFile,
 	artboardOf,
 	originIn,
 	fromArtboardCoordinates,

@@ -6,26 +6,18 @@ import { z } from 'zod'
 import type { Backups } from './backup.ts'
 import { errorResult, replyResult } from './content.ts'
 import {
+	MAX_UPDATES,
 	booleanOperation,
 	buildNode,
 	buildOrder,
 	documentId,
-	editableOverrides,
-	fixedWidth,
-	frame,
 	hex,
 	layerInput,
-	layout,
-	lineSpacing,
-	order,
-	overrides,
-	prototypeAndExport,
 	relativeTo,
 	render,
 	style,
-	svgPath,
-	textRuns,
 	textStyle,
+	updateFields,
 } from './schemas.ts'
 import { BridgeError, type SketchBridge } from './sketch.ts'
 
@@ -177,49 +169,26 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 			title: 'Update layer',
 			description:
 				'Changes an existing layer: parent, name, visibility, lock, frame, text, styled runs of text, line spacing, corner radius, path, which symbol an instance uses, symbol overrides, style, text style, smart layout, resizing, rotation, flips, masks, boolean operations, stacking order, prototype links, export presets, and which overrides a symbol master lets instances change.',
+			inputSchema: { documentId, ...updateFields, ...render },
+			annotations: destructive,
+		},
+		write('updateLayer')
+	)
+
+	server.registerTool(
+		'update_layers',
+		{
+			title: 'Update layers',
+			description:
+				'Applies several update_layer changes in one call and renders once at the end. Each entry takes the same fields as update_layer. The layers are all looked up before any change, and if a change fails, the reply names its index and the changes before it stay applied.',
 			inputSchema: {
 				documentId,
-				id: z.string(),
-				parentId: z
-					.string()
-					.optional()
-					.describe(
-						'Move the layer into this artboard, group, or page. It keeps its place on the canvas, and frame is then relative to the new parent. Artboards move only between pages.'
-					),
-				name: z.string().optional(),
-				hidden: z.boolean().optional(),
-				locked: z.boolean().optional(),
-				frame: frame.optional().describe('Only the given keys change.'),
-				relativeTo,
-				text: z.string().optional(),
-				textRuns: textRuns.optional(),
-				fixedWidth: fixedWidth.optional(),
-				lineSpacing: lineSpacing.optional(),
-				cornerRadius: z.number().min(0).optional(),
-				path: svgPath
-					.optional()
-					.describe(
-						'Replaces the points of a path layer, or the parts of a Shape. Coordinates are in the parent. A single path layer refuses data with several subpaths.'
-					),
-				symbol: z
-					.string()
-					.optional()
-					.describe(
-						'Swap a symbol instance to another master, by name or id. Library symbol names work too.'
-					),
-				overrides: overrides.optional(),
-				editableOverrides: editableOverrides.optional(),
-				style,
-				textStyle,
-				...layout,
-				booleanOperation: booleanOperation.optional().describe('For a part of a combined shape.'),
-				...prototypeAndExport,
-				order: order.optional(),
+				updates: z.array(z.object(updateFields)).min(1).max(MAX_UPDATES),
 				...render,
 			},
 			annotations: destructive,
 		},
-		write('updateLayer')
+		write('updateLayers')
 	)
 
 	server.registerTool(

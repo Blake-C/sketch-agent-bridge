@@ -25,6 +25,12 @@ const {
 	artboardOf,
 	originIn,
 	fromArtboardCoordinates,
+	createSvgLayer,
+	readSvgFile,
+	tagCreated,
+	summary,
+	renderFiles,
+	renderRequest,
 	result,
 	deferredResult,
 } = require('../edit.js')
@@ -63,9 +69,39 @@ function createLayer(args, request) {
 		: result(document, layer, args, request)
 }
 
-function updateLayer(args, request) {
-	const document = editableDocument(args)
-	const layer = findLayer(document, args.id)
+const SVG_SOURCE_TYPES = ['Group', 'Shape', 'ShapePath']
+
+// The new drawing is a new layer, so it takes the old layer's place, name, and style, and the old layer is removed.
+function replaceSvg(document, layer, args) {
+	if (!SVG_SOURCE_TYPES.includes(layer.type)) {
+		throw new Error('Only a group, shape, or shape path can take a new SVG drawing')
+	}
+	if (!wasCreatedByAgent(layer)) {
+		throw new Error(
+			layer.name +
+				' was not created by an agent, so its drawing is not replaced. Delete it with force: true and build a new svg layer instead.'
+		)
+	}
+	const frame = Object.assign(
+		{ x: layer.frame.x, y: layer.frame.y, width: layer.frame.width, height: layer.frame.height },
+		args.frame ? frameInParent(layer, args) : {}
+	)
+	const parent = layer.parent
+	const next = createSvgLayer(parent, args.svgFile ? readSvgFile(args.svgFile) : args.svg, frame)
+	next.name = layer.name
+	next.hidden = layer.hidden
+	next.sketchObject.setStyle(layer.sketchObject.style().copy())
+	setOrder(document, next, { above: layer.id })
+	next.locked = layer.locked
+	tagCreated(next)
+	layer.remove()
+	if (parent.type === 'Group') parent.adjustToFit()
+	return next
+}
+
+function applyUpdate(document, found, args) {
+	const replacing = args.svg !== undefined || args.svgFile !== undefined
+	const layer = replacing ? replaceSvg(document, found, args) : found
 	if (args.parentId !== undefined) setParent(document, layer, args.parentId)
 	if (args.hidden !== undefined) layer.hidden = args.hidden
 	if (args.locked !== undefined) layer.locked = args.locked
@@ -73,7 +109,7 @@ function updateLayer(args, request) {
 		setPath(layer, args.path)
 		fromArtboardCoordinates(layer, args)
 	}
-	if (args.frame) setFrame(layer, frameInParent(layer, args))
+	if (args.frame && !replacing) setFrame(layer, frameInParent(layer, args))
 	if (args.text !== undefined) {
 		if (layer.type !== 'Text') throw new Error('Only text layers have text')
 		const customName = layer.name !== layer.text ? layer.name : undefined
@@ -99,8 +135,45 @@ function updateLayer(args, request) {
 	if (args.lineSpacing !== undefined) setLineSpacing(layer, args.lineSpacing)
 	if (args.textRuns) applyTextRuns(document, layer, args.textRuns)
 	if (args.order !== undefined) setOrder(document, layer, args.order)
-	const deferRender = args.overrides !== undefined || args.symbol !== undefined
+	return { layer, deferRender: args.overrides !== undefined || args.symbol !== undefined }
+}
+
+function updateLayer(args, request) {
+	const document = editableDocument(args)
+	const { layer, deferRender } = applyUpdate(document, findLayer(document, args.id), args)
 	return deferRender ? deferredResult(document, layer, args) : result(document, layer, args, request)
+}
+
+// Updates that ran before a failed one are not rolled back, so every id is checked before the first change.
+function updateLayers(args, request) {
+	const document = editableDocument(args)
+	const updates = args.updates || []
+	updates.forEach(update => findLayer(document, update.id))
+	const updated = []
+	let deferRender = false
+	updates.forEach((update, index) => {
+		try {
+			const outcome = applyUpdate(document, findLayer(document, update.id), update)
+			updated.push(outcome.layer)
+			deferRender = deferRender || outcome.deferRender
+		} catch (error) {
+			throw new Error(
+				'Update ' +
+					index +
+					' for ' +
+					update.id +
+					' failed, and the ' +
+					index +
+					' updates before it stay applied: ' +
+					String(error.message || error),
+				{ cause: error }
+			)
+		}
+	})
+	const options = Object.assign({ render: 'artboard' }, args)
+	const reply = { result: { updated: updated.map(summary) } }
+	if (deferRender) return Object.assign(reply, { files: [], render: renderRequest(updated[0], options) })
+	return Object.assign(reply, { files: renderFiles(updated[0], options, request) })
 }
 
 function applySharedStyle(args, request) {
@@ -168,6 +241,7 @@ module.exports = {
 	createArtboard,
 	createLayer,
 	updateLayer,
+	updateLayers,
 	applySharedStyle,
 	upsertSwatch,
 	upsertSharedStyle,

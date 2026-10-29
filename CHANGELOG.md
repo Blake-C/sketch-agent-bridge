@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Added an `update_layers` tool, which applies several `update_layer` changes in one plugin run and renders once.
+- Added `svg` and `svgFile` to `update_layer`, which replace the drawing of an SVG layer an agent created and keep its name, place in the layer list, and style.
 - Added `~/.sketch-agent-bridge/assets/`, which the server creates before each request so a sandboxed agent can be allowed to write generated files there.
 - Added `colorControls` to `style`, which sets Sketch's Color Adjust (hue, saturation, brightness, and contrast) on an image layer, and to the layer spec when it is turned on.
 - Added `order` to `build_layers`, which places the new root layers at the back, at an index, or next to a sibling, so a mask can be added to the back of an existing group in one call.

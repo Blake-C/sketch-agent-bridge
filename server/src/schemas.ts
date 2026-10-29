@@ -470,6 +470,54 @@ const layerFields = {
 
 export const layerInput = z.object(layerFields)
 
+export const MAX_UPDATES = 200
+
+export const updateFields = {
+	id: z.string(),
+	parentId: z
+		.string()
+		.optional()
+		.describe(
+			'Move the layer into this artboard, group, or page. It keeps its place on the canvas, and frame is then relative to the new parent. Artboards move only between pages.'
+		),
+	name: z.string().optional(),
+	hidden: z.boolean().optional(),
+	locked: z.boolean().optional(),
+	frame: frame
+		.optional()
+		.describe('Only the given keys change. With svg or svgFile, it is the frame the new viewBox maps onto.'),
+	relativeTo,
+	text: z.string().optional(),
+	textRuns: textRuns.optional(),
+	fixedWidth: fixedWidth.optional(),
+	lineSpacing: lineSpacing.optional(),
+	cornerRadius: z.number().min(0).optional(),
+	path: svgPath
+		.optional()
+		.describe(
+			'Replaces the points of a path layer, or the parts of a Shape. Coordinates are in the parent. A single path layer refuses data with several subpaths.'
+		),
+	svg: z
+		.string()
+		.optional()
+		.describe(
+			"Replaces the drawing of a layer made from SVG with new markup. The new layer takes the old one's place in the layer list, name, visibility, lock, and its own style, such as shadows, and gets a new id, which the reply gives. The viewBox maps onto the old layer's frame unless frame is given, and Sketch trims empty space the same way it does for a new svg layer."
+		),
+	svgFile: z.string().optional().describe(`Absolute path to a .svg file, used in place of svg. ${ASSET_PATH_RULE}`),
+	symbol: z
+		.string()
+		.optional()
+		.describe('Swap a symbol instance to another master, by name or id. Library symbol names work too.'),
+	overrides: overrides.optional(),
+	editableOverrides: editableOverrides.optional(),
+	style,
+	textStyle,
+	...layout,
+	booleanOperation: booleanOperation.optional().describe('For a part of a combined shape.'),
+	...prototypeAndExport,
+	order: order.optional(),
+}
+
 export type BuildNode = Omit<z.infer<typeof layerInput>, 'kind'> & {
 	kind: (typeof layerKinds)[number] | 'shape'
 	ref?: string
