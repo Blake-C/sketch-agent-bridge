@@ -564,6 +564,10 @@ export const buildNode: z.ZodType<BuildNode> = z.lazy(() =>
 
 export const findInput = {
 	pageId: z.string().optional().describe('Search only this page. Defaults to every page.'),
+	parentId: z
+		.string()
+		.optional()
+		.describe('Search only inside this artboard or group, at any depth. Used in place of pageId.'),
 	type: z
 		.enum([
 			'Artboard',

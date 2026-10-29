@@ -1,5 +1,5 @@
 const sketch = require('sketch')
-const { resolveDocument, findPage } = require('../document.js')
+const { resolveDocument, findPage, findLayer } = require('../document.js')
 const { frameSpec, smartLayoutName, swatchId } = require('../spec.js')
 const { allSwatches, findByIdOrName } = require('../style.js')
 
@@ -84,8 +84,16 @@ function location(layer) {
 
 function find(args) {
 	const document = resolveDocument(args)
-	const scope = args.pageId ? findPage(document, args.pageId) : document
-	const matches = sketch.find(args.type || '*', scope).filter(matcher(args, document))
+	const scope = args.parentId
+		? findLayer(document, args.parentId)
+		: args.pageId
+			? findPage(document, args.pageId)
+			: document
+	if (args.parentId && !scope.layers) throw new Error(scope.name + ' is not an artboard or group')
+	const matches = sketch
+		.find(args.type || '*', scope)
+		.filter(layer => layer.id !== scope.id)
+		.filter(matcher(args, document))
 	const limit = args.limit || DEFAULT_LIMIT
 	return {
 		result: {
