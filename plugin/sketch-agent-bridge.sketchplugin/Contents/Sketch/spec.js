@@ -5,6 +5,14 @@ const DEFAULT_DEPTH = 8
 const MAX_NODES = 2000
 const MAX_PATH_LENGTH = 2000
 const MAX_SHAPE_PARTS = 20
+const RESIZING_EDGES = {
+	pinLeft: 'Left',
+	pinRight: 'Right',
+	pinTop: 'Top',
+	pinBottom: 'Bottom',
+	fixWidth: 'Width',
+	fixHeight: 'Height',
+}
 
 function swatchNames(document) {
 	const names = {}
@@ -181,6 +189,27 @@ function smartLayoutName(layer) {
 	)
 }
 
+// Resizing constraints are not in Sketch's JavaScript API, so they are read from the native layer.
+function resizingOf(layer) {
+	const native = layer.sketchObject
+	const resizing = {}
+	Object.keys(RESIZING_EDGES).forEach(key => {
+		resizing[key] = Boolean(native['hasFixed' + RESIZING_EDGES[key]]())
+	})
+	return resizing
+}
+
+function resizingSpec(layer) {
+	const resizing = resizingOf(layer)
+	const set = Object.keys(resizing).filter(key => resizing[key])
+	if (set.length === 0) return undefined
+	const spec = {}
+	set.forEach(key => {
+		spec[key] = true
+	})
+	return spec
+}
+
 function flowSpec(flow) {
 	if (!flow) return undefined
 	if (flow.isBackAction()) return { target: 'back', animation: flow.animationType }
@@ -228,6 +257,7 @@ function layerSpec(layer, options) {
 			mask: node.sketchObject.hasClippingMask() ? true : undefined,
 			breaksMask: node.sketchObject.shouldBreakMaskChain() ? true : undefined,
 			smartLayout: node.type === 'Group' || node.type === 'SymbolMaster' ? smartLayoutName(node) : undefined,
+			resizing: node.type === 'Page' ? undefined : resizingSpec(node),
 			shapeType: node.type === 'ShapePath' ? node.shapeType : undefined,
 			cornerRadius: cornerRadius(node),
 			path: pathSpec(node),
@@ -266,4 +296,14 @@ function layerSpec(layer, options) {
 	return spec
 }
 
-module.exports = { layerSpec, styleSpec, textStyleSpec, swatchNames, swatchId, frameSpec, smartLayoutName }
+module.exports = {
+	layerSpec,
+	styleSpec,
+	textStyleSpec,
+	swatchNames,
+	swatchId,
+	frameSpec,
+	smartLayoutName,
+	resizingOf,
+	RESIZING_EDGES,
+}

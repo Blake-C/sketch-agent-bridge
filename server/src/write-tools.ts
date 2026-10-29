@@ -145,7 +145,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Update layer',
 			description:
-				'Changes an existing layer: parent, name, visibility, lock, frame, text, line spacing, corner radius, path, which symbol an instance uses, symbol overrides, style, text style, smart layout, rotation, flips, masks, stacking order, prototype links, and export presets.',
+				'Changes an existing layer: parent, name, visibility, lock, frame, text, line spacing, corner radius, path, which symbol an instance uses, symbol overrides, style, text style, smart layout, resizing, rotation, flips, masks, stacking order, prototype links, and export presets.',
 			inputSchema: {
 				documentId,
 				id: z.string(),

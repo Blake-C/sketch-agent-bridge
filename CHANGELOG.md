@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - Added an `assets/` folder with tiling grain, paper, and contour textures and five leaf drawings, a `list_assets` tool that lists them, and `svgFile` on svg layers to load a drawing from a `.svg` file.
 - Added `mask` and `breaksMask` to `build_layers`, `create_layer`, `update_layer`, and layer specs, so a shape or image can clip the layers above it in its group.
 - Added `warnings` to plugin replies, shown at the top of the tool result. Setting `fontFamily` or `fontWeight` warns when Sketch used a different font because the family is not installed or has no face at that weight, and lists the weights the family has.
+- Added `resizing` to `build_layers`, `create_layer`, `update_layer`, and layer specs, which pins a layer to the edges of its parent and fixes its width or height, for when its group, artboard, or symbol instance is resized.
 - Added `sharedStyle` and `swatch` to `find_layers`, which find the layers linked to a shared style or using a swatch.
 - Added `orientation` and `color` to `fetch_images`, and `warnings` to its reply for a filter that `get_images` dropped because no photo matched it.
 

@@ -121,6 +121,12 @@ test('relativeTo takes parent or artboard', () => {
 	assert.equal(schema.safeParse({ relativeTo: 'page' }).success, false)
 })
 
+test('layer nodes take resizing as booleans for each edge and size', () => {
+	assert.ok(node({ resizing: { pinLeft: true, pinRight: true, fixHeight: true } }).success)
+	assert.ok(node({ resizing: {} }).success)
+	assert.equal(node({ resizing: { pinLeft: 'yes' } }).success, false)
+})
+
 test('find takes a shared style and a swatch', () => {
 	const schema = z.object(findInput)
 	assert.ok(schema.safeParse({ sharedStyle: 'Button/Primary', swatch: 'ACF/Blue' }).success)

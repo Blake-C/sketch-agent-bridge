@@ -1,7 +1,7 @@
 const sketch = require('sketch')
 const Settings = require('sketch/settings')
 const { resolveDocument, findLayer } = require('./document.js')
-const { layerSpec, swatchNames, frameSpec } = require('./spec.js')
+const { layerSpec, swatchNames, frameSpec, resizingOf, RESIZING_EDGES } = require('./spec.js')
 const { exportLayers } = require('./export.js')
 const { applyStyle, loadImage, nativeColor, isColorValue } = require('./style.js')
 const { findLocalOrImport } = require('./libraries.js')
@@ -216,8 +216,26 @@ function setMask(layer, mask) {
 	layer.sketchObject.setHasClippingMask(mask)
 }
 
+function setResizing(layer, resizing) {
+	if (layer.type === 'Page') throw new Error('Pages have no resizing constraints')
+	const next = resizingOf(layer)
+	Object.keys(RESIZING_EDGES).forEach(key => {
+		if (resizing[key] !== undefined) next[key] = resizing[key]
+	})
+	if (next.pinLeft && next.pinRight && next.fixWidth) {
+		throw new Error('A layer pinned to the left and right cannot also have a fixed width')
+	}
+	if (next.pinTop && next.pinBottom && next.fixHeight) {
+		throw new Error('A layer pinned to the top and bottom cannot also have a fixed height')
+	}
+	Object.keys(RESIZING_EDGES).forEach(key => {
+		if (resizing[key] !== undefined) layer.sketchObject['setHasFixed' + RESIZING_EDGES[key]](resizing[key])
+	})
+}
+
 function applyLayout(layer, input) {
 	if (input.smartLayout !== undefined) setSmartLayout(layer, input.smartLayout)
+	if (input.resizing !== undefined) setResizing(layer, input.resizing)
 	if (input.rotation !== undefined) layer.transform.rotation = input.rotation
 	if (input.flipHorizontal !== undefined) layer.transform.flippedHorizontally = input.flipHorizontal
 	if (input.flipVertical !== undefined) layer.transform.flippedVertically = input.flipVertical

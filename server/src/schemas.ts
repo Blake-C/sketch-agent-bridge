@@ -212,6 +212,19 @@ export const layout = {
 		.boolean()
 		.optional()
 		.describe('Stops a mask lower in the same group from clipping this layer and the layers above it.'),
+	resizing: z
+		.object({
+			pinLeft: z.boolean().optional(),
+			pinRight: z.boolean().optional(),
+			pinTop: z.boolean().optional(),
+			pinBottom: z.boolean().optional(),
+			fixWidth: z.boolean().optional(),
+			fixHeight: z.boolean().optional(),
+		})
+		.optional()
+		.describe(
+			'How the layer resizes when its group, artboard, or symbol instance is resized. pin keeps the distance to that edge, and fix keeps the size. A layer pinned to both sides cannot also fix that size. Keys left out are unchanged.'
+		),
 }
 
 export const order = z
