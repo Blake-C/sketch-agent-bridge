@@ -25,6 +25,13 @@ test('layer nodes take rotation and flips', () => {
 	assert.equal(node({ rotation: '15' }).success, false)
 })
 
+test('layer nodes take mask and breaksMask as booleans', () => {
+	assert.ok(node({ kind: 'rectangle', mask: true }).success)
+	assert.ok(node({ mask: false, breaksMask: true }).success)
+	assert.equal(node({ mask: 'yes' }).success, false)
+	assert.equal(node({ breaksMask: 1 }).success, false)
+})
+
 test('order takes a named move, a non-negative index, or a sibling to sit next to', () => {
 	const schema = z.object({ order })
 	for (const value of ['front', 'back', 'forward', 'backward', 0, 3, { above: 'A' }, { below: 'B' }]) {

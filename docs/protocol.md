@@ -123,7 +123,7 @@ Assigning a library text style with `syncWithSharedStyle` links the style withou
 - `symbol` and `overrides` for `symbol`
 - `children` for `group` and `artboard`
 - `ref`, a label the `build` reply maps to the new layer's id
-- the layout fields `smartLayout` for `group`, and `rotation`, `flipHorizontal`, and `flipVertical` for every kind
+- the layout fields `smartLayout` for `group`, `mask` for shapes and images, and `rotation`, `flipHorizontal`, `flipVertical`, and `breaksMask` for every kind
 - `flow` and `exportFormats` for every kind, and `flowStartPoint` for `artboard`
 
 The kinds are `artboard`, `rectangle`, `oval`, `triangle`, `polygon`, `star`, `path`, `text`, `group`, `symbol`, `svg`, and `image`. An artboard node needs a page as its parent. Child frames are relative to their parent's requested frame, and each group shrinks to fit its children once they are all created. Sketch refits a group as soon as a styled text layer inside it changes size, which would shift the siblings built after it. So `build` creates every layer in the nearest artboard or page, offset to where its group will be, and moves the layers into their groups at the end. When `parentId` is a group, the new layers move into it the same way, and it shrinks to fit. If any node fails, `build` removes everything it created in that call. The reply has `created`, `roots`, `groups`, and `refs`, where `groups` lists every group node with its final frame in its parent's coordinates. A group's final frame can differ from the node's requested frame, because the group shrinks to fit its children, and frames given to later edits inside the group are relative to the final frame.
@@ -178,6 +178,8 @@ Sketch 88.1 writes text alignment with the raw values AppKit uses on Intel Macs.
 
 `smartLayout` is one of `LeftToRight`, `HorizontallyCenter`, `RightToLeft`, `TopToBottom`, `VerticallyCenter`, or `BottomToTop`, and `null` turns it off. It applies to groups and symbol masters. After `setOverrides` changes an instance whose master has a smart layout, the plugin calls `resizeWithSmartLayout()` on the instance, so the instance grows or shrinks to fit its new override text.
 
+`mask: true` makes a shape path, shape, or image a clipping mask by calling `setHasClippingMask` on the native layer, and `mask: false` turns it off. Sketch clips every layer above the mask in the same group or artboard to the mask's outline, so a mask normally sits first in a group with the layers it clips. A group holding a mask is sized to the mask instead of the full size of the layers it clips. `breaksMask: true` calls `setShouldBreakMaskChain`, which stops the mask from clipping that layer and the layers above it. The plugin refuses `mask: true` on any other layer type.
+
 `updateLayer` takes `parentId` to move a layer into another artboard, group, or page. The layer keeps its place on the canvas, and a `frame` in the same request is relative to the new parent. An artboard can only move to a page, and a layer cannot move into itself or one of its children. A group that the layer leaves or joins is resized to fit its children.
 
 `updateLayer` takes `order`, which is `front`, `back`, `forward`, `backward`, an index in the parent where 0 is the back, or `{ "above": "<id>" }` or `{ "below": "<id>" }` to sit directly next to a sibling. The sibling must share the layer's parent.
@@ -228,7 +230,7 @@ The server runs the function with `/bin/zsh -f -c`, and the search text, sizes, 
 Each layer has `id`, `name`, `type`, and `frame`. These keys appear only when they have a value:
 
 - `children`, or `childCount` with `truncated: true` on the root when the depth limit or the 2000-layer limit cut the tree. A `Shape` made of more than 20 parts, such as an SVG path with many subpaths, always shows `childCount` instead of its parts.
-- `hidden`, `locked`, `rotation`, `flippedHorizontally`, `flippedVertically`
+- `hidden`, `locked`, `rotation`, `flippedHorizontally`, `flippedVertically`, `mask`, `breaksMask`
 - `smartLayout` for groups and symbol masters
 - `shapeType` and `cornerRadius` for shape paths, and for a `Custom` shape path, `path` as SVG path data when it is 2000 characters or shorter, and `closed: false` when the path is open. Export a longer path as SVG with `export`.
 - `text`, `textStyle`, `fixedWidth`, and `lineSpacing` for text layers, where `lineSpacing` is left out when it is `natural`, `textStyle` has `fontAxes` for a variable font, where `alignment` is left out when it is `left` and `verticalAlignment` is left out when it is `top`

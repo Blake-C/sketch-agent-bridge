@@ -202,6 +202,16 @@ export const layout = {
 	rotation: z.number().optional().describe('Rotation in degrees.'),
 	flipHorizontal: z.boolean().optional(),
 	flipVertical: z.boolean().optional(),
+	mask: z
+		.boolean()
+		.optional()
+		.describe(
+			'For a shape or image. Clips the layers above it in the same group or artboard to its shape. Put the mask first in a group with the layers it clips, so it clips nothing else. false removes the mask.'
+		),
+	breaksMask: z
+		.boolean()
+		.optional()
+		.describe('Stops a mask lower in the same group from clipping this layer and the layers above it.'),
 }
 
 export const order = z

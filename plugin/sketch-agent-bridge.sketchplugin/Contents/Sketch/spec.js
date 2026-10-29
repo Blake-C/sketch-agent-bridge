@@ -225,6 +225,8 @@ function layerSpec(layer, options) {
 			rotation: node.transform && node.transform.rotation ? node.transform.rotation : undefined,
 			flippedHorizontally: node.transform && node.transform.flippedHorizontally ? true : undefined,
 			flippedVertically: node.transform && node.transform.flippedVertically ? true : undefined,
+			mask: node.sketchObject.hasClippingMask() ? true : undefined,
+			breaksMask: node.sketchObject.shouldBreakMaskChain() ? true : undefined,
 			smartLayout: node.type === 'Group' || node.type === 'SymbolMaster' ? smartLayoutName(node) : undefined,
 			shapeType: node.type === 'ShapePath' ? node.shapeType : undefined,
 			cornerRadius: cornerRadius(node),

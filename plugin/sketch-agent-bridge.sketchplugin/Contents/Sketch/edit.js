@@ -15,6 +15,7 @@ const CONTAINER_TYPES = ['Artboard', 'Group', 'SymbolMaster', 'Page']
 const GROUP_TYPES = ['Group', 'Shape']
 const STYLE_OVERRIDES = ['textStyle', 'layerStyle']
 const SMART_LAYOUT_TYPES = ['Group', 'SymbolMaster']
+const MASK_TYPES = ['ShapePath', 'Shape', 'Image']
 const SHAPE_KINDS = { rectangle: 'Rectangle', oval: 'Oval', triangle: 'Triangle', polygon: 'Polygon', star: 'Star' }
 const LINE_SPACINGS = ['natural', 'system', 'variable', 'constantBaseline']
 const ORDER_MOVES = { front: 'moveToFront', back: 'moveToBack', forward: 'moveForward', backward: 'moveBackward' }
@@ -210,11 +211,18 @@ function fillGroup(group, layers) {
 	group.adjustToFit()
 }
 
+function setMask(layer, mask) {
+	if (mask && !MASK_TYPES.includes(layer.type)) throw new Error('Only shapes and images can be masks')
+	layer.sketchObject.setHasClippingMask(mask)
+}
+
 function applyLayout(layer, input) {
 	if (input.smartLayout !== undefined) setSmartLayout(layer, input.smartLayout)
 	if (input.rotation !== undefined) layer.transform.rotation = input.rotation
 	if (input.flipHorizontal !== undefined) layer.transform.flippedHorizontally = input.flipHorizontal
 	if (input.flipVertical !== undefined) layer.transform.flippedVertically = input.flipVertical
+	if (input.mask !== undefined) setMask(layer, input.mask)
+	if (input.breaksMask !== undefined) layer.sketchObject.setShouldBreakMaskChain(input.breaksMask)
 }
 
 function setFlow(document, layer, flow) {
