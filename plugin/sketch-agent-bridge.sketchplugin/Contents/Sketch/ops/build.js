@@ -12,6 +12,7 @@ const {
 	renderFiles,
 	renderRequest,
 	setBooleanOperation,
+	setOrder,
 } = require('../edit.js')
 
 const MAX_BUILD_NODES = 2000
@@ -77,10 +78,11 @@ function build(args, request) {
 
 	try {
 		args.nodes.forEach(node => roots.push(make(stage, node, rootOffset, false)))
-		if (parent.id !== stage.id) {
-			roots.forEach(root => moveInto(root, parent, parentOrigin.x, parentOrigin.y))
-			parent.adjustToFit()
-		}
+		const intoGroup = parent.id !== stage.id
+		if (intoGroup) roots.forEach(root => moveInto(root, parent, parentOrigin.x, parentOrigin.y))
+		// A mask moved to the back of a group changes the group's size, so the group refits after the roots are placed.
+		if (args.order !== undefined) placeRoots(document, roots, args.order)
+		if (intoGroup) parent.adjustToFit()
 	} catch (error) {
 		created.reverse().forEach(layer => layer.remove())
 		throw error
@@ -92,6 +94,12 @@ function build(args, request) {
 	const reply = { result: { created: created.length, roots: roots.map(summary), groups: groups.map(summary), refs } }
 	if (deferRender) return Object.assign(reply, { files: [], render: renderRequest(shown, options) })
 	return Object.assign(reply, { files: renderFiles(shown, options, request) })
+}
+
+function placeRoots(document, roots, order) {
+	if (order === 'front') return
+	setOrder(document, roots[0], order)
+	for (let i = 1; i < roots.length; i++) setOrder(document, roots[i], { above: roots[i - 1].id })
 }
 
 module.exports = { build }

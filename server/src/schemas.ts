@@ -327,6 +327,17 @@ export const order = z
 		'Move the layer within its parent: front, back, forward, backward, an index where 0 is the back, or { above: id } or { below: id } to sit next to a sibling.'
 	)
 
+export const buildOrder = z
+	.union([
+		z.enum(['front', 'back']),
+		z.number().int().min(0),
+		z.object({ above: z.string() }).strict(),
+		z.object({ below: z.string() }).strict(),
+	])
+	.describe(
+		'Where the root nodes go in the parent: front, back, an index where 0 is the back, or { above: id } or { below: id } to sit next to a sibling. The roots keep their order among themselves. Default front.'
+	)
+
 export const prototypeAndExport = {
 	flow: z
 		.object({

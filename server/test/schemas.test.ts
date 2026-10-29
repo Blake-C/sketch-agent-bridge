@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { z } from 'zod'
-import { buildNode, findInput, layerInput, order, relativeTo } from '../src/schemas.ts'
+import { buildNode, buildOrder, findInput, layerInput, order, relativeTo } from '../src/schemas.ts'
 
 const node = (fields: Record<string, unknown>) => layerInput.safeParse({ kind: 'group', ...fields })
 
@@ -42,6 +42,16 @@ test('order takes a named move, a non-negative index, or a sibling to sit next t
 	assert.equal(schema.safeParse({ order: 1.5 }).success, false)
 	assert.equal(schema.safeParse({ order: { above: 'A', below: 'B' } }).success, false)
 	assert.equal(schema.safeParse({ order: { next: 'A' } }).success, false)
+})
+
+test('build order takes front, back, an index, or a sibling, and no step moves', () => {
+	const schema = z.object({ order: buildOrder })
+	for (const value of ['front', 'back', 0, 3, { above: 'A' }, { below: 'B' }]) {
+		assert.ok(schema.safeParse({ order: value }).success, JSON.stringify(value))
+	}
+	for (const value of ['forward', 'backward', -1, { above: 'A', below: 'B' }]) {
+		assert.equal(schema.safeParse({ order: value }).success, false, JSON.stringify(value))
+	}
 })
 
 test('style takes inner shadows, blur, blending, and border options', () => {

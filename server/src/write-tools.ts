@@ -8,6 +8,7 @@ import { errorResult, replyResult } from './content.ts'
 import {
 	booleanOperation,
 	buildNode,
+	buildOrder,
 	documentId,
 	editableOverrides,
 	fixedWidth,
@@ -118,6 +119,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 					'What the root nodes\' frames and paths are measured from. "artboard" uses the artboard or symbol master holding parentId, or the page when there is none. Children of a group node stay relative to that group\'s requested frame. Default parent.'
 				),
 				nodes: z.array(buildNode).min(1),
+				order: buildOrder.optional(),
 				...render,
 			},
 			annotations: additive,
