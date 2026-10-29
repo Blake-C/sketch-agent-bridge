@@ -22,7 +22,7 @@ An agent connected to the MCP server can:
 - switch Sketch to a layer's page, select layers, and scroll the canvas to a layer
 - fill layers with colors, gradients, or images, and add inner shadows, blurs, blend modes, dashed borders, and arrowheads
 - add or change swatches and shared styles
-- download random Unsplash photos that match a query, through a local shell function, for use as image layers and fills
+- download the Unsplash photos most relevant to a query, filtered by orientation or color, through a local shell function, for use as image layers and fills
 
 For agents without MCP support, the plugin menu command **Plugins > Agent Bridge > Send Selection to Agent** exports the selection to a folder and copies the folder path to the clipboard, so the path can be pasted into any agent.
 

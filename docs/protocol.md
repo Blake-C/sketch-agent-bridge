@@ -215,9 +215,11 @@ Write replies are sized to keep the agent's context small:
 
 ## Fetching images
 
-`fetch_images` runs the `get_images` shell function from the file named by the `SKETCH_AGENT_BRIDGE_GET_IMAGES` environment variable. The function asks Unsplash's random photo endpoint for photos that match the query, using the access key it reads from the login keychain, under the service name `unsplash_access_key`, and downloads the photos as JPEGs into a new folder under `~/.sketch-agent-bridge/images/`. The server never reads the key.
+`fetch_images` runs the `get_images` shell function from the file named by the `SKETCH_AGENT_BRIDGE_GET_IMAGES` environment variable. The function asks Unsplash's search endpoint for the photos most relevant to the query, using the access key it reads from the login keychain, under the service name `unsplash_access_key`, and downloads the photos as JPEGs into a new folder under `~/.sketch-agent-bridge/images/`. The server never reads the key.
 
-The server runs the function with `/bin/zsh -f -c`, and the search text and sizes go in as separate shell parameters, so text from the agent is never parsed as shell code. The shell gets only `HOME`, `USER`, and `PATH` from the environment.
+`orientation` is `landscape`, `portrait`, `squarish`, or `any`, and `get_images` picks it from the width and height when it is left out. `color` is one of the 11 colors `get_images` accepts, such as `blue` or `black_and_white`. When no photo matches a filter, `get_images` searches again without it and prints a line that starts with `Warning:`, and the server returns those lines in `warnings`.
+
+The server runs the function with `/bin/zsh -f -c`, and the search text, sizes, orientation, and color go in as separate shell parameters, so text from the agent is never parsed as shell code. The shell gets only `HOME`, `USER`, and `PATH` from the environment.
 
 ## Layer spec
 
