@@ -76,7 +76,6 @@ These tools do not call the plugin:
 
 - `list_inbox` and `get_inbox_item` read `~/.sketch-agent-bridge/inbox/`.
 - `fetch_images` calls the Unsplash API. See [Fetching images](#fetching-images).
-- `list_assets` reads `assets/manifest.json`. See [Assets](#assets).
 
 ## Finding layers
 
@@ -277,14 +276,6 @@ Write replies are sized to keep the agent's context small:
 The reply has an `images` list, where each entry has the file `path` and a `credit` with `photographer`, `profileUrl`, and `text`, such as "Photo by Annie Spratt on Unsplash". The [Unsplash API guidelines](https://help.unsplash.com/en/articles/2511245-unsplash-api-guidelines) require crediting the photographer and Unsplash with a link to the photographer's profile, and `profileUrl` carries the `utm_source` and `utm_medium` parameters that the [attribution guideline](https://help.unsplash.com/en/articles/2511315-guideline-attribution) asks for. The same API guidelines require a request to each photo's `download_location`, which the server sends after saving the photo. When the `download_location` request fails, the photo is kept, and `warnings` gets the HTTP status with the first error Unsplash sent, such as a rate limit message.
 
 The server downloads photos only from `https://images.unsplash.com` and sends download requests only to `https://api.unsplash.com`, so a link in the Unsplash reply that points anywhere else is refused. A download also has to come back with an `image/` content type. When some downloads fail and others succeed, the reply has the photos that downloaded and a warning for each one that did not.
-
-## Assets
-
-`assets/` holds textures and SVG drawings for agents to use, and `assets/manifest.json` lists each one with its `file`, `kind`, `width`, `height`, and a `description` of how to use it. `list_assets` returns the manifest with each `file` turned into an absolute `path`, and with an optional `kind` it returns only `texture` or only `svg` entries. It drops any entry whose path would fall outside `assets/`.
-
-The textures are PNGs that tile without a seam. `paper` and `contours` are drawn from value noise on a lattice that wraps at the tile edge, and `grain` is random noise for each pixel. `grain` and `paper` are gray around the middle value, so they go on their own layer above a color, filled in `tile` mode, with `blendingMode` set to `Overlay` or `SoftLight` and a low `opacity`. The `fills` input has no blend mode field, so a texture added as a second fill on the colored layer covers the color. `contours` is white lines on a clear background and needs only a low `opacity`.
-
-The leaf drawings point up with the stem at the bottom, so a `rotation` angle sets the direction the leaf points. Each leaf has a lit half and a shaded half, a tapered midrib, and curved veins. `pnpm assets` regenerates every asset and the manifest from `scripts/generate-assets.ts`, and the output is the same on every run because the random numbers come from a fixed seed.
 
 ## Layer spec
 

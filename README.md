@@ -33,7 +33,6 @@ An agent connected to the MCP server can:
 - read and change the document's color space
 - save the document when the user asks
 - download the Unsplash photos most relevant to a query, filtered by orientation or color, with a credit for each photographer, for use as image layers and fills
-- use the textures and leaf drawings in `assets/`, which `list_assets` lists with their paths
 
 For agents without MCP support, the plugin menu command **Plugins > Agent Bridge > Send Selection to Agent** exports the selection to a folder and copies the folder path to the clipboard, so the path can be pasted into any agent.
 

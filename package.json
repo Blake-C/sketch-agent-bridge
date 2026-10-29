@@ -13,8 +13,7 @@
 		"typecheck": "tsc --noEmit",
 		"test": "node --test 'server/test/**/*.test.ts'",
 		"lint": "eslint . && prettier --check .",
-		"format": "prettier --write .",
-		"assets": "node scripts/generate-assets.ts"
+		"format": "prettier --write ."
 	},
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "1.32.1",

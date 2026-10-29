@@ -442,12 +442,7 @@ const layerFields = {
 		.describe(
 			'SVG markup, for kind "svg". The viewBox maps onto the frame. Given only a width or only a height, the other follows the viewBox shape. Sketch trims empty space, so the layer ends up the size of the drawing, placed where the drawing sits in the viewBox.'
 		),
-	svgFile: z
-		.string()
-		.optional()
-		.describe(
-			'Absolute path to a .svg file, for kind "svg", used in place of svg. list_assets lists the drawings that come with the bridge.'
-		),
+	svgFile: z.string().optional().describe('Absolute path to a .svg file, for kind "svg", used in place of svg.'),
 	image: z.string().optional().describe('Absolute path to an image file, for kind "image".'),
 	symbol: z
 		.string()
