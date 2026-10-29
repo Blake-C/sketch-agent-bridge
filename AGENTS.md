@@ -11,7 +11,7 @@ Sketch Agent Bridge is a Sketch 88.1 plugin and a local MCP server that let AI a
 
 ## How a request flows
 
-1. The server makes `~/.sketch-agent-bridge/requests/<uuid>/` and writes the op and its args to `request.json` in it.
+1. The server makes `~/.sketch-agent-bridge/requests/<uuid>/` and writes the op, its args, and the allowed asset folders to `request.json` in it.
 2. The server runs `/Applications/Sketch.app/Contents/MacOS/sketchtool run <plugin> bridge --context='{"requestDir":"<dir>"}' --without-activating` with `execFile`, never through a shell.
 3. The plugin does the op and writes `reply.json` and any exports into that folder.
 4. The server reads the reply and returns it to the agent. At the start of each request, the server deletes request folders older than 24 hours, and photo folders and inbox items older than 7 days.
@@ -22,7 +22,7 @@ The plugin refuses any `requestDir` outside `~/.sketch-agent-bridge/`. Write ops
 
 No package manager that manages JavaScript dependencies should ever be run on the local host machine. Always create a Dockerfile for any given project and tooling that is needed for that project, and initialize and execute PNPM, NPM, YARN, or any package manager tooling inside that container. This is done to keep the host machine safe.
 
-These commands all run through Docker. The `dev` service has network access and is only for `pnpm install`. The `offline` service has no network, so a build or test step cannot download or send anything. Both run as the `node` user with every Linux capability dropped.
+These commands all run through Docker. Only `pnpm install` uses the `dev` service, which has network access. The `offline` service has no network, so a build or test step cannot download or send anything. Both run as the `node` user with every Linux capability dropped.
 
 - `docker compose run --rm dev pnpm install`
 - `docker compose run --rm offline pnpm build`

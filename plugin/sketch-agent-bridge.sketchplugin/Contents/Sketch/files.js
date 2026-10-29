@@ -29,7 +29,7 @@ function assertAllowedAsset(path) {
 	if (!allowed.some(dir => resolved.startsWith(dir + '/'))) {
 		throw new Error(
 			path +
-				' is outside ~/.sketch-agent-bridge and the folders in SKETCH_AGENT_BRIDGE_ASSET_DIRS. Add its folder to that variable where the MCP server is registered.'
+				' is outside ~/.sketch-agent-bridge and the folders in SKETCH_AGENT_BRIDGE_ASSET_DIRS. Add its folder to SKETCH_AGENT_BRIDGE_ASSET_DIRS where the MCP server is registered.'
 		)
 	}
 }

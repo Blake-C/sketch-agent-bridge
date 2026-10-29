@@ -13,7 +13,7 @@ docker compose run --rm dev pnpm install
 docker compose run --rm offline pnpm build
 ```
 
-The `dev` service has network access for `pnpm install`, and the `offline` service has none. Both run as the `node` user. A `node_modules` volume filled by an earlier version of the image belongs to root, so `pnpm install` fails with `EACCES` until the volume is removed with `docker volume rm sketch-agent-bridge_node_modules`.
+The `dev` service has network access for `pnpm install`, and the `offline` service has none. Both run as the `node` user, which cannot write to a `node_modules` volume that an earlier version of the image filled as root, so `pnpm install` fails with `EACCES` until the volume is removed with `docker volume rm sketch-agent-bridge_node_modules`.
 
 This writes `server/dist/server.js`, which has to be rebuilt after any change in `server/src/`. Changes to the plugin need no build.
 
@@ -50,7 +50,7 @@ claude mcp add --scope user sketch -e UNSPLASH_ACCESS_KEY=<key> -- node "$PWD/se
 
 If the server is already registered, run `claude mcp remove --scope user sketch` first. After rebuilding the server, reconnect it from `/mcp` in Claude Code or start a new session, so the new build is the one running.
 
-By default, the plugin only reads image and SVG files inside `~/.sketch-agent-bridge/`, which holds the photos from `fetch_images`. To let the agent place files from other folders, list them in `SKETCH_AGENT_BRIDGE_ASSET_DIRS`, separated by `:`:
+By default, the plugin only reads image and SVG files inside `~/.sketch-agent-bridge/`, which holds the photos from `fetch_images`. To let the agent place files from other folders, list them in `SKETCH_AGENT_BRIDGE_ASSET_DIRS` with a `:` between them.
 
 ```sh
 claude mcp add --scope user sketch -e SKETCH_AGENT_BRIDGE_ASSET_DIRS="$HOME/Design/Assets:$HOME/Downloads" -- node "$PWD/server/dist/server.js"

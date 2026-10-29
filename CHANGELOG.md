@@ -48,8 +48,8 @@ All notable changes to this project will be documented in this file.
 - Changed the Docker setup to pin the Node and gitleaks images by digest, run as the `node` user with every Linux capability dropped, and add an `offline` service with no network for build, test, lint, and format.
 - Changed `fetch_images` to refuse a photo larger than 25 MB, and a download that redirects away from `images.unsplash.com`.
 - Changed the plugin to read image and SVG files only from `~/.sketch-agent-bridge/` and the folders in the new `SKETCH_AGENT_BRIDGE_ASSET_DIRS` variable. Before, an agent could read any image or SVG file on the Mac into a document.
-- Changed the server to delete folders in `images/` and `inbox/` older than 7 days, and to keep only the newest 10 backups of each document. Before, those folders grew without limit.
-- Changed the plugin to create folders with mode 0700 and write files with mode 0600, and the server to set `~/.sketch-agent-bridge` to 0700 on each request. Folders made by Send Selection could be read by other users on the Mac.
+- Changed the server to delete folders in `images/` and `inbox/` older than 7 days, and to keep only the newest 10 backups of each document. Before, `images/`, `inbox/`, and `backups/` grew without limit.
+- Changed the plugin to create folders with mode 0700 and write files with mode 0600, and the server to set `~/.sketch-agent-bridge` to 0700 on each request. Before, other users on the Mac could read the folders that Send Selection made.
 - Changed the server to write each request to `request.json` in the request folder and pass only the folder path to `sketchtool`. Other users on the Mac could read the request, including layer text, in the process list, and a large request could go over the system's limit on argument size.
 - Changed `fetch_images` to call the Unsplash API from the server, so it no longer needs the `get_images` shell function or `SKETCH_AGENT_BRIDGE_GET_IMAGES`. The key comes from the `unsplash_access_key` keychain item or `UNSPLASH_ACCESS_KEY`. Each entry in `images` is now an object with `path` and a `credit` for the photographer. The server sends Unsplash the download request its API guidelines require. A failed download leaves out that photo with a warning instead of failing the whole call, and the reply warns when Unsplash returns fewer photos than `count`. Errors and warnings include the text Unsplash sent with a failed request.
 - Changed svg layers given only a width or only a height to keep the viewBox's aspect ratio.
@@ -101,12 +101,6 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- Changed the Docker setup to pin the Node and gitleaks images by digest, run as the `node` user with every Linux capability dropped, and add an `offline` service with no network for build, test, lint, and format.
-- Changed `fetch_images` to refuse a photo larger than 25 MB, and a download that redirects away from `images.unsplash.com`.
-- Changed the plugin to read image and SVG files only from `~/.sketch-agent-bridge/` and the folders in the new `SKETCH_AGENT_BRIDGE_ASSET_DIRS` variable. Before, an agent could read any image or SVG file on the Mac into a document.
-- Changed the server to delete folders in `images/` and `inbox/` older than 7 days, and to keep only the newest 10 backups of each document. Before, those folders grew without limit.
-- Changed the plugin to create folders with mode 0700 and write files with mode 0600, and the server to set `~/.sketch-agent-bridge` to 0700 on each request. Folders made by Send Selection could be read by other users on the Mac.
-- Changed the server to write each request to `request.json` in the request folder and pass only the folder path to `sketchtool`. Other users on the Mac could read the request, including layer text, in the process list, and a large request could go over the system's limit on argument size.
 - Changed write tools to return only id, name, type, and frame by default.
 - Changed tool replies to compact JSON, and default renders to 1x.
 
