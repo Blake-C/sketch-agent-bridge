@@ -4,18 +4,22 @@ The MCP server talks to the plugin by running this command:
 
 ```sh
 /Applications/Sketch.app/Contents/MacOS/sketchtool run <repo>/plugin/sketch-agent-bridge.sketchplugin bridge \
-	--context='{"request":"<request JSON as a string>"}' --without-activating
+	--context='{"requestDir":"/Users/<you>/.sketch-agent-bridge/requests/<uuid>"}' --without-activating
 ```
 
-`sketchtool run` loads the plugin bundle from the path given, so the plugin does not need to be installed for the bridge command to work. Sketch 88.1 passes each key of the `--context` dictionary to the command as a property of `context`. The request is sent as one JSON string under `request` so that no value goes through Cocoa type conversion.
+`sketchtool run` loads the plugin bundle from the path given, so the plugin does not need to be installed for the bridge command to work. Sketch 88.1 passes each key of the `--context` dictionary to the command as a property of `context`.
 
 ## Request
 
+The server makes the request folder with mode 0700 and writes `request.json` into it with mode 0600:
+
 ```json
-{ "op": "layer", "args": { "id": "..." }, "replyDir": "/Users/<you>/.sketch-agent-bridge/requests/<uuid>" }
+{ "op": "layer", "args": { "id": "..." } }
 ```
 
-The plugin refuses a `replyDir` that is not inside `~/.sketch-agent-bridge/` and writes no reply.
+The server writes the request to a file because other users on the Mac can read a process's arguments with `ps`, and a large request could go over the system's limit on argument size.
+
+The plugin refuses a `requestDir` that is not inside `~/.sketch-agent-bridge/` and writes no reply. The request folder is also the reply folder, called `replyDir` below.
 
 ## Reply
 

@@ -6,6 +6,7 @@ import { test } from 'node:test'
 import { Backups } from '../src/backup.ts'
 import { SketchBridge, type Runner } from '../src/sketch.ts'
 import { UNDO_STUCK_WARNING, callWrite } from '../src/write-tools.ts'
+import { requestFrom } from './helpers.ts'
 
 const QUICK_SAVE_WAIT = { timeoutMs: 200, intervalMs: 10 }
 
@@ -15,8 +16,7 @@ async function setup(documents: Document[], onOp?: (op: string) => Promise<void>
 	const bridgeDir = await mkdtemp(path.join(tmpdir(), 'write-test-'))
 	const calls: { op: string; args: Record<string, unknown> }[] = []
 	const run: Runner = async (_file, args) => {
-		const context = args.find(arg => arg.startsWith('--context=')) ?? ''
-		const request = JSON.parse(JSON.parse(context.slice('--context='.length)).request)
+		const request = requestFrom(args)
 		calls.push({ op: request.op, args: request.args })
 		await onOp?.(request.op)
 		const result =
@@ -97,8 +97,7 @@ test('callWrite renders in a second call when the plugin asks for it', async () 
 	const bridgeDir = await mkdtemp(path.join(tmpdir(), 'write-test-'))
 	const ops: string[] = []
 	const run: Runner = async (_file, args) => {
-		const context = args.find(arg => arg.startsWith('--context=')) ?? ''
-		const request = JSON.parse(JSON.parse(context.slice('--context='.length)).request)
+		const request = requestFrom(args)
 		ops.push(request.op)
 		let reply: unknown = { ok: true, result: { id: 'L1' }, render: { ids: ['L1'], scale: 1 } }
 		if (request.op === 'status') {

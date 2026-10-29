@@ -1,18 +1,13 @@
 import assert from 'node:assert/strict'
-import { mkdir, mkdtemp, readdir, utimes, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readdir, stat, utimes, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import { BridgeError, SketchBridge, isInside, parseReply, type Runner } from '../src/sketch.ts'
+import { requestFrom } from './helpers.ts'
 
 async function tempBridgeDir() {
 	return mkdtemp(path.join(tmpdir(), 'bridge-test-'))
-}
-
-function requestFrom(args: string[]) {
-	const context = args.find(arg => arg.startsWith('--context='))
-	assert.ok(context)
-	return JSON.parse(JSON.parse(context.slice('--context='.length)).request)
 }
 
 test('parseReply accepts success and error replies', () => {
@@ -71,6 +66,8 @@ test('call runs sketchtool with an argument array and reads the reply', async ()
 	assert.equal(seen?.file, '/bin/sketchtool')
 	assert.deepEqual(seen?.args.slice(0, 3), ['run', '/plugin.sketchplugin', 'bridge'])
 	assert.equal(seen?.args.at(-1), '--without-activating')
+	assert.equal(seen?.args.join(' ').includes('"X"'), false)
+	assert.equal((await stat(path.join(dir, 'request.json'))).mode & 0o777, 0o600)
 	assert.ok(isInside(dir, path.join(bridgeDir, 'requests')))
 	assert.ok(reply.ok)
 	assert.deepEqual(reply.result, { op: 'layer', args: { id: 'X' } })

@@ -23,6 +23,12 @@ function writeText(path, text) {
 	NSString.stringWithString(text).writeToFile_atomically_encoding_error(path, true, NSUTF8StringEncoding, null)
 }
 
+function readText(path) {
+	const text = NSString.stringWithContentsOfFile_encoding_error(path, NSUTF8StringEncoding, null)
+	if (!text) throw new Error('Could not read ' + path)
+	return String(text)
+}
+
 function listDir(path) {
 	const names = NSFileManager.defaultManager().contentsOfDirectoryAtPath_error(path, null)
 	if (!names) return []
@@ -31,4 +37,4 @@ function listDir(path) {
 	return result
 }
 
-module.exports = { BRIDGE_DIR, standardize, isInsideBridgeDir, makeDir, writeText, listDir }
+module.exports = { BRIDGE_DIR, standardize, isInsideBridgeDir, makeDir, readText, writeText, listDir }

@@ -1,4 +1,4 @@
-const { isInsideBridgeDir, standardize, writeText } = require('./files.js')
+const { isInsideBridgeDir, readText, standardize, writeText } = require('./files.js')
 const { takeWarnings } = require('./warnings.js')
 
 // Sketch 88.1 cannot build a CGRect on macOS 27 until CoreFoundation's BridgeSupport metadata is loaded. See CHALLENGES.md.
@@ -17,10 +17,10 @@ const ops = Object.assign(
 	require('./ops/document.js')
 )
 
-function readRequest(context) {
-	const raw = context.request || (context.context && context.context.request)
-	if (!raw) throw new Error('The bridge command needs a "request" value in --context')
-	return JSON.parse(String(raw))
+function requestDirFrom(context) {
+	const dir = context.requestDir || (context.context && context.context.requestDir)
+	if (!dir) throw new Error('The bridge command needs a "requestDir" value in --context')
+	return String(dir)
 }
 
 function errorMessage(error) {
@@ -33,23 +33,24 @@ function errorMessage(error) {
 }
 
 function onBridge(context) {
-	let request
+	let replyDir
 	try {
-		request = readRequest(context)
+		replyDir = requestDirFrom(context)
 	} catch (error) {
 		console.error(error)
 		return
 	}
-	if (!request.replyDir || !isInsideBridgeDir(request.replyDir)) {
-		console.error('Refused replyDir outside ~/.sketch-agent-bridge: ' + request.replyDir)
+	if (!isInsideBridgeDir(replyDir)) {
+		console.error('Refused requestDir outside ~/.sketch-agent-bridge: ' + replyDir)
 		return
 	}
-	request.replyDir = standardize(request.replyDir)
+	replyDir = standardize(replyDir)
 	FRAMEWORKS.forEach(name => framework(name))
 
 	let reply
 	takeWarnings()
 	try {
+		const request = Object.assign(JSON.parse(readText(replyDir + '/request.json')), { replyDir })
 		const op = Object.prototype.hasOwnProperty.call(ops, request.op) ? ops[request.op] : null
 		if (!op) throw new Error('Unknown op: ' + request.op)
 		const outcome = op(request.args || {}, request)
@@ -59,7 +60,7 @@ function onBridge(context) {
 	} catch (error) {
 		reply = { ok: false, error: errorMessage(error) }
 	}
-	writeText(request.replyDir + '/reply.json', JSON.stringify(reply))
+	writeText(replyDir + '/reply.json', JSON.stringify(reply))
 }
 
 globalThis.onBridge = onBridge

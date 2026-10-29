@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
-import { mkdir, readFile, readdir, rm, stat } from 'node:fs/promises'
+import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -106,10 +106,16 @@ export class SketchBridge {
 		await this.pruneRequests()
 		const dir = path.join(this.requestsDir, randomUUID())
 		await mkdir(dir, { recursive: true, mode: 0o700 })
-		const request = JSON.stringify({ op, args, replyDir: dir })
+		await writeFile(path.join(dir, 'request.json'), JSON.stringify({ op, args }), { mode: 0o600 })
 		await this.run(
 			this.sketchtool,
-			['run', this.pluginPath, 'bridge', `--context=${JSON.stringify({ request })}`, '--without-activating'],
+			[
+				'run',
+				this.pluginPath,
+				'bridge',
+				`--context=${JSON.stringify({ requestDir: dir })}`,
+				'--without-activating',
+			],
 			this.timeoutMs
 		)
 		let text: string

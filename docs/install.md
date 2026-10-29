@@ -59,9 +59,9 @@ Other MCP clients take the same command in their own config format:
 With Sketch open, this runs the `status` op and prints the reply:
 
 ```sh
-D="$HOME/.sketch-agent-bridge/requests/manual-status"; mkdir -p "$D"
-REQ=$(node -e 'console.log(JSON.stringify({request: JSON.stringify({op:"status",args:{},replyDir:process.argv[1]})}))' "$D")
-/Applications/Sketch.app/Contents/MacOS/sketchtool run "$PWD/plugin/sketch-agent-bridge.sketchplugin" bridge --context="$REQ" --without-activating
+D="$HOME/.sketch-agent-bridge/requests/manual-status"; mkdir -p -m 700 "$D"
+echo '{"op":"status","args":{}}' > "$D/request.json"
+/Applications/Sketch.app/Contents/MacOS/sketchtool run "$PWD/plugin/sketch-agent-bridge.sketchplugin" bridge --context="{\"requestDir\":\"$D\"}" --without-activating
 cat "$D/reply.json"
 ```
 
