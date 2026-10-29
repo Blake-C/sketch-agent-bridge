@@ -4,35 +4,56 @@ Sketch Agent Bridge connects Sketch 88.1 to AI agents such as Claude Code. Sketc
 
 ## What it does
 
-An agent connected to the MCP server can:
+An agent connected to the MCP server can do the things listed below in the open Sketch document.
+
+### Read the design
 
 - see the current selection as a PNG, an SVG, and a JSON spec of its layers
-- export layers as PNG, SVG, or Sketch's JSON file format, with a background color or without cropping to the visible content
 - list pages and artboards, and read any layer by id
-- add, rename, reorder, and delete pages
 - find layers by type, name, text, symbol, shared style, or swatch, and list symbols with how many instances use each one
 - read the document's design tokens, which are its swatches, text styles, layer styles, and symbols
-- build a whole tree of artboards, groups, shapes, paths, text, SVG drawings, and images in one call
-- edit the points of a path, and set line spacing and variable font axes on text
-- style part of a text layer, such as one bold or colored word
 - read the lines a text layer wraps into, and whether the text overflows its frame
+- see which layers no longer match their shared style
+
+### Create layers
+
+- build a whole tree of artboards, groups, shapes, paths, text, SVG drawings, and images in one call
+- download the Unsplash photos most relevant to a query, filtered by orientation or color, with a credit for each photographer, for use as image layers and fills
+
+### Edit layers
+
 - edit layers, move them into other artboards, groups, or pages, lock them, group and ungroup them, and apply shared styles
 - duplicate layers, change their stacking order, rotate and flip them, and set Smart Layout on groups and symbols
+- fill layers with colors, gradients, or images, add inner shadows, blurs, blend modes, dashed borders, and arrowheads, and set Sketch's Color Adjust on image layers
+- edit the points of a path, and set line spacing and variable font axes on text
+- style part of a text layer, such as one bold or colored word
 - use a shape or image as a clipping mask for the layers above it in its group
 - combine shapes with union, subtract, intersect, and difference
 - pin layers to the edges of their group, artboard, or symbol and fix their width or height, which sets how they change when a symbol instance is resized
+- set the column, row, and square grids on artboards and symbol masters
+
+### Symbols, styles, and libraries
+
 - turn layers into symbols, place instances, set their overrides, swap them between symbols, and detach them
 - set which overrides a symbol lets its instances change
-- turn artboards into symbols and back, and see which layers no longer match their shared style
-- use symbols, shared styles, and swatches from enabled libraries by name, sync or unlink them, and add libraries or turn them on and off
-- link layers and hotspots to artboards for prototypes, add export presets, and add slices
-- set the column, row, and square grids on artboards and symbol masters
-- switch Sketch to a layer's page, select layers, and scroll the canvas to a layer
-- fill layers with colors, gradients, or images, add inner shadows, blurs, blend modes, dashed borders, and arrowheads, and set Sketch's Color Adjust on image layers
+- turn artboards into symbols and back
 - add or change swatches and shared styles
+- use symbols, shared styles, and swatches from enabled libraries by name, sync or unlink them, and add libraries or turn them on and off
+
+### Prototypes and exports
+
+- link layers and hotspots to artboards for prototypes
+- export layers as PNG, SVG, or Sketch's JSON file format, with a background color or without cropping to the visible content
+- add export presets and slices
+
+### Pages and the document
+
+- add, rename, reorder, and delete pages
+- switch Sketch to a layer's page, select layers, and scroll the canvas to a layer
 - read and change the document's color space
 - save the document when the user asks
-- download the Unsplash photos most relevant to a query, filtered by orientation or color, with a credit for each photographer, for use as image layers and fills
+
+### Without MCP
 
 For agents without MCP support, the plugin menu command **Plugins > Agent Bridge > Send Selection to Agent** exports the selection to a folder and copies the folder path to the clipboard, so the path can be pasted into any agent.
 
