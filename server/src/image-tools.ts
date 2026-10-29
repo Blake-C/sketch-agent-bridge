@@ -26,7 +26,7 @@ export function registerImageTools(server: McpServer, bridge: SketchBridge) {
 					.enum(COLORS)
 					.optional()
 					.describe(
-						'Dominant color to search for. When no photo matches, the search runs again without it and the reply says so.'
+						'Dominant color to search for. When no photo matches, the search runs again without it and the reply says so. It favors heavily tinted photos, so for a natural scene such as a sunset, put the color words in the query instead.'
 					),
 				preview: z
 					.boolean()
