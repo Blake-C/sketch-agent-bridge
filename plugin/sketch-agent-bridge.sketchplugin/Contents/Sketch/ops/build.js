@@ -90,8 +90,9 @@ function build(args, request) {
 
 	const shown = roots.length === 1 || parent.type === 'Page' ? roots[0] : parent
 	const options = Object.assign({ render: 'artboard' }, args)
-	// Groups shrink to fit their children, so their final frames can differ from the requested ones.
-	const reply = { result: { created: created.length, roots: roots.map(summary), groups: groups.map(summary), refs } }
+	// Groups shrink to fit their children, so their final frames can differ from the requested ones. Roots already show theirs.
+	const nested = groups.filter(group => !roots.includes(group))
+	const reply = { result: { created: created.length, roots: roots.map(summary), groups: nested.map(summary), refs } }
 	if (deferRender) return Object.assign(reply, { files: [], render: renderRequest(shown, options) })
 	return Object.assign(reply, { files: renderFiles(shown, options, request) })
 }
