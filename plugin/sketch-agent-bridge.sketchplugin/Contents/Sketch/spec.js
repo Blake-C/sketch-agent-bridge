@@ -4,6 +4,7 @@ const { fromSketchAlignment, allSwatches, hexFromNative } = require('./style.js'
 const DEFAULT_DEPTH = 8
 const MAX_NODES = 2000
 const MAX_PATH_LENGTH = 2000
+const MAX_SHAPE_PARTS = 20
 
 function swatchNames(document) {
 	const names = {}
@@ -242,7 +243,8 @@ function layerSpec(layer, options) {
 		if (Object.keys(spec.style).length === 0) delete spec.style
 		const children = (node.layers || []).filter(child => includeHidden || !child.hidden)
 		if (children.length > 0) {
-			if (level >= depth || counter.nodes >= MAX_NODES) {
+			const manyParts = node.type === 'Shape' && children.length > MAX_SHAPE_PARTS
+			if (level >= depth || counter.nodes >= MAX_NODES || manyParts) {
 				spec.childCount = children.length
 				counter.truncated = true
 			} else {

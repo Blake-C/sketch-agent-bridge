@@ -221,7 +221,7 @@ The server runs the function with `/bin/zsh -f -c`, and the search text and size
 
 Each layer has `id`, `name`, `type`, and `frame`. These keys appear only when they have a value:
 
-- `children`, or `childCount` with `truncated: true` on the root when the depth limit or the 2000-layer limit cut the tree
+- `children`, or `childCount` with `truncated: true` on the root when the depth limit or the 2000-layer limit cut the tree. A `Shape` made of more than 20 parts, such as an SVG path with many subpaths, always shows `childCount` instead of its parts.
 - `hidden`, `locked`, `rotation`, `flippedHorizontally`, `flippedVertically`
 - `smartLayout` for groups and symbol masters
 - `shapeType` and `cornerRadius` for shape paths, and for a `Custom` shape path, `path` as SVG path data when it is 2000 characters or shorter, and `closed: false` when the path is open. Export a longer path as SVG with `export`.

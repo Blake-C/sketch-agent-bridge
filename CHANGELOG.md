@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 
 - Fixed `build_layers` placing layers in the wrong spot when a group held a text layer with a `textStyle`. Sketch refit the group as soon as the text changed size, and every layer built after it was offset by the group's new origin.
 - Fixed SVG layers shifting up and to the left when the drawing did not fill its viewBox. The drawing now sits where it does in the viewBox.
+- Fixed `get_layer` returning the points of every part of a compound shape, which reached about 95,000 characters for a dotted map. A shape with more than 20 parts now reports `childCount` instead.
 
 ## [0.3.0] - 2026-10-27
 
