@@ -418,8 +418,21 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		'update_page',
 		{
 			title: 'Update page',
-			description: 'Renames a page. Use reveal_layer with a page id to switch to it.',
-			inputSchema: { documentId, id: z.string(), name: z.string() },
+			description:
+				'Renames a page or moves it in the page list. Use reveal_layer with a page id to switch to it.',
+			inputSchema: {
+				documentId,
+				id: z.string(),
+				name: z.string().optional(),
+				index: z
+					.number()
+					.int()
+					.min(0)
+					.optional()
+					.describe(
+						'New place in the page list, where 0 is the first page. An index past the end moves it last.'
+					),
+			},
 			annotations: destructive,
 		},
 		write('updatePage')

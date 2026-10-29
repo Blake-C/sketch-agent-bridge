@@ -8,7 +8,7 @@ An agent connected to the MCP server can:
 
 - see the current selection as a PNG, an SVG, and a JSON spec of its layers
 - list pages and artboards, and read any layer by id
-- add, rename, and delete pages
+- add, rename, reorder, and delete pages
 - find layers by type, name, text, symbol, shared style, or swatch, and list symbols with how many instances use each one
 - read the document's design tokens, which are its swatches, text styles, layer styles, and symbols
 - build a whole tree of artboards, groups, shapes, paths, text, SVG drawings, and images in one call

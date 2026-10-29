@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Added `index` to `update_page`, which moves a page in the page list.
 - Added a `slice` layer kind to `build_layers` and `create_layer`, which marks an area of the canvas to export.
 - Added a `save_document` tool, which saves the document to its file and waits until Sketch has written it.
 - Added `parentId` and `locked` to `update_layer`, so a layer can move into another artboard, group, or page and keep its place on the canvas.

@@ -6,6 +6,16 @@ function pageSummary(page) {
 	return { id: page.id, name: page.name }
 }
 
+// Sketch's JavaScript API cannot reorder pages, and taking a page out of the document can change which page is selected.
+function movePage(document, page, index) {
+	const selected = document.selectedPage
+	const data = document.sketchObject.documentData()
+	const target = Math.min(index, document.pages.length - 1)
+	data.removePage(page.sketchObject)
+	data.insertPage_atIndex(page.sketchObject, target)
+	if (selected) selected.selected = true
+}
+
 function existingPage(document, id) {
 	if (!id) throw new Error('Pass a page id')
 	return findPage(document, id)
@@ -22,7 +32,9 @@ function updatePage(args) {
 	const document = editableDocument(args)
 	const page = existingPage(document, args.id)
 	if (args.name !== undefined) page.name = args.name
-	return { result: pageSummary(page) }
+	if (args.index !== undefined) movePage(document, page, args.index)
+	const index = document.pages.findIndex(candidate => candidate.id === page.id)
+	return { result: Object.assign(pageSummary(page), { index }) }
 }
 
 function deletePage(args) {
