@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Changed CI to run on pushes to `dev` as well as `main`, and Dependabot to open its pull requests against `dev`, where development now happens before it is merged into `main`.
+
 ## [0.4.0] - 2026-10-29
 
 ### Added
