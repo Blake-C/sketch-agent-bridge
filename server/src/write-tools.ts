@@ -4,6 +4,7 @@ import { setTimeout as sleep } from 'node:timers/promises'
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import { z } from 'zod'
 import type { Backups } from './backup.ts'
+import { expandBuild } from './build.ts'
 import { errorResult, replyResult } from './content.ts'
 import {
 	MAX_UPDATES,
@@ -99,7 +100,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Build layers',
 			description:
-				'Creates a whole tree of layers in one call: artboards, groups, shapes, paths, text, SVG, images, and symbol instances, with children nested inside groups and artboards. Prefer this over create_layer for anything with more than a few layers. Child frames are relative to the frame given for their parent. Groups shrink to fit their children, so the reply lists each group with its final frame, and later frames inside a group are relative to that final frame. A path with several subpaths becomes a Shape with one part per subpath. A shape node combines its shape and path children with the booleanOperation set on each child. Renders once at the end. If any layer fails, nothing is kept.',
+				'Creates a whole tree of layers in one call: artboards, groups, shapes, paths, text, SVG, images, and symbol instances, with children nested inside groups and artboards. Child frames are relative to the frame given for their parent. Groups shrink to fit their children, so the reply lists each group with its final frame, and later frames inside a group are relative to that final frame. A path with several subpaths becomes a Shape with one part per subpath. A shape node combines its shape and path children with the booleanOperation set on each child. The reply gives ids only for the roots and for nodes with a ref. textStyle on the call or on a group sets text defaults once, and copyOf repeats an earlier node. Renders once at the end. If any layer fails, nothing is kept.',
 			inputSchema: {
 				documentId,
 				parentId: z
@@ -110,12 +111,23 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 					'What the root nodes\' frames and paths are measured from. "artboard" uses the artboard or symbol master holding parentId, or the page when there is none. Children of a group node stay relative to that group\'s requested frame. Default parent.'
 				),
 				nodes: z.array(buildNode).min(1),
+				textStyle: textStyle.describe(
+					"The default text style for every text node in this call. A group's textStyle and a text node's own keys win over it."
+				),
 				order: buildOrder.optional(),
 				...render,
 			},
 			annotations: additive,
 		},
-		write('build')
+		async ({ nodes, textStyle: defaults, ...args }) => {
+			let expanded
+			try {
+				expanded = expandBuild(nodes, defaults)
+			} catch (error) {
+				return errorResult(error)
+			}
+			return callWrite(bridge, backups, 'build', { ...args, nodes: expanded })
+		}
 	)
 
 	server.registerTool(

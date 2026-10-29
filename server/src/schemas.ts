@@ -526,8 +526,9 @@ export const updateFields = {
 }
 
 export type BuildNode = Omit<z.infer<typeof layerInput>, 'kind'> & {
-	kind: (typeof layerKinds)[number] | 'shape'
+	kind?: (typeof layerKinds)[number] | 'shape'
 	ref?: string
+	copyOf?: string
 	booleanOperation?: z.infer<typeof booleanOperation>
 	children?: BuildNode[]
 }
@@ -537,10 +538,25 @@ export const buildNode: z.ZodType<BuildNode> = z.lazy(() =>
 		...layerFields,
 		kind: z
 			.enum([...layerKinds, 'shape'])
+			.optional()
 			.describe(
-				'"hotspot" is an invisible clickable area for a prototype, and it needs a flow. "slice" marks an area of the canvas to export, set with exportFormats, and has no style. "shape" combines its children, which must be shapes or paths, into one shape with boolean operations.'
+				'"hotspot" is an invisible clickable area for a prototype, and it needs a flow. "slice" marks an area of the canvas to export, set with exportFormats, and has no style. "shape" combines its children, which must be shapes or paths, into one shape with boolean operations. Needed unless copyOf is given.'
 			),
-		ref: z.string().optional().describe('A label. The reply maps each ref to the created layer id.'),
+		ref: z
+			.string()
+			.optional()
+			.describe(
+				'A label. The reply maps each ref to the created layer id. Set it on any layer a later call may change, because the reply gives no other ids below the roots.'
+			),
+		copyOf: z
+			.string()
+			.optional()
+			.describe(
+				"The ref of an earlier node in this call to copy, with its children. Fields given here replace the source's, and frame, style, and textStyle are merged key by key. Children given here are merged into the source child with the same name, or added after the source's children when no name matches. Refs inside the source are not copied."
+			),
+		textStyle: textStyle.describe(
+			"For text. On a group or artboard node, the default text style for the text nodes inside it, where a text node's own keys win."
+		),
 		booleanOperation: booleanOperation.optional().describe('For a child of a shape node. Default none.'),
 		children: z.array(buildNode).optional().describe('Child layers, for kind "group", "artboard", or "shape".'),
 	})
