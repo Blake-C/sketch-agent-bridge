@@ -37,6 +37,7 @@ function build(args, request) {
 	const refs = {}
 	const roots = []
 	const created = []
+	const groups = []
 	let deferRender = false
 
 	function make(container, node, offset) {
@@ -51,6 +52,7 @@ function build(args, request) {
 			layer.frame = frame
 		}
 		if (node.ref) refs[node.ref] = layer.id
+		if (node.kind === 'group') groups.push(layer)
 		if (node.overrides || node.kind === 'symbol') deferRender = true
 		const children = node.children || []
 		if (children.length > 0) {
@@ -81,7 +83,8 @@ function build(args, request) {
 
 	const shown = roots.length === 1 || parent.type === 'Page' ? roots[0] : parent
 	const options = Object.assign({ render: 'artboard' }, args)
-	const reply = { result: { created: created.length, roots: roots.map(summary), refs } }
+	// Groups shrink to fit their children, so their final frames can differ from the requested ones.
+	const reply = { result: { created: created.length, roots: roots.map(summary), groups: groups.map(summary), refs } }
 	if (deferRender) return Object.assign(reply, { files: [], render: renderRequest(shown, options) })
 	return Object.assign(reply, { files: renderFiles(shown, options, request) })
 }

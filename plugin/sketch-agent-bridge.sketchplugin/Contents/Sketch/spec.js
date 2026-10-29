@@ -42,10 +42,15 @@ function compact(object) {
 function fillSpec(fill, swatches) {
 	if (!fill.enabled) return null
 	if (fill.fillType === 'Gradient') {
-		return compact({
-			gradient: fill.gradient.gradientType,
-			stops: fill.gradient.stops.map(stop => ({ position: stop.position, color: stop.color })),
-		})
+		const gradient = fill.gradient
+		return {
+			gradient: {
+				type: String(gradient.gradientType).toLowerCase(),
+				from: { x: gradient.from.x, y: gradient.from.y },
+				to: { x: gradient.to.x, y: gradient.to.y },
+				stops: gradient.stops.map(stop => ({ position: stop.position, color: stop.color })),
+			},
+		}
 	}
 	if (fill.fillType === 'Pattern') return { image: true }
 	return compact({ color: fill.color, swatch: linkedSwatch(fill, swatches) })

@@ -17,6 +17,11 @@ All notable changes to this project will be documented in this file.
 - Added `sharedStyleOutOfSync` to layer specs.
 - Added a warning on write replies when Sketch has stopped recording undo history for the document, and `undoStuck` in `sketch_status`.
 - Added `{ above: id }` and `{ below: id }` to `order` in `update_layer`, so a layer can be placed directly next to a sibling without knowing its index.
+- Added `groups` to the `build_layers` reply, which lists every group the build created with its final frame. A group shrinks to fit its children, so its origin can differ from the origin of the requested frame, and later frames inside it are relative to the new origin.
+
+### Changed
+
+- Changed gradient fills in `get_layer` and `get_design_tokens` to `{ "gradient": { "type", "from", "to", "stops" } }`, the same form `style` takes as input. The start and end points were missing before, so a gradient's direction could only be checked by exporting it.
 
 ### Fixed
 

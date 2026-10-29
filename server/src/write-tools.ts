@@ -77,7 +77,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Build layers',
 			description:
-				'Creates a whole tree of layers in one call: artboards, groups, shapes, paths, text, SVG, images, and symbol instances, with children nested inside groups and artboards. Prefer this over create_layer for anything with more than a few layers. Child frames are relative to the frame given for their parent. Groups shrink to fit their children. A path with several subpaths becomes a Shape with one part per subpath. Renders once at the end. If any layer fails, nothing is kept.',
+				'Creates a whole tree of layers in one call: artboards, groups, shapes, paths, text, SVG, images, and symbol instances, with children nested inside groups and artboards. Prefer this over create_layer for anything with more than a few layers. Child frames are relative to the frame given for their parent. Groups shrink to fit their children, so the reply lists each group with its final frame, and later frames inside a group are relative to that final frame. A path with several subpaths becomes a Shape with one part per subpath. Renders once at the end. If any layer fails, nothing is kept.',
 			inputSchema: {
 				documentId,
 				parentId: z
@@ -122,7 +122,11 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 				'Creates one layer inside an artboard, group, or page. Use build_layers for more than a few layers.',
 			inputSchema: {
 				documentId,
-				parentId: z.string().describe('Id of an artboard, group, or page.'),
+				parentId: z
+					.string()
+					.describe(
+						"Id of an artboard, group, or page. Inside a group, frame is relative to the group's current frame, which moves when the group shrinks to fit."
+					),
 				...layerInput.shape,
 				...render,
 			},
