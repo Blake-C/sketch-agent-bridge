@@ -176,7 +176,7 @@ Sketch 88.1 writes text alignment with the raw values AppKit uses on Intel Macs.
 
 `updateLayer` takes `parentId` to move a layer into another artboard, group, or page. The layer keeps its place on the canvas, and a `frame` in the same request is relative to the new parent. An artboard can only move to a page, and a layer cannot move into itself or one of its children. A group that the layer leaves or joins is resized to fit its children.
 
-`updateLayer` takes `order`, which is `front`, `back`, `forward`, `backward`, or an index in the parent where 0 is the back.
+`updateLayer` takes `order`, which is `front`, `back`, `forward`, `backward`, an index in the parent where 0 is the back, or `{ "above": "<id>" }` or `{ "below": "<id>" }` to sit directly next to a sibling. The sibling must share the layer's parent.
 
 `duplicate` copies each layer into the same parent, directly above the original, and moves the copy by `offset`. Each copy gets the `createdByAgent` setting.
 

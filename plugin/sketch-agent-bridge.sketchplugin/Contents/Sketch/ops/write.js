@@ -74,7 +74,7 @@ function updateLayer(args, request) {
 	applyPrototypeAndExport(document, layer, args)
 	if (args.fixedWidth !== undefined) setFixedWidth(layer, args.fixedWidth)
 	if (args.lineSpacing !== undefined) setLineSpacing(layer, args.lineSpacing)
-	if (args.order !== undefined) setOrder(layer, args.order)
+	if (args.order !== undefined) setOrder(document, layer, args.order)
 	const deferRender = args.overrides !== undefined || args.symbol !== undefined
 	return deferRender ? deferredResult(document, layer, args) : result(document, layer, args, request)
 }

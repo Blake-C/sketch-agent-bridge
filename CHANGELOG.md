@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Added an `update_library` tool that adds a library or turns one on or off, and `includeDisabled` in `list_libraries`.
 - Added `sharedStyleOutOfSync` to layer specs.
 - Added a warning on write replies when Sketch has stopped recording undo history for the document, and `undoStuck` in `sketch_status`.
+- Added `{ above: id }` and `{ below: id }` to `order` in `update_layer`, so a layer can be placed directly next to a sibling without knowing its index.
 
 ### Fixed
 

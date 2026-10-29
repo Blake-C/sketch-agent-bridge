@@ -198,8 +198,15 @@ export const layout = {
 }
 
 export const order = z
-	.union([z.enum(['front', 'back', 'forward', 'backward']), z.number().int().min(0)])
-	.describe('Move the layer within its parent: front, back, forward, backward, or an index where 0 is the back.')
+	.union([
+		z.enum(['front', 'back', 'forward', 'backward']),
+		z.number().int().min(0),
+		z.object({ above: z.string() }).strict(),
+		z.object({ below: z.string() }).strict(),
+	])
+	.describe(
+		'Move the layer within its parent: front, back, forward, backward, an index where 0 is the back, or { above: id } or { below: id } to sit next to a sibling.'
+	)
 
 export const prototypeAndExport = {
 	flow: z

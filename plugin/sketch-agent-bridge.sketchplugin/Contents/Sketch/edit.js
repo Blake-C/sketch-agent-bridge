@@ -114,10 +114,22 @@ function setPath(layer, path) {
 	layer.frame = next.frame
 }
 
-function setOrder(layer, order) {
+function setOrder(document, layer, order) {
 	if (typeof order === 'number') layer.index = order
-	else if (ORDER_MOVES[order]) layer[ORDER_MOVES[order]]()
-	else throw new Error('Unknown order: ' + order)
+	else if (typeof order === 'string' && ORDER_MOVES[order]) layer[ORDER_MOVES[order]]()
+	else if (order && (order.above || order.below)) placeNextTo(document, layer, order)
+	else throw new Error('Unknown order: ' + JSON.stringify(order))
+}
+
+function placeNextTo(document, layer, order) {
+	const sibling = findLayer(document, order.above || order.below)
+	if (sibling.id === layer.id) throw new Error('A layer cannot be ordered against itself')
+	if (!sibling.parent || !layer.parent || sibling.parent.id !== layer.parent.id) {
+		throw new Error('The layer and ' + sibling.name + ' must share the same parent')
+	}
+	// Taking the layer out first shifts every sibling above it down by one.
+	const target = layer.index < sibling.index ? sibling.index - 1 : sibling.index
+	layer.index = order.above ? target + 1 : target
 }
 
 function bounds(layers) {

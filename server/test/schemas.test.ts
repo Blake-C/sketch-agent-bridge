@@ -25,14 +25,16 @@ test('layer nodes take rotation and flips', () => {
 	assert.equal(node({ rotation: '15' }).success, false)
 })
 
-test('order takes a named move or a non-negative index', () => {
+test('order takes a named move, a non-negative index, or a sibling to sit next to', () => {
 	const schema = z.object({ order })
-	for (const value of ['front', 'back', 'forward', 'backward', 0, 3]) {
-		assert.ok(schema.safeParse({ order: value }).success, String(value))
+	for (const value of ['front', 'back', 'forward', 'backward', 0, 3, { above: 'A' }, { below: 'B' }]) {
+		assert.ok(schema.safeParse({ order: value }).success, JSON.stringify(value))
 	}
 	assert.equal(schema.safeParse({ order: 'top' }).success, false)
 	assert.equal(schema.safeParse({ order: -1 }).success, false)
 	assert.equal(schema.safeParse({ order: 1.5 }).success, false)
+	assert.equal(schema.safeParse({ order: { above: 'A', below: 'B' } }).success, false)
+	assert.equal(schema.safeParse({ order: { next: 'A' } }).success, false)
 })
 
 test('style takes inner shadows, blur, blending, and border options', () => {
