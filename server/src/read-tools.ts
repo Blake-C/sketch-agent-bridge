@@ -105,6 +105,18 @@ export function registerReadTools(server: McpServer, bridge: SketchBridge) {
 	)
 
 	server.registerTool(
+		'find_overlaps',
+		{
+			title: 'Find overlaps',
+			description:
+				'Lists each visible text layer in an artboard or group whose lines are crossed by another visible layer, such as a shape drawn over a heading. A layer that holds the whole text, such as a button or a card behind it, does not count, and neither does anything hidden behind such a layer. Shapes are tested against their outlines and other layers against their frames, after masks clip them. Shapes from one SVG drawing are reported once as their group, with the number of shapes that cross the text. Check this after placing text near artwork.',
+			inputSchema: { documentId, id: z.string().describe('Artboard, symbol master, or group id.') },
+			annotations: readOnly,
+		},
+		async args => callOp(bridge, 'overlaps', args)
+	)
+
+	server.registerTool(
 		'find_layers',
 		{
 			title: 'Find layers',

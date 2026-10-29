@@ -49,6 +49,7 @@ Every op takes an optional `documentId`. Without it, the op uses the front docum
 | `export`            | `export_layers`                     | `ids`, `formats`, `scale`, `trimmed`, `background`                                                                                                                                                                                                                                                          |
 | `tokens`            | `get_design_tokens`                 | none                                                                                                                                                                                                                                                                                                        |
 | `find`              | `find_layers`                       | `pageId`, `type`, `name`, `nameMatch`, `text`, `symbol`, `sharedStyle`, `swatch`, `limit`                                                                                                                                                                                                                   |
+| `overlaps`          | `find_overlaps`                     | `id`                                                                                                                                                                                                                                                                                                        |
 | `symbols`           | `list_symbols`                      | `includeOverrides`                                                                                                                                                                                                                                                                                          |
 | `libraries`         | `list_libraries`                    | `libraryId`, `includeDisabled`                                                                                                                                                                                                                                                                              |
 | `reveal`            | `reveal_layer`                      | `id`                                                                                                                                                                                                                                                                                                        |
@@ -93,6 +94,18 @@ These tools do not call the plugin:
 The reply has `total`, `truncated` when there are more than `limit` matches (default 50), and for each match its `id`, `name`, `type`, `frame`, `page`, and `artboard`, plus `hidden` when the layer is hidden.
 
 `symbols` lists each symbol master with `id`, `name`, `symbolId`, `page`, `instanceCount`, `smartLayout`, and `library` when the master came from a library. With `includeOverrides`, each master also lists its overrides with `editable`.
+
+## Finding overlaps
+
+`overlaps` walks the artboard, symbol master, or group given by `id` and collects every visible layer that paints something, in stacking order. Groups are walked into, hidden layers are skipped, and a shape path or shape with no enabled fill or border is skipped. A mask clips the layers above it in its group until one of them breaks the mask chain, and each layer's area is clipped to its mask.
+
+For each text layer, a layer counts as crossing it when it shares area with one of the text's wrapped lines, which the plugin reads from Sketch's text fragments. A fixed-width text frame can be much wider than its words, so the lines are compared instead of the frame. These layers do not count:
+
+- a layer whose area holds the whole text frame, such as a button or a card behind the text
+- any layer below the topmost layer that holds the whole text frame, because that layer hides it
+- a shape path or shape whose outline does not reach the shared area. The plugin tests a grid of 13 by 7 points across the shared area against the outline from `pathInFrameWithTransforms`, because a rotated or curved shape has a frame larger than the shape. Images, symbol instances, and other text are compared by frame.
+
+When a crossing layer is inside a group that does not hold the text, such as one petal of an imported SVG drawing, the reply names the group once and gives the number of its layers that cross the text in `layers`. The reply has `checked`, with the number of text layers and painted layers it looked at, and `overlaps`, with one entry per text layer that something crosses.
 
 ## Libraries
 

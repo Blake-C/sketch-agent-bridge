@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - Added an `install_google_font` tool, which downloads a family from Google Fonts into `~/Library/Fonts` as static TrueType files, registers them so Sketch can use them without a restart, and adds the family to a "Google Fonts" collection in Font Book.
 - Added a `list_fonts` tool, which lists the installed font families, the families in the "Google Fonts" collection, and each face's style and weight on the Sketch scale.
+- Added a `find_overlaps` tool, which lists the text layers in an artboard or group that another visible layer crosses, testing shapes against their outlines and skipping layers that hold the whole text or are hidden behind one that does.
 - Added an `update_layers` tool, which applies several `update_layer` changes in one plugin run and renders once.
 - Added `svg` and `svgFile` to `update_layer`, which replace the drawing of an SVG layer an agent created and keep its name, place in the layer list, and style.
 - Added `~/.sketch-agent-bridge/assets/`, which the server creates before each request so a sandboxed agent can be allowed to write generated files there.

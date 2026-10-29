@@ -19,6 +19,7 @@ const cocoaGlobals = {
 	NSFontManager: 'readonly',
 	NSHomeDirectory: 'readonly',
 	NSItalicFontMask: 'readonly',
+	NSMakePoint: 'readonly',
 	NSMakeRange: 'readonly',
 	NSPasteboard: 'readonly',
 	NSPasteboardTypeString: 'readonly',

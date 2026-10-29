@@ -13,6 +13,7 @@ An agent connected to the MCP server can do the things listed below in the open 
 - find layers by type, name, text, symbol, shared style, or swatch, and list symbols with how many instances use each one
 - read the document's design tokens, which are its swatches, text styles, layer styles, and symbols
 - read the lines a text layer wraps into, and whether the text overflows its frame
+- find text layers that another layer crosses, such as a shape drawn over a heading
 - see which layers no longer match their shared style
 
 ### Create layers

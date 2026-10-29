@@ -15,7 +15,8 @@ const ops = Object.assign(
 	require('./ops/library.js'),
 	require('./ops/pages.js'),
 	require('./ops/document.js'),
-	require('./ops/fonts.js')
+	require('./ops/fonts.js'),
+	require('./ops/overlaps.js')
 )
 
 function requestDirFrom(context) {
