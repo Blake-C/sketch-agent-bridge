@@ -32,6 +32,8 @@ These commands all run through Docker. The `dev` service has network access and 
 - `docker compose run --rm offline pnpm format`
 - `docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f git /repo`
 
+GitHub Actions runs `pnpm check`, `pnpm build`, and gitleaks on each push to `main` and each pull request, from `.github/workflows/ci.yml`. Dependabot opens weekly pull requests for npm packages, Actions, and the Docker base image, and waits 7 days after a release, which matches `minimumReleaseAge` in `pnpm-workspace.yaml`. Actions and images are pinned to a commit SHA or digest, with the version in a comment or tag.
+
 Docker's socket is blocked by the Claude Code sandbox, so Docker commands need the sandbox turned off for that one command.
 
 ## Testing against Sketch
