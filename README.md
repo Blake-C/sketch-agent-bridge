@@ -1,6 +1,6 @@
 # Sketch Agent Bridge
 
-Sketch Agent Bridge connects Sketch 88.1 to AI agents such as Claude Code. Sketch 88.1 runs locally without a subscription and has no AI features, so this project adds a plugin and a local MCP server that let an agent read designs from the open Sketch document and edit it.
+Sketch Agent Bridge connects older versions of Sketch to AI agents such as Claude Code, and it is built and tested against Sketch 88.1. It adds a plugin and a local MCP server that let an agent read designs from the open Sketch document and edit it.
 
 ## What it does
 
@@ -67,13 +67,13 @@ Build the server in Docker, connect it to an agent, and optionally link the plug
 
 ## Safety
 
-- New layers go on a page named "Agent Drafts" unless the agent names another parent.
+- `build_layers` and `create_artboard` put new layers on a page named "Agent Drafts" unless the agent names another parent or page.
 - Before the first edit in a session, the server copies the `.sketch` file to `~/.sketch-agent-bridge/backups/`.
 - Each edit is one step in Sketch's undo history. If Sketch stops recording undo history for the document, every edit reply starts with a warning until Sketch restarts.
-- The agent can only delete or detach layers, delete pages, or turn symbol masters into artboards when it created them, unless it passes `force: true`.
+- The agent can only delete layers, detach symbol instances, delete pages, or turn symbol masters into artboards when it created them, unless it passes `force: true`.
 - `update_library` changes Sketch's library list for every document, outside the backup and Cmd+Z, and it can add or turn off a library but not remove one.
 - The bridge makes no network calls except through `fetch_images`, which calls `api.unsplash.com` and downloads photos from `images.unsplash.com`. The server reads the Unsplash key from the login keychain, or from `UNSPLASH_ACCESS_KEY` when the keychain has no key, and sends it only to `api.unsplash.com`.
-- Every file the bridge writes stays under `~/.sketch-agent-bridge/` on the Mac.
+- Apart from the `.sketch` file that `save_document` saves, every file the bridge writes stays under `~/.sketch-agent-bridge/` on the Mac.
 
 ## License
 
