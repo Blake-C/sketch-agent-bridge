@@ -7,6 +7,8 @@ const SOLID_TYPES = ['Text', 'Image', 'SymbolInstance']
 const MIN_AREA = 1
 const SAMPLE_COLUMNS = 12
 const SAMPLE_ROWS = 6
+const USES_DEVICE_METRICS = 1 << 3
+const MEASURE_LIMIT = 100000
 
 function rectIn(root, layer) {
 	const frame = layer.frame.changeBasis({ from: layer.parent, to: root })
@@ -95,10 +97,50 @@ function touches(leaf, area) {
 	return false
 }
 
+// A shape with a border and no fill is drawn as its outline, so text inside the outline does not touch it.
+function isOutlineOnly(layer) {
+	if (!PAINTED_SHAPES.includes(layer.type) || layer.closed === false) return false
+	return !(layer.style.fills || []).some(fill => fill.enabled !== false)
+}
+
+// A line crosses the outline when part of it is inside the shape and part of it is not.
+function outlineCrosses(leaf, line, shared) {
+	const path = outline(leaf)
+	if (!path) return true
+	let inside = 0
+	let total = 0
+	for (let column = 0; column <= SAMPLE_COLUMNS; column++) {
+		for (let row = 0; row <= SAMPLE_ROWS; row++) {
+			const x = shared.x + (shared.width * column) / SAMPLE_COLUMNS - leaf.offset.x
+			const y = shared.y + (shared.height * row) / SAMPLE_ROWS - leaf.offset.y
+			total++
+			if (path.containsPoint(NSMakePoint(x, y))) inside++
+		}
+	}
+	return inside > 0 && (inside < total || !contains(leaf.rect, line))
+}
+
+// A line's box also holds the space above and below its letters, so two stacked lines can touch when their letters do not.
+// Device metrics give the bounds of the ink, measured from the baseline, which baselineOffset gives up from the bottom of the line.
+function letterBox(fragment, font) {
+	const rect = fragment.rect
+	const text = String(fragment.text).replace(/\s+$/, '')
+	if (!font || !text) return rect
+	const ink = NSString.stringWithString(text).boundingRectWithSize_options_attributes(
+		NSMakeSize(MEASURE_LIMIT, MEASURE_LIMIT),
+		USES_DEVICE_METRICS,
+		{ [NSFontAttributeName]: font }
+	)
+	const above = ink.origin.y + ink.size.height
+	const baseline = rect.y + rect.height - fragment.baselineOffset
+	return { x: rect.x, y: baseline - above, width: rect.width, height: ink.size.height }
+}
+
 // A fixed-width text frame can be much wider than its words, so each wrapped line is checked on its own.
 function lineRects(text) {
+	const font = text.layer.sketchObject.font()
 	const rects = text.layer.fragments
-		.map(fragment => fragment.rect)
+		.map(fragment => letterBox(fragment, font))
 		.map(rect => ({
 			x: rect.x + text.layer.frame.x + text.offset.x,
 			y: rect.y + text.layer.frame.y + text.offset.y,
@@ -108,6 +150,11 @@ function lineRects(text) {
 		.map(rect => intersect(rect, text.rect))
 		.filter(Boolean)
 	return rects.length ? rects : [text.rect]
+}
+
+function linesOf(leaf) {
+	if (!leaf.lines) leaf.lines = lineRects(leaf)
+	return leaf.lines
 }
 
 // Layers below a painted layer that covers the whole text are hidden behind it, such as art behind a card.
@@ -145,12 +192,19 @@ function overlaps(args) {
 	texts.forEach(text => {
 		const hits = new Map()
 		const cover = coverIndex(leaves, leaves.indexOf(text))
-		const lines = lineRects(text)
+		const lines = linesOf(text)
 		leaves.forEach((other, index) => {
 			if (other.layer.id === text.layer.id || index <= cover || contains(other.rect, text.rect)) return
 			const crossed = lines.some(line => {
+				if (other.layer.type === 'Text') {
+					return linesOf(other).some(otherLine => {
+						const shared = intersect(line, otherLine)
+						return shared && shared.width * shared.height >= MIN_AREA
+					})
+				}
 				const shared = intersect(line, other.rect)
-				return shared && shared.width * shared.height >= MIN_AREA && touches(other, shared)
+				if (!shared || shared.width * shared.height < MIN_AREA) return false
+				return isOutlineOnly(other.layer) ? outlineCrosses(other, line, shared) : touches(other, shared)
 			})
 			if (!crossed) return
 			const shown = reportedLayer(other, text.layer)

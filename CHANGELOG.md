@@ -59,6 +59,8 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Changed the color, fill, shadow, style, text style, and text run schemas to appear once in each tool's `definitions` and be referenced with `$ref`. This change and the removal of `create_layer` and `update_layer` cut `tools/list` from 115,945 to 77,541 characters.
+- Changed `find_overlaps` to compare the letters of each line, measured from the baseline, instead of the whole line box, so stacked headings no longer cross each other when their letters do not touch.
+- Changed `find_overlaps` to count a closed shape with a border and no fill as crossing text only when a line runs over its outline, so text inside an outline-only shape is not reported.
 - Changed the `build_layers` reply to leave root layers out of `groups`, because `roots` already lists them with their final frames.
 - Changed `list_fonts` and `install_google_font` to leave out each face's PostScript name.
 - Changed the `mask` description to say that Sketch draws the mask's fill, so a mask that should only clip needs `fills: []`.
