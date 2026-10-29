@@ -1,6 +1,7 @@
 const sketch = require('sketch')
 const { resolveDocument, findPage } = require('../document.js')
-const { frameSpec, smartLayoutName } = require('../spec.js')
+const { frameSpec, smartLayoutName, swatchId } = require('../spec.js')
+const { allSwatches, findByIdOrName } = require('../style.js')
 
 const DEFAULT_LIMIT = 50
 
@@ -15,7 +16,49 @@ function matchesSymbol(layer, key) {
 	return Boolean(master) && [master.name, master.id, master.symbolId].includes(key)
 }
 
-function matcher(args) {
+function matchesSharedStyle(layer, key) {
+	const shared = layer.sharedStyle
+	return Boolean(shared) && (shared.id === key || shared.name === key)
+}
+
+function referencedSwatchIds(layer, data) {
+	const list = layer.sketchObject.swatchesReferencedInDocument(data)
+	const ids = []
+	for (let index = 0; index < list.count(); index++) {
+		const swatch = list.objectAtIndex(index)
+		const local = swatch.respondsToSelector(NSSelectorFromString('localSwatch')) ? swatch.localSwatch() : swatch
+		ids.push(String(local.objectID()))
+	}
+	return ids
+}
+
+function countOf(ids, id) {
+	return ids.filter(item => item === id).length
+}
+
+function overridesUseSwatch(layer, id) {
+	if (layer.type !== 'SymbolInstance') return false
+	return layer.overrides.some(override => {
+		if (override.property !== 'fillColor' || override.isDefault) return false
+		const color = override.sketchObject.currentValue()
+		return Boolean(color && color.swatchID && String(color.swatchID()) === id)
+	})
+}
+
+// swatchesReferencedInDocument also lists every swatch the children use, so a layer uses the swatch itself only when it lists it more times than its children do.
+function usesSwatch(layer, id, data) {
+	const own = countOf(referencedSwatchIds(layer, data), id)
+	const inChildren = (layer.layers || []).reduce(
+		(total, child) => total + countOf(referencedSwatchIds(child, data), id),
+		0
+	)
+	return own > inChildren || overridesUseSwatch(layer, id)
+}
+
+function matcher(args, document) {
+	const swatch =
+		args.swatch !== undefined ? swatchId(findByIdOrName(allSwatches(document), args.swatch, 'swatch')) : null
+	const data = document.sketchObject.documentData()
 	return layer => {
 		if (layer.type === 'Page') return false
 		if (args.name !== undefined) {
@@ -24,6 +67,8 @@ function matcher(args) {
 		}
 		if (args.text !== undefined && !(layer.type === 'Text' && includes(layer.text, args.text))) return false
 		if (args.symbol !== undefined && !matchesSymbol(layer, args.symbol)) return false
+		if (args.sharedStyle !== undefined && !matchesSharedStyle(layer, args.sharedStyle)) return false
+		if (swatch && !usesSwatch(layer, swatch, data)) return false
 		return true
 	}
 }
@@ -40,7 +85,7 @@ function location(layer) {
 function find(args) {
 	const document = resolveDocument(args)
 	const scope = args.pageId ? findPage(document, args.pageId) : document
-	const matches = sketch.find(args.type || '*', scope).filter(matcher(args))
+	const matches = sketch.find(args.type || '*', scope).filter(matcher(args, document))
 	const limit = args.limit || DEFAULT_LIMIT
 	return {
 		result: {

@@ -13,6 +13,7 @@ const cocoaGlobals = {
 	NSHomeDirectory: 'readonly',
 	NSPasteboard: 'readonly',
 	NSPasteboardTypeString: 'readonly',
+	NSSelectorFromString: 'readonly',
 	NSString: 'readonly',
 	NSURL: 'readonly',
 	NSUTF8StringEncoding: 'readonly',

@@ -120,3 +120,8 @@ test('relativeTo takes parent or artboard', () => {
 	for (const value of ['parent', 'artboard', undefined]) assert.ok(schema.safeParse({ relativeTo: value }).success)
 	assert.equal(schema.safeParse({ relativeTo: 'page' }).success, false)
 })
+
+test('find takes a shared style and a swatch', () => {
+	const schema = z.object(findInput)
+	assert.ok(schema.safeParse({ sharedStyle: 'Button/Primary', swatch: 'ACF/Blue' }).success)
+})

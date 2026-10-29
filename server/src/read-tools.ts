@@ -102,7 +102,7 @@ export function registerReadTools(server: McpServer, bridge: SketchBridge) {
 		{
 			title: 'Find layers',
 			description:
-				'Searches every page, or one page, for layers by type, name, text, or symbol, and returns each match with its page and artboard. Use it to locate layers without reading whole trees.',
+				'Searches every page, or one page, for layers by type, name, text, symbol, shared style, or swatch, and returns each match with its page and artboard. Use it to locate layers without reading whole trees.',
 			inputSchema: {
 				documentId,
 				...findInput,

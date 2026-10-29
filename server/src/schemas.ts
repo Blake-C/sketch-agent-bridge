@@ -363,5 +363,15 @@ export const findInput = {
 	nameMatch: z.enum(['contains', 'exact']).optional().describe('Default contains.'),
 	text: z.string().optional().describe('Text that a text layer contains, case-insensitive.'),
 	symbol: z.string().optional().describe('Symbol master name, id, or symbolId, to find its instances.'),
+	sharedStyle: z
+		.string()
+		.optional()
+		.describe('Shared layer or text style name or id, to find the layers linked to it.'),
+	swatch: z
+		.string()
+		.optional()
+		.describe(
+			'Swatch name or id, to find the layers whose fills, borders, shadows, text color, artboard background, or color overrides use it.'
+		),
 	limit: z.number().int().min(1).max(500).optional().describe('Most layers to return. Default 50.'),
 }
