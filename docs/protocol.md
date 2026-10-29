@@ -91,6 +91,8 @@ These tools do not call the plugin:
 
 The reply has `total`, `truncated` when there are more than `limit` matches (default 50), and for each match its `id`, `name`, `type`, `frame`, `page`, and `artboard`, plus `hidden` when the layer is hidden.
 
+`artboards` lists the artboards and symbol masters on a page with their frames, and `nextX`, which is 100 points right of the right edge of everything on the page. `createArtboard` and an artboard node in `build` go there when no `x` is given.
+
 `symbols` lists each symbol master with `id`, `name`, `symbolId`, `page`, `instanceCount`, `smartLayout`, and `library` when the master came from a library. With `includeOverrides`, each master also lists its overrides with `editable`.
 
 ## Finding overlaps

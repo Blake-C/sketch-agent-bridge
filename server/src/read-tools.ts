@@ -83,7 +83,8 @@ export function registerReadTools(server: McpServer, bridge: SketchBridge) {
 		'list_artboards',
 		{
 			title: 'List artboards',
-			description: 'Lists the artboards and symbol masters on a page.',
+			description:
+				'Lists the artboards and symbol masters on a page, and nextX, the x where create_artboard or an artboard node without an x would go on that page.',
 			inputSchema: {
 				documentId,
 				pageId: z.string().optional().describe('Page id from list_pages. Defaults to the current page.'),

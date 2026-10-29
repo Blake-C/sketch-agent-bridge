@@ -2,6 +2,7 @@ const sketch = require('sketch')
 const { resolveDocument, findLayer, findPage, documentName, undoIsStuck } = require('../document.js')
 const { layerSpec, swatchNames, frameSpec } = require('../spec.js')
 const { exportLayers } = require('../export.js')
+const { rightOfContent } = require('../edit.js')
 
 function status() {
 	const selected = sketch.getSelectedDocument()
@@ -40,6 +41,7 @@ function artboards(args) {
 	return {
 		result: {
 			page: { id: page.id, name: page.name },
+			nextX: rightOfContent(page),
 			artboards: page.layers
 				.filter(layer => layer.type === 'Artboard' || layer.type === 'SymbolMaster')
 				.map(layer => ({ id: layer.id, name: layer.name, type: layer.type, frame: frameSpec(layer.frame) })),
