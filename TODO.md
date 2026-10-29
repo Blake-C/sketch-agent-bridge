@@ -46,3 +46,92 @@ Three overlaps were found by looking at renders.
 `get_layer` with `textLines` reports text that overflows its own frame, but nothing reported text that sits on top of or under another visible layer.
 
 - [x] Add a `find_overlaps` tool that lists each text layer that another visible layer crosses. Comparing frames alone reported the stripes behind the card and leaves near the headline, so it compares each wrapped line of text, tests shapes against their outlines, and skips layers hidden behind a layer that holds the whole text. With the nav link moved back to where it first was, it reported the dahlia crossing "Collections", and the finished artboard reports no overlaps.
+
+## Items from the token usage test
+
+The items below come from a second stress test on 2026-10-29, where an agent rebuilt a screenshot of a landing page for Makalu in `tester.sketch`. The finished artboard has about 80 layers and took 3 build or update calls. The agent noted each place where a tool sent or returned more tokens than the work needed.
+
+## Share repeated schemas in the tool definitions
+
+`tools/list` returns 115,945 characters for 41 tools, and four of them are 16,737 to 18,463 characters each. Those four are `build_layers`, `create_layer`, `update_layer`, and `update_layers`, and each one carries a full copy of the layer schema. Zod also writes the color, fill, style, and text style schemas out in full each time a field uses them.
+
+- [x] Give the shared schemas in `server/src/schemas.ts` an id with `.meta({ id })`, so zod puts each one in `definitions` once and every other use is a `$ref`. This cut `tools/list` from 115,945 to 106,618 characters, about 8%, because the field descriptions make up most of each tool's size and each one appears once.
+- [x] Remove `create_layer` and `update_layer`, because `build_layers` with one node and `update_layers` with one entry do the same work and each of the two tools repeated the whole layer schema. With the `$ref` change, `tools/list` went from 115,945 to 77,541 characters.
+- [x] Add a test that fails when `tools/list` grows past 80,000 characters.
+
+## Return the ids of layers a later call will need
+
+The `build_layers` reply gave ids only for the root layers and for nodes with a `ref`. The agent needed the ids of two background layers to change their gradients, so it called `get_layer` on the artboard, which returned about 3,000 tokens of styles and paths.
+
+- [x] Say in the `build_layers` description and the `ref` description to set `ref` on any layer that a later call may change.
+
+## Stop listing root groups twice in the `build_layers` reply
+
+Each root that is a group appears in both `roots` and `groups`, with the same id, name, type, and frame.
+
+- [x] Leave root layers out of `groups`.
+
+## Set a text style once for many text layers
+
+The second `build_layers` call repeated `fontFamily: "Avenir"` about 60 times, and the text color for each section on every text node in it.
+
+- [x] Add `textStyle` to `build_layers`, used as the default for every text node in the call.
+- [x] Let a group or artboard node take `textStyle`, used as the default for the text nodes inside it. A text node's own `textStyle` keys win over both defaults.
+
+## Render part of an artboard
+
+To check one section after a fix, the agent had to render the whole 1200 by 3122 artboard again at a scale of 0.35, which made the text too small to read.
+
+- [x] Add `region` to `export_layers`, which crops the PNG to a rectangle given in the layer's coordinates, so a section can be checked at full size. A 460 by 140 region of the Visit Tokyo artboard at a scale of 1.5 came back as a 690 by 210 PNG.
+
+## Return a short layer list from `get_layer`
+
+`get_layer` with `depth: 1` returned the full path, style, and text style of each of the 40 children, even though the agent needed only ids and names.
+
+- [x] Add `summary` to `get_layer`, which returns only the id, name, type, frame, visibility, text, and child count of each layer. On the Makalu artboard at `depth: 1`, the reply went from 10,319 to 5,878 characters.
+
+## Search inside one artboard or group
+
+`find_layers` takes a `pageId` and nothing narrower, so a name such as "Tint" matches layers in every artboard on the page.
+
+- [x] Add `parentId` to `find_layers`, which searches only inside that artboard or group. "Tint" matched 3 layers on the page and 2 inside the Makalu artboard.
+
+## Shorten the `list_fonts` reply
+
+`list_fonts` returns a PostScript name for each face, and Avenir alone has 12 faces. The PostScript name is not used anywhere else in the tools.
+
+- [x] Drop `postscriptName` from each face in `list_fonts` and `install_google_font`.
+
+## Say where a new artboard can go
+
+The agent listed all 18 artboards on the page to find empty space to the right of them for the new artboard.
+
+- [x] Add `nextX` to the `list_artboards` reply, which is where `create_artboard` would place an artboard on that page when no x is given.
+
+## Cut false overlaps from `find_overlaps`
+
+`find_overlaps` reported 13 text layers, and only 1 was a real overlap, the Section I copy over the mountain photo.
+
+- Two-line headings were reported against each other, because the box of one line touches the box of the next even though the letters don't touch.
+- Text inside outline-only shapes, such as the hexes and the trail map diamond, was reported against the outline, because a shape without a fill does not count as holding the text.
+
+- [x] Compare the letters of each line against other layers, using device metrics to measure the ink of each line from its baseline. The Makalu artboard now reports only the Section I copy over the photo, and moving "CLOUD'S PEAK" up 10 points made it report the two headings again.
+- [x] Count a closed shape with a border and no fill as crossing the text only when a line is partly inside its outline and partly outside.
+
+## Repeat a node in `build_layers`
+
+The five side navs and the four section badges were nearly the same spec written out each time, with only the frame and one fill changed.
+
+- [x] Add `copyOf` to `build_layers` nodes, which takes the `ref` of an earlier node in the same call and builds a copy of it. Fields given on the copy replace the source's fields, and children given on the copy are matched to the source's children by name.
+
+## Shorten the paths `fetch_images` returns
+
+Each path from `fetch_images` is about 110 characters, such as `/Users/<user>/.sketch-agent-bridge/images/<uuid>/dark-snowy-mountain-cliff-pine-trees-dus.jpg`, and the agent sends it again in each fill that uses it.
+
+- [x] Return paths that start with `~/.sketch-agent-bridge/`, use a 12-character folder name, and name the files `1.jpg`, `2.jpg`, and so on. Accept paths that start with `~/` wherever an image or SVG file is taken. A path is now 48 characters.
+
+## Name exported PNGs with the scale that was asked for
+
+An export at a scale of 1.5 was named `@1x`, 0.35 was named `@0.3x`, and 0.25 was named `@0.2x`, even though each image was the size that was asked for.
+
+- [x] Rename each exported PNG to `<layer id>@<scale>x.png` using the scale that was asked for.
