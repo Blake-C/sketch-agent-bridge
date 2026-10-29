@@ -116,7 +116,7 @@ Assigning a library text style with `syncWithSharedStyle` links the style withou
 - `cornerRadius` for `rectangle`
 - `text`, `fixedWidth`, and `lineSpacing` for `text`. A text node with a frame width gets a fixed width unless `fixedWidth` is false. `lineSpacing` is `natural`, `system`, `variable`, or `constantBaseline`.
 - `path` for `path`, as SVG path data in the parent's coordinates. The layer's frame fits the path, and a `frame` moves or resizes it with only the keys given.
-- `svg` for `svg`, as SVG markup. The frame width and height are written onto the root `<svg>` tag, so the drawing scales to that size.
+- `svg` for `svg`, as SVG markup. The frame width and height are written onto the root `<svg>` tag, so the viewBox scales to that size. Sketch trims the empty space around imported SVG content, so the plugin adds an invisible rect the size of the viewBox, uses it to place the drawing where it sits in the viewBox, and then removes it. The layer's frame is the size of the drawing, not the requested frame.
 - `image` for `image`, as an absolute path to an image file
 - `symbol` and `overrides` for `symbol`
 - `children` for `group` and `artboard`

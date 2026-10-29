@@ -16,6 +16,7 @@ const SMART_LAYOUT_TYPES = ['Group', 'SymbolMaster']
 const SHAPE_KINDS = { rectangle: 'Rectangle', oval: 'Oval', triangle: 'Triangle', polygon: 'Polygon', star: 'Star' }
 const LINE_SPACINGS = ['natural', 'system', 'variable', 'constantBaseline']
 const ORDER_MOVES = { front: 'moveToFront', back: 'moveToBack', forward: 'moveForward', backward: 'moveBackward' }
+const SVG_BOUNDS_NAME = 'sketch-agent-bridge-svg-bounds'
 
 function editableDocument(args) {
 	const document = resolveDocument(args)
@@ -254,15 +255,73 @@ function setOverrides(document, instance, changes) {
 	if (instance.master && instance.master.smartLayout) instance.resizeWithSmartLayout()
 }
 
+function svgAttribute(tag, name) {
+	const match = tag.match(new RegExp('\\s' + name + '\\s*=\\s*["\']([^"\']*)["\']'))
+	return match ? match[1] : undefined
+}
+
+function svgViewBox(tag) {
+	const viewBox = svgAttribute(tag, 'viewBox')
+	const numbers = viewBox
+		? viewBox
+				.trim()
+				.split(/[\s,]+/)
+				.map(Number)
+		: []
+	if (numbers.length === 4 && numbers.every(isFinite) && numbers[2] > 0 && numbers[3] > 0) return numbers
+	const width = parseFloat(svgAttribute(tag, 'width'))
+	const height = parseFloat(svgAttribute(tag, 'height'))
+	return width > 0 && height > 0 ? [0, 0, width, height] : null
+}
+
 function svgWithSize(svg, width, height) {
 	return svg.replace(/<svg\b[^>]*>/, tag => {
+		const box = svgViewBox(tag)
 		let next = tag
 		if (width !== undefined)
-			next = next.replace(/\swidth="[^"]*"/, '').replace('<svg', '<svg width="' + width + '"')
+			next = next.replace(/\swidth\s*=\s*["'][^"']*["']/, '').replace('<svg', '<svg width="' + width + '"')
 		if (height !== undefined)
-			next = next.replace(/\sheight="[^"]*"/, '').replace('<svg', '<svg height="' + height + '"')
-		return next
+			next = next.replace(/\sheight\s*=\s*["'][^"']*["']/, '').replace('<svg', '<svg height="' + height + '"')
+		if (!box) return next
+		return (
+			next +
+			'<rect id="' +
+			SVG_BOUNDS_NAME +
+			'" x="' +
+			box[0] +
+			'" y="' +
+			box[1] +
+			'" width="' +
+			box[2] +
+			'" height="' +
+			box[3] +
+			'" fill="none"/>'
+		)
 	})
+}
+
+function findByName(layer, name) {
+	if (layer.name === name) return layer
+	const children = layer.layers || []
+	for (let i = 0; i < children.length; i++) {
+		const match = findByName(children[i], name)
+		if (match) return match
+	}
+	return null
+}
+
+// Sketch trims the empty space around imported SVG content, so a marker rect the size of the viewBox shows where the content sat in the frame.
+function createSvgLayer(parent, svg, frame) {
+	const layer = sketch.createLayerFromData(svgWithSize(svg, frame.width, frame.height), 'svg')
+	layer.parent = parent
+	setFrame(layer, { x: frame.x || 0, y: frame.y || 0 })
+	const marker = findByName(layer, SVG_BOUNDS_NAME)
+	if (!marker) return layer
+	const origin = marker.frame.changeBasis({ from: marker.parent, to: layer })
+	setFrame(layer, { x: (frame.x || 0) - origin.x, y: (frame.y || 0) - origin.y })
+	marker.remove()
+	if (layer.type === 'Group' && layer.layers.length > 0) layer.adjustToFit()
+	return layer
 }
 
 function createNode(document, parent, node) {
@@ -295,9 +354,7 @@ function createNode(document, parent, node) {
 		layer = new sketch.Image({ parent, image: loadImage(node.image), frame: rectangle })
 	} else if (node.kind === 'svg') {
 		if (!node.svg) throw new Error('An svg layer needs svg markup')
-		layer = sketch.createLayerFromData(svgWithSize(node.svg, frame.width, frame.height), 'svg')
-		layer.parent = parent
-		setFrame(layer, { x: rectangle.x, y: rectangle.y })
+		layer = createSvgLayer(parent, node.svg, frame)
 	} else if (node.kind === 'symbol') {
 		const master = findSymbolMaster(document, node.symbol)
 		layer = master.createNewInstance()

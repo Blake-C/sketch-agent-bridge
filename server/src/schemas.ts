@@ -274,7 +274,12 @@ const layerFields = {
 	path: svgPath.optional().describe('SVG path data, for kind "path". Coordinates are in the parent.'),
 	cornerRadius: z.number().min(0).optional(),
 	text: z.string().optional(),
-	svg: z.string().optional().describe('SVG markup, for kind "svg". The frame width and height resize it.'),
+	svg: z
+		.string()
+		.optional()
+		.describe(
+			'SVG markup, for kind "svg". The viewBox maps onto the frame. Sketch trims empty space, so the layer ends up the size of the drawing, placed where the drawing sits in the viewBox.'
+		),
 	image: z.string().optional().describe('Absolute path to an image file, for kind "image".'),
 	symbol: z
 		.string()
