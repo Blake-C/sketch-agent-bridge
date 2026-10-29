@@ -8,6 +8,8 @@ const cocoaGlobals = {
 	NSImage: 'readonly',
 	NSTextAlignmentCenter: 'readonly',
 	NSFileManager: 'readonly',
+	NSFontItalicTrait: 'readonly',
+	NSFontManager: 'readonly',
 	NSHomeDirectory: 'readonly',
 	NSPasteboard: 'readonly',
 	NSPasteboardTypeString: 'readonly',

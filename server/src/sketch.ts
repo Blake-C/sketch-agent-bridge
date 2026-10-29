@@ -22,6 +22,7 @@ const replySchema = z.discriminatedUnion('ok', [
 		result: z.unknown(),
 		files: z.array(fileSchema).default([]),
 		render: z.object({ ids: z.array(z.string()), scale: z.number() }).optional(),
+		warnings: z.array(z.string()).optional(),
 	}),
 	z.object({ ok: z.literal(false), error: z.string() }),
 ])

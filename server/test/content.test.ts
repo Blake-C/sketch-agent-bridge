@@ -29,6 +29,19 @@ test('replyResult inlines PNGs and only inlines SVGs when asked', async () => {
 	assert.deepEqual(withSvg.content[2], { type: 'text', text: 'SVG for A:\n<svg/>' })
 })
 
+test('replyResult puts plugin warnings before the result', async () => {
+	const result = await replyResult({
+		ok: true,
+		result: { id: 'A' },
+		files: [],
+		warnings: ['Title: Avenir Next has no weight 7, so Sketch used 6.'],
+	})
+	assert.deepEqual(result.content, [
+		{ type: 'text', text: 'Warning: Title: Avenir Next has no weight 7, so Sketch used 6.' },
+		{ type: 'text', text: '{"result":{"id":"A"},"files":[]}' },
+	])
+})
+
 test('replyResult marks plugin errors', async () => {
 	const result = await replyResult({ ok: false, error: 'No layer has id X' })
 	assert.equal(result.isError, true)

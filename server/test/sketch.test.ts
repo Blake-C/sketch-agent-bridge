@@ -18,6 +18,12 @@ function requestFrom(args: string[]) {
 test('parseReply accepts success and error replies', () => {
 	assert.deepEqual(parseReply('{"ok":true,"result":{"a":1}}'), { ok: true, result: { a: 1 }, files: [] })
 	assert.deepEqual(parseReply('{"ok":false,"error":"nope"}'), { ok: false, error: 'nope' })
+	assert.deepEqual(parseReply('{"ok":true,"result":{},"warnings":["Font swapped"]}'), {
+		ok: true,
+		result: {},
+		files: [],
+		warnings: ['Font swapped'],
+	})
 })
 
 test('parseReply rejects bad JSON and bad shapes', () => {

@@ -14,7 +14,8 @@ export function errorResult(error: unknown): CallToolResult {
 
 export async function replyResult(reply: Reply, options: { inlineSvg?: boolean } = {}): Promise<CallToolResult> {
 	if (!reply.ok) return errorResult(reply.error)
-	const content: Content[] = [{ type: 'text', text: JSON.stringify({ result: reply.result, files: reply.files }) }]
+	const content: Content[] = (reply.warnings ?? []).map(warning => ({ type: 'text', text: `Warning: ${warning}` }))
+	content.push({ type: 'text', text: JSON.stringify({ result: reply.result, files: reply.files }) })
 	for (const file of reply.files) {
 		if (file.format === 'png') {
 			const data = await readFile(file.path)

@@ -29,6 +29,8 @@ On failure it writes `{ "ok": false, "error": "<message>" }`. Exported files go 
 
 A successful reply can also carry `"render": { "ids": [...], "scale": 1 }`. The plugin sends it from `build` and `createLayer` when they place a symbol instance or set overrides, and from `updateLayer` when it sets overrides or swaps the symbol. An export in the same plugin run still shows the instance's previous overrides and the size it had before Smart Layout resized it, and it leaves out symbols imported from a library during that run. The server then runs the `export` op in a second plugin run and returns that PNG.
 
+A successful reply can also carry `"warnings": ["..."]` when the op finished but Sketch did not do exactly what was asked. The server puts each warning at the top of the tool result, prefixed with `Warning:`. After applying a text style that sets `fontFamily` or `fontWeight`, the plugin reads both back, because Sketch uses the closest installed font without reporting it. It warns when the family is not installed, or when the family has no face at the requested weight, and the weight warning lists the weights the family does have.
+
 ## Ops
 
 Every op takes an optional `documentId`. Without it, the op uses the front document.

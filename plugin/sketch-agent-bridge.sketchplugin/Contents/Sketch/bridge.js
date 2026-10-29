@@ -1,4 +1,5 @@
 const { isInsideBridgeDir, standardize, writeText } = require('./files.js')
+const { takeWarnings } = require('./warnings.js')
 
 // Sketch 88.1 cannot build a CGRect on macOS 27 until CoreFoundation's BridgeSupport metadata is loaded. See CHALLENGES.md.
 const FRAMEWORKS = ['CoreFoundation', 'Foundation', 'CoreGraphics', 'AppKit']
@@ -46,11 +47,14 @@ function onBridge(context) {
 	FRAMEWORKS.forEach(name => framework(name))
 
 	let reply
+	takeWarnings()
 	try {
 		const op = Object.prototype.hasOwnProperty.call(ops, request.op) ? ops[request.op] : null
 		if (!op) throw new Error('Unknown op: ' + request.op)
 		const outcome = op(request.args || {}, request)
+		const warnings = takeWarnings()
 		reply = { ok: true, result: outcome.result, files: outcome.files || [], render: outcome.render }
+		if (warnings.length) reply.warnings = warnings
 	} catch (error) {
 		reply = { ok: false, error: errorMessage(error) }
 	}

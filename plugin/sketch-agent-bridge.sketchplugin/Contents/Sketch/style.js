@@ -1,5 +1,6 @@
 const sketch = require('sketch')
 const { findLocalOrImport } = require('./libraries.js')
+const { warn } = require('./warnings.js')
 
 const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'tif', 'tiff', 'webp', 'heic', 'bmp']
 const GRADIENT_TYPES = { linear: 'Linear', radial: 'Radial', angular: 'Angular' }
@@ -177,6 +178,42 @@ function setFontAxes(layer, values) {
 	layer.style.fontAxes = axes
 }
 
+function familyWeights(family) {
+	const members = NSFontManager.sharedFontManager().availableMembersOfFontFamily(family)
+	if (!members) return []
+	const weights = []
+	for (let index = 0; index < members.count(); index++) {
+		const member = members.objectAtIndex(index)
+		if (Number(member.objectAtIndex(3)) & NSFontItalicTrait) continue
+		weights.push({ weight: Number(member.objectAtIndex(2)), name: String(member.objectAtIndex(1)) })
+	}
+	return weights.sort((a, b) => a.weight - b.weight).map(face => face.weight + ' ' + face.name)
+}
+
+// Sketch quietly swaps in the closest font it has, so the applied family and weight are read back.
+function warnOnFontSubstitution(layer, textStyle) {
+	const family = String(layer.style.fontFamily)
+	if (textStyle.fontFamily !== undefined && family.toLowerCase() !== textStyle.fontFamily.toLowerCase()) {
+		warn(layer.name + ': font family ' + textStyle.fontFamily + ' is not installed, so Sketch used ' + family + '.')
+		return
+	}
+	const weight = Number(layer.style.fontWeight)
+	if (textStyle.fontWeight !== undefined && weight !== textStyle.fontWeight) {
+		warn(
+			layer.name +
+				': ' +
+				family +
+				' has no weight ' +
+				textStyle.fontWeight +
+				', so Sketch used ' +
+				weight +
+				'. Its weights are ' +
+				familyWeights(family).join(', ') +
+				'.'
+		)
+	}
+}
+
 function applyStyle(document, layer, style, textStyle) {
 	if (style) {
 		if (style.fills && layer.type === 'Artboard') {
@@ -207,6 +244,9 @@ function applyStyle(document, layer, style, textStyle) {
 		if (textStyle.alignment !== undefined) layer.style.alignment = toSketchAlignment(textStyle.alignment)
 		if (textStyle.textColor !== undefined) layer.style.textColor = resolveColor(document, textStyle.textColor)
 		if (textStyle.fontAxes !== undefined) setFontAxes(layer, textStyle.fontAxes)
+		if (textStyle.fontFamily !== undefined || textStyle.fontWeight !== undefined) {
+			warnOnFontSubstitution(layer, textStyle)
+		}
 	}
 }
 
