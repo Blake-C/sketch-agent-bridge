@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Fixed groups and compound shapes keeping their old bounds after `update_layers`, `duplicate_layer`, `delete_layer`, `build_layers`, `group_layers`, or `combine_shapes` changed the layers inside them. Every group and compound shape above a changed layer now refits, deepest first, the way Sketch does after a manual edit.
 - Fixed the document path in `sketch_status`, `save_document`, and Send Selection to Agent, which kept URL escapes such as `%20` for spaces, so the backup before each write could not find a file whose name has spaces.
 
 ## [0.4.0] - 2026-10-29

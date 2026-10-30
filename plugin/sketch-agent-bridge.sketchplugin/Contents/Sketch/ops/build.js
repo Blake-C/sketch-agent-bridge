@@ -6,6 +6,8 @@ const {
 	createNode,
 	moveInto,
 	fillGroup,
+	fitGroups,
+	groupsAbove,
 	artboardOf,
 	originIn,
 	summary,
@@ -82,7 +84,7 @@ function build(args, request) {
 		if (intoGroup) roots.forEach(root => moveInto(root, parent, parentOrigin.x, parentOrigin.y))
 		// A mask moved to the back of a group changes the group's size, so the group refits after the roots are placed.
 		if (args.order !== undefined) placeRoots(document, roots, args.order)
-		if (intoGroup) parent.adjustToFit()
+		if (intoGroup) fitGroups([parent].concat(groupsAbove(parent)))
 	} catch (error) {
 		created.reverse().forEach(layer => layer.remove())
 		throw error

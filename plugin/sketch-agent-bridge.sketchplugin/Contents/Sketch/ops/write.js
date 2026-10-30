@@ -6,6 +6,9 @@ const {
 	draftsPage,
 	wasCreatedByAgent,
 	setParent,
+	groupsAbove,
+	fitGroups,
+	fitAbove,
 	setFrame,
 	setCornerRadius,
 	setOrder,
@@ -82,7 +85,7 @@ function replaceSvg(document, layer, args) {
 	next.locked = layer.locked
 	tagCreated(next)
 	layer.remove()
-	if (parent.type === 'Group') parent.adjustToFit()
+	fitAbove([next])
 	return next
 }
 
@@ -131,31 +134,36 @@ function applyUpdate(document, found, args) {
 }
 
 // Updates that ran before a failed one are not rolled back, so every id is checked before the first change.
+// Groups refit after the last update, so every update's parent coordinates match the frames the agent read before the call.
 function updateLayers(args, request) {
 	const document = editableDocument(args)
 	const updates = args.updates || []
 	updates.forEach(update => findLayer(document, update.id))
 	const updated = []
 	let deferRender = false
-	updates.forEach((update, index) => {
-		try {
-			const outcome = applyUpdate(document, findLayer(document, update.id), update)
-			updated.push(outcome.layer)
-			deferRender = deferRender || outcome.deferRender
-		} catch (error) {
-			throw new Error(
-				'Update ' +
-					index +
-					' for ' +
-					update.id +
-					' failed, and the ' +
-					index +
-					' updates before it stay applied: ' +
-					String(error.message || error),
-				{ cause: error }
-			)
-		}
-	})
+	try {
+		updates.forEach((update, index) => {
+			try {
+				const outcome = applyUpdate(document, findLayer(document, update.id), update)
+				updated.push(outcome.layer)
+				deferRender = deferRender || outcome.deferRender
+			} catch (error) {
+				throw new Error(
+					'Update ' +
+						index +
+						' for ' +
+						update.id +
+						' failed, and the ' +
+						index +
+						' updates before it stay applied: ' +
+						String(error.message || error),
+					{ cause: error }
+				)
+			}
+		})
+	} finally {
+		fitAbove(updated)
+	}
 	const options = Object.assign({ render: 'artboard' }, args)
 	const reply = { result: { updated: updated.map(summary) } }
 	if (deferRender) return Object.assign(reply, { files: [], render: renderRequest(updated[0], options) })
@@ -219,7 +227,9 @@ function deleteLayer(args) {
 		)
 	}
 	const removed = layers.map(layer => ({ id: layer.id, name: layer.name, type: layer.type }))
+	const above = layers.reduce((groups, layer) => groups.concat(groupsAbove(layer)), [])
 	layers.forEach(layer => layer.remove())
+	fitGroups(above)
 	return { result: { removed } }
 }
 

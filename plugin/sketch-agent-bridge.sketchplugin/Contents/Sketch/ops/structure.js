@@ -11,6 +11,7 @@ const {
 	bounds,
 	moveInto,
 	fillGroup,
+	fitAbove,
 	summary,
 	renderFiles,
 	result,
@@ -33,6 +34,7 @@ function groupLayers(args, request) {
 	const group = new sketch.Group({ name: args.name || 'Group', parent, frame: bounds(layers) })
 	group.index = layers[layers.length - 1].index
 	fillGroup(group, layers)
+	fitAbove([group])
 	tagCreated(group)
 	return result(document, group, args, request)
 }
@@ -57,6 +59,7 @@ function combineShapes(args, request) {
 	fillGroup(shape, layers)
 	layers.forEach(layer => layer.sketchObject.setBooleanOperation(operation))
 	shape.adjustToFit()
+	fitAbove([shape])
 	tagCreated(shape)
 	return result(document, shape, args, request)
 }
@@ -133,6 +136,7 @@ function duplicateLayers(args, request) {
 		tagCreated(copy)
 		return copy
 	})
+	fitAbove(copies)
 	return {
 		result: { duplicated: copies.map(summary) },
 		files: renderFiles(copies[0], args, request),

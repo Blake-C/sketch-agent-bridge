@@ -72,12 +72,35 @@ function setParent(document, layer, parentId) {
 		if (node.id === layer.id) throw new Error('A layer cannot move into itself or one of its children')
 	}
 	const previous = layer.parent
+	const left = groupsAbove(layer)
 	const frame = layer.frame.changeBasis({ from: previous, to: parent })
 	layer.parent = parent
 	layer.frame = frame
-	;[previous, parent].forEach(group => {
-		if (group.type === 'Group' && group.layers.length > 0) group.adjustToFit()
+	fitGroups(left.concat(groupsAbove(layer)))
+}
+
+function groupsAbove(layer) {
+	const groups = []
+	for (let node = layer.parent; node && GROUP_TYPES.includes(node.type); node = node.parent) groups.push(node)
+	return groups
+}
+
+// A group's bounds come from its children's bounds, so the deepest groups refit first. Sketch removes a group when its last child goes, so removed groups are skipped.
+function fitGroups(groups) {
+	const unique = {}
+	groups.forEach(group => {
+		if (GROUP_TYPES.includes(group.type) && group.parent) unique[group.id] = group
 	})
+	Object.keys(unique)
+		.map(id => ({ group: unique[id], depth: groupsAbove(unique[id]).length }))
+		.sort((a, b) => b.depth - a.depth)
+		.forEach(entry => {
+			if (entry.group.layers.length > 0) entry.group.adjustToFit()
+		})
+}
+
+function fitAbove(layers) {
+	fitGroups(layers.reduce((groups, layer) => groups.concat(groupsAbove(layer)), []))
 }
 
 function setFrame(layer, frame) {
@@ -639,6 +662,9 @@ module.exports = {
 	wasCreatedByAgent,
 	SHAPE_PART_TYPES,
 	setParent,
+	groupsAbove,
+	fitGroups,
+	fitAbove,
 	setFrame,
 	setCornerRadius,
 	setOrder,

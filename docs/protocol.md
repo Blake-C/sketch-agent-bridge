@@ -183,6 +183,7 @@ These paths can be absolute or start with `~/`, which the plugin expands to the 
 - Layers created by a write op get the layer setting `createdByAgent`, which `deleteLayer` checks unless `force` is true.
 - Changing a text layer's text keeps its name when the name was set to something other than the old text.
 - Swapping an instance to another symbol renames it to the new symbol, unless the instance had a name of its own.
+- After a write op changes, adds, moves, or removes a layer inside a group or a `Shape`, the plugin calls `adjustToFit()` on every group and `Shape` above it, up to the artboard, symbol master, or page, starting with the deepest. This is what Sketch does after a manual edit. Without it a group keeps its old bounds, so its selection box covers empty space and blocks clicks on the layers below it. The refit does not move anything on the canvas, but the frames of the layers inside a refit group change, because they are relative to the group.
 
 ### Colors and fills
 
@@ -234,7 +235,7 @@ An `updateLayers` entry takes `svg` or `svgFile` to replace the drawing of a gro
 
 ### Several updates in one call
 
-`updateLayers` takes `updates`, a list of up to 200 entries, and runs them in order in one plugin run. It looks up every `id` before it changes anything, so a request with an unknown id changes nothing. A change can still fail partway through the list, and the plugin does not roll back the updates before it, so those updates stay applied and the error names the index of the failed update. The reply lists each updated layer and renders the artboard of the first one once at the end.
+`updateLayers` takes `updates`, a list of up to 200 entries, and runs them in order in one plugin run. It looks up every `id` before it changes anything, so a request with an unknown id changes nothing. A change can still fail partway through the list, and the plugin does not roll back the updates before it, so those updates stay applied and the error names the index of the failed update. Groups refit once after the last update, including when an update fails, so a `frame` in parent coordinates in a later update is relative to the parent's frame from before the call. The exceptions are `parentId`, `mask`, `breaksMask`, and `booleanOperation`, which refit the groups they affect as soon as their update runs. The reply lists each updated layer and renders the artboard of the first one once at the end.
 
 ### Text runs
 
