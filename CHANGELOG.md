@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Changed write tools to refuse a call without `documentId` while more than one document is open in Sketch, because a copy of a file keeps the original's layer ids and a write could change the wrong file. The error lists the open documents with their ids and paths.
 - Changed `style` to refuse image fills on image layers, because the fill draws over the layer's picture and Color Adjust does not apply to it.
 - Changed the `rotation` description to say that rotation is clockwise.
 - Changed CI to run on pushes to `dev` as well as `main`, and Dependabot to open its pull requests against `dev`, where development now happens before it is merged into `main`.

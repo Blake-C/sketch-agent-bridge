@@ -6,7 +6,7 @@ const ASSET_PATH_RULE =
 export const documentId = z
 	.string()
 	.optional()
-	.describe('Document id from sketch_status. Defaults to the front document.')
+	.describe('Document id from sketch_status. Needed if several documents are open.')
 
 export const hex = z.string().regex(/^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/, 'Use #rrggbb or #rrggbbaa')
 

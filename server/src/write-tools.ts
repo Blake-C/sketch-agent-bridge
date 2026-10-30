@@ -52,6 +52,16 @@ export async function waitForSave(file: string, before: number, wait: SaveWait =
 	}
 }
 
+// Copies of a .sketch file keep the same layer ids, so a layer id alone can match a layer in the wrong open document.
+function ambiguousDocument(documents: { id: string; name: string; path: string | null }[]): BridgeError {
+	const list = documents
+		.map(document => `"${document.name}" (documentId ${document.id}${document.path ? `, ${document.path}` : ''})`)
+		.join('; ')
+	return new BridgeError(
+		`${documents.length} documents are open in Sketch, so a write needs documentId to say which one to change. Open documents: ${list}.`
+	)
+}
+
 export async function callWrite(
 	bridge: SketchBridge,
 	backups: Backups,
@@ -63,6 +73,7 @@ export async function callWrite(
 		const { reply: statusReply } = await bridge.call('status', {})
 		if (!statusReply.ok) return errorResult(statusReply.error)
 		const status = statusSchema.parse(statusReply.result)
+		if (args.documentId === undefined && status.documents.length > 1) throw ambiguousDocument(status.documents)
 		const targetId = (args.documentId as string | undefined) ?? status.selectedDocumentId ?? status.documents[0]?.id
 		const document = status.documents.find(candidate => candidate.id === targetId)
 		if (!document) throw new BridgeError('No matching document is open in Sketch')

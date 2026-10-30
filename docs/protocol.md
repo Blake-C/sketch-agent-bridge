@@ -37,7 +37,7 @@ A successful reply can also carry `"warnings": ["..."]` when the op finished but
 
 ## Ops
 
-Every op takes an optional `documentId`. Without it, the op uses the front document.
+Every op takes an optional `documentId`. Without it, the op uses the front document. The server refuses a write op without `documentId` while more than one document is open, and the error lists each open document's name, id, and path. A copy of a `.sketch` file keeps the original's layer ids, so with the original and a copy both open, a layer id alone could change the wrong file. Read ops still use the front document.
 
 | Op                  | MCP tool                            | Args                                                                                                                                                                                                                                                                                                                                                                            |
 | ------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
