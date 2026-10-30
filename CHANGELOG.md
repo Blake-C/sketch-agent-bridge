@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Added a `fit_groups` tool, which refits groups and compound shapes to their children without moving anything, for files whose group bounds were left wrong by an earlier version. It keeps ids and layer order, and with `recursive` it repairs every group in an artboard or page in one call.
 - Added `image` to `update_layers`, which replaces the picture of an image layer and keeps its frame and Color Adjust.
 - Added `fixedHeight` to text nodes in `build_layers` and to `update_layers`, which keeps a text layer's frame height so `verticalAlignment` can center or bottom-align the text. A text node with a frame height in `build_layers` now gets a fixed height.
 

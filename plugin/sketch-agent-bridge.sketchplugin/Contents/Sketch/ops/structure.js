@@ -12,6 +12,9 @@ const {
 	moveInto,
 	fillGroup,
 	fitAbove,
+	groupsAbove,
+	refitGroups,
+	GROUP_TYPES,
 	summary,
 	renderFiles,
 	result,
@@ -79,6 +82,38 @@ function ungroupLayer(args, request) {
 	}
 }
 
+function groupsInside(layer) {
+	return (layer.layers || []).reduce((groups, child) => {
+		const inside = groupsInside(child)
+		return GROUP_TYPES.includes(child.type) ? groups.concat([child], inside) : groups.concat(inside)
+	}, [])
+}
+
+// Repairs group bounds left wrong by an earlier edit, keeping ids, layer order, and every layer's place on the canvas.
+function fitGroups(args, request) {
+	const document = editableDocument(args)
+	const ids = args.ids || []
+	if (ids.length === 0) throw new Error('Pass at least one layer id')
+	const recursive = args.recursive !== false
+	const targets = ids.map(id => findLayer(document, id))
+	const refused = targets.filter(target => !GROUP_TYPES.includes(target.type) && !(recursive && target.layers))
+	if (refused.length > 0) {
+		throw new Error(
+			'Only groups and shapes can be fit, or with recursive an artboard, symbol master, or page: ' +
+				refused.map(layer => layer.name).join(', ')
+		)
+	}
+	const groups = targets.reduce(
+		(all, target) => all.concat(recursive ? groupsInside(target) : [], [target], groupsAbove(target)),
+		[]
+	)
+	const fitted = refitGroups(groups)
+	return {
+		result: { fitted: fitted.map(summary) },
+		files: targets[0].type === 'Page' ? [] : renderFiles(targets[0], args, request),
+	}
+}
+
 function overrideList(instance) {
 	return instance.overrides
 		.filter(override => override.editable !== false)
@@ -143,4 +178,4 @@ function duplicateLayers(args, request) {
 	}
 }
 
-module.exports = { groupLayers, combineShapes, ungroupLayer, createSymbol, duplicate: duplicateLayers }
+module.exports = { groupLayers, combineShapes, ungroupLayer, fitGroups, createSymbol, duplicate: duplicateLayers }

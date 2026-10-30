@@ -215,6 +215,28 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 	)
 
 	server.registerTool(
+		'fit_groups',
+		{
+			title: 'Fit groups',
+			description:
+				'Refits groups and combined shapes to their children without moving anything on the canvas, for a file whose group bounds no longer match their layers. Keeps ids and layer order. Groups above each target refit too.',
+			inputSchema: {
+				documentId,
+				ids: z.array(z.string()).min(1).max(50),
+				recursive: z
+					.boolean()
+					.optional()
+					.describe(
+						'Also refit every group inside each target, deepest first, and accept artboards, symbol masters, and pages as targets. Default true.'
+					),
+				...render,
+			},
+			annotations: additive,
+		},
+		write('fitGroups')
+	)
+
+	server.registerTool(
 		'duplicate_layer',
 		{
 			title: 'Duplicate layers',

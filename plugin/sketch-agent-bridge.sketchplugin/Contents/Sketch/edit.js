@@ -76,7 +76,7 @@ function setParent(document, layer, parentId) {
 	const frame = layer.frame.changeBasis({ from: previous, to: parent })
 	layer.parent = parent
 	layer.frame = frame
-	fitGroups(left.concat(groupsAbove(layer)))
+	refitGroups(left.concat(groupsAbove(layer)))
 }
 
 function groupsAbove(layer) {
@@ -86,21 +86,22 @@ function groupsAbove(layer) {
 }
 
 // A group's bounds come from its children's bounds, so the deepest groups refit first. Sketch removes a group when its last child goes, so removed groups are skipped.
-function fitGroups(groups) {
+function refitGroups(groups) {
 	const unique = {}
 	groups.forEach(group => {
 		if (GROUP_TYPES.includes(group.type) && group.parent) unique[group.id] = group
 	})
-	Object.keys(unique)
+	const fitted = Object.keys(unique)
 		.map(id => ({ group: unique[id], depth: groupsAbove(unique[id]).length }))
 		.sort((a, b) => b.depth - a.depth)
-		.forEach(entry => {
-			if (entry.group.layers.length > 0) entry.group.adjustToFit()
-		})
+		.map(entry => entry.group)
+		.filter(group => group.layers.length > 0)
+	fitted.forEach(group => group.adjustToFit())
+	return fitted
 }
 
 function fitAbove(layers) {
-	fitGroups(layers.reduce((groups, layer) => groups.concat(groupsAbove(layer)), []))
+	refitGroups(layers.reduce((groups, layer) => groups.concat(groupsAbove(layer)), []))
 }
 
 function setFrame(layer, frame) {
@@ -661,9 +662,10 @@ module.exports = {
 	tagCreated,
 	wasCreatedByAgent,
 	SHAPE_PART_TYPES,
+	GROUP_TYPES,
 	setParent,
 	groupsAbove,
-	fitGroups,
+	refitGroups,
 	fitAbove,
 	setFrame,
 	setCornerRadius,

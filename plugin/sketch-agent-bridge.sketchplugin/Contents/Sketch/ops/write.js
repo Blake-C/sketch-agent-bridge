@@ -7,7 +7,7 @@ const {
 	wasCreatedByAgent,
 	setParent,
 	groupsAbove,
-	fitGroups,
+	refitGroups,
 	fitAbove,
 	setFrame,
 	setCornerRadius,
@@ -229,7 +229,7 @@ function deleteLayer(args) {
 	const removed = layers.map(layer => ({ id: layer.id, name: layer.name, type: layer.type }))
 	const above = layers.reduce((groups, layer) => groups.concat(groupsAbove(layer)), [])
 	layers.forEach(layer => layer.remove())
-	fitGroups(above)
+	refitGroups(above)
 	return { result: { removed } }
 }
 
