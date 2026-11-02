@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Added `SECURITY.md`, which asks for vulnerability reports through GitHub's private reporting and lists what counts as a security problem.
 - Added a pre-commit hook in `.githooks/` that runs gitleaks on the staged changes.
 - Added `pnpm audit signatures` and `pnpm audit --audit-level=high` to CI.
 - Added a daily CI run on `main`, so `pnpm audit` catches a new advisory without a push. GitHub's dependency graph reads only the part of `pnpm-lock.yaml` that pins pnpm itself, so Dependabot alerts do not cover the project's packages.
