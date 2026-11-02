@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Changed the Dockerfile to install the pnpm binary from a tarball checked against its SHA-512, in place of `npm install --global pnpm`.
 - Changed pnpm to stop with an error when `node_modules` is out of date before a script runs. pnpm used to start an install first, which hung in the `offline` Docker service because it has no network.
 
 ## [0.5.0] - 2026-11-01
