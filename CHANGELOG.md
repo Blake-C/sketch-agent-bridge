@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Changed pnpm to stop with an error when `node_modules` is out of date before a script runs. pnpm used to start an install first, which hung in the `offline` Docker service because it has no network.
+
 ## [0.5.0] - 2026-11-01
 
 ### Added
