@@ -7,11 +7,16 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Added a pre-commit hook in `.githooks/` that runs gitleaks on the staged changes.
+- Added `pnpm audit signatures` and `pnpm audit --audit-level=high` to CI.
 
 ### Changed
 
 - Changed the Dockerfile to install the pnpm binary from a tarball checked against its SHA-512, in place of `npm install --global pnpm`.
 - Changed pnpm to stop with an error when `node_modules` is out of date before a script runs. pnpm used to start an install first, which hung in the `offline` Docker service because it has no network.
+
+### Fixed
+
+- Fixed `pnpm audit` reporting a high severity advisory in `body-parser` below 2.4.0, which `@modelcontextprotocol/sdk` pulls in through `express`. An override in `pnpm-workspace.yaml` now requires 2.4.0 or later.
 
 ## [0.5.0] - 2026-11-01
 

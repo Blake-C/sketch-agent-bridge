@@ -5,3 +5,5 @@ blockExoticSubdeps: true
 allowBuilds:
     esbuild: true
 verifyDepsBeforeRun: error
+overrides:
+    body-parser: ^2.4.0
