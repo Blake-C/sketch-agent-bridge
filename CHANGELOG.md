@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-11-01
+
 ### Added
 
 - Added `SECURITY.md`, which asks for vulnerability reports through GitHub's private reporting and lists what counts as a security problem.
