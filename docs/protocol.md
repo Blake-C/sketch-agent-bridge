@@ -133,6 +133,8 @@ Assigning a library text style with `syncWithSharedStyle` links the style withou
 
 `export` writes each layer as `png`, `svg`, or `json` into `replyDir/exports/<layerId>/`. The server returns a PNG as an image and an SVG as its markup. JSON is the layer in Sketch's file format, which Sketch writes with `sketch.export`, and the server returns it as text when it is 100 KB or smaller and as a path otherwise. One artboard in the test document came to 510 KB of JSON.
 
+Hosts refuse a tool result much over 1 MB, and 50 SVG exports that are each under 100 KB can add up to more than that. So the server stops inlining once a reply holds 200 KB of SVG and JSON text or 8 MB of PNGs, and lists the remaining files by path at the end of the result. `inline: false` on `export_layers` returns only the reply with its file paths, for an agent that exports many layers to read them from disk.
+
 Sketch names a PNG with a scale that can differ from the one used, such as `@1x` for 1.5, so the plugin renames each PNG to `<layerId>@<scale>x.png` with the scale that was asked for.
 
 `region` crops each PNG to `{ x, y, width, height }`, measured in points from the top-left corner of the layer, so one section of a tall artboard can be checked at full scale. The plugin exports the whole layer with `trimmed` turned off, crops it with `CGImageCreateWithImageInRect`, and writes the crop over the PNG. It refuses a region that does not overlap the layer.

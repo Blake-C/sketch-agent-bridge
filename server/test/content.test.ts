@@ -67,3 +67,29 @@ test('replyResult inlines JSON exports and gives the path of large ones', async 
 	assert.deepEqual(result.content[1], { type: 'text', text: 'JSON for A:\n{"_class":"text"}' })
 	assert.deepEqual(result.content[2], { type: 'text', text: `JSON for B is too large to show inline: ${large}` })
 })
+
+test('replyResult stops inlining text once the reply budget is spent and lists the rest by path', async () => {
+	const dir = await mkdtemp(path.join(tmpdir(), 'content-test-'))
+	const files = []
+	for (let k = 0; k < 4; k++) {
+		const file = path.join(dir, `${k}.svg`)
+		await writeFile(file, `<svg>${'x'.repeat(90 * 1024)}</svg>`)
+		files.push({ layerId: String(k), format: 'svg', path: file })
+	}
+	const result = await replyResult({ ok: true, result: {}, files }, { inlineSvg: true })
+	const texts = result.content.map(item => (item.type === 'text' ? item.text : ''))
+	assert.equal(texts.filter(text => text.startsWith('SVG for')).length, 2)
+	assert.match(texts.at(-1) ?? '', /^2 more files are not shown inline/)
+	assert.ok(texts.at(-1)?.includes(files[3].path))
+})
+
+test('replyResult returns only the file paths with inline false', async () => {
+	const dir = await mkdtemp(path.join(tmpdir(), 'content-test-'))
+	const svg = path.join(dir, 'a.svg')
+	await writeFile(svg, '<svg/>')
+	const result = await replyResult(
+		{ ok: true, result: {}, files: [{ layerId: 'A', format: 'svg', path: svg }] },
+		{ inlineSvg: true, inline: false }
+	)
+	assert.equal(result.content.length, 1)
+})

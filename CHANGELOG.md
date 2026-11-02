@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Added `inline: false` to `export_layers`, which returns only the file paths.
 - Added a `fit_groups` tool, which refits groups and compound shapes to their children without moving anything, for files whose group bounds were left wrong by an earlier version. It keeps ids and layer order, and with `recursive` it repairs every group in an artboard or page in one call.
 - Added `image` to `update_layers`, which replaces the picture of an image layer and keeps its frame and Color Adjust.
 - Added `fixedHeight` to text nodes in `build_layers` and to `update_layers`, which keeps a text layer's frame height so `verticalAlignment` can center or bottom-align the text. A text node with a frame height in `build_layers` now gets a fixed height.
@@ -21,6 +22,7 @@ All notable changes to this project will be documented in this file.
 
 - Fixed `ungroup_layer` moving the group's children to the front of the parent. They now take the group's place in the stack, in the same order.
 - Fixed SVG imports in `build_layers` and `update_layers` showing elements that have `visibility="hidden"` or `display="none"`. Those elements now become hidden layers.
+- Fixed `export_layers` replies going over the host's size limit when many SVG or JSON exports were each under 100 KB. A reply now stops inlining after 200 KB of text or 8 MB of PNGs and lists the remaining files by path.
 - Fixed groups and compound shapes keeping their old bounds after `update_layers`, `duplicate_layer`, `delete_layer`, `build_layers`, `group_layers`, or `combine_shapes` changed the layers inside them. Every group and compound shape above a changed layer now refits, deepest first, the way Sketch does after a manual edit.
 - Fixed the document path in `sketch_status`, `save_document`, and Send Selection to Agent, which kept URL escapes such as `%20` for spaces, so the backup before each write could not find a file whose name has spaces.
 
