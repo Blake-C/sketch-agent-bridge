@@ -24,6 +24,10 @@ const SHAPE_KINDS = { rectangle: 'Rectangle', oval: 'Oval', triangle: 'Triangle'
 const LINE_SPACINGS = ['natural', 'system', 'variable', 'constantBaseline']
 const ORDER_MOVES = { front: 'moveToFront', back: 'moveToBack', forward: 'moveForward', backward: 'moveBackward' }
 const SVG_BOUNDS_NAME = 'sketch-agent-bridge-svg-bounds'
+// Sketch imports elements with visibility="hidden" or display="none" as visible layers, so they are tagged with
+// this suffix on their id before import and hidden by name afterward.
+const SVG_HIDDEN_MARK = ' [sketch-agent-bridge-hidden]'
+const SVG_HIDDEN_ATTRIBUTE = /\s(?:visibility\s*=\s*["']hidden["']|display\s*=\s*["']none["'])/
 const NO_BOOLEAN_OPERATION = -1
 const NONZERO_WINDING = 0
 
@@ -481,6 +485,31 @@ function svgWithSize(svg, givenWidth, givenHeight) {
 	})
 }
 
+function markHiddenElements(svg) {
+	return svg.replace(/<([A-Za-z][\w:-]*)(\s[^>]*?)?(\/?)>/g, (tag, name, attributes, close) => {
+		if (!attributes || !SVG_HIDDEN_ATTRIBUTE.test(attributes)) return tag
+		let next = attributes.replace(new RegExp(SVG_HIDDEN_ATTRIBUTE.source, 'g'), '')
+		if (/\sid\s*=\s*["']/.test(next)) {
+			next = next.replace(
+				/(\sid\s*=\s*)(["'])(.*?)\2/,
+				(match, prefix, quote, id) => prefix + quote + id + SVG_HIDDEN_MARK + quote
+			)
+		} else {
+			next = ' id="' + SVG_HIDDEN_MARK.trim() + '"' + next
+		}
+		return '<' + name + next + close + '>'
+	})
+}
+
+function hideMarkedLayers(layer) {
+	if (layer.name && layer.name.indexOf(SVG_HIDDEN_MARK.trim()) !== -1) {
+		const name = layer.name.replace(SVG_HIDDEN_MARK, '').replace(SVG_HIDDEN_MARK.trim(), '').trim()
+		layer.name = name || (layer.type === 'Group' ? 'Group' : 'Shape')
+		layer.hidden = true
+	}
+	;(layer.layers || []).forEach(hideMarkedLayers)
+}
+
 function findByName(layer, name) {
 	if (layer.name === name) return layer
 	const children = layer.layers || []
@@ -493,7 +522,8 @@ function findByName(layer, name) {
 
 // Sketch trims the empty space around imported SVG content, so a marker rect the size of the viewBox shows where the content sat in the frame.
 function createSvgLayer(parent, svg, frame) {
-	const layer = sketch.createLayerFromData(svgWithSize(svg, frame.width, frame.height), 'svg')
+	const layer = sketch.createLayerFromData(svgWithSize(markHiddenElements(svg), frame.width, frame.height), 'svg')
+	hideMarkedLayers(layer)
 	layer.parent = parent
 	setFrame(layer, { x: frame.x || 0, y: frame.y || 0 })
 	const marker = findByName(layer, SVG_BOUNDS_NAME)
