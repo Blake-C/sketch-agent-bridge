@@ -83,6 +83,7 @@ These tools do not call the plugin:
 
 - `list_inbox` and `get_inbox_item` read `~/.sketch-agent-bridge/inbox/`.
 - `fetch_images` calls the Unsplash API. See [Fetching images](#fetching-images).
+- `diff_snapshots` reads two snapshot files. `snapshot_artboard` runs only the `export` op. See [Snapshots](#snapshots).
 
 ## Finding layers
 
@@ -323,6 +324,12 @@ Write replies are sized to keep the agent's context small:
 The reply has an `images` list, where each entry has the file `path` and a `credit` with `photographer`, `profileUrl`, and `text`, such as "Photo by Annie Spratt on Unsplash". The [Unsplash API guidelines](https://help.unsplash.com/en/articles/2511245-unsplash-api-guidelines) require crediting the photographer and Unsplash with a link to the photographer's profile, and `profileUrl` carries the `utm_source` and `utm_medium` parameters that the [attribution guideline](https://help.unsplash.com/en/articles/2511315-guideline-attribution) asks for. The same API guidelines require a request to each photo's `download_location`, which the server sends after saving the photo. When the `download_location` request fails, the photo is kept, and `warnings` gets the HTTP status with the first error Unsplash sent, such as a rate limit message.
 
 The server downloads photos only from `https://images.unsplash.com` and sends download requests only to `https://api.unsplash.com`, so a link in the Unsplash reply that points anywhere else is refused. A download also has to come back with an `image/` content type. When some downloads fail and others succeed, the reply has the photos that downloaded and a warning for each one that did not.
+
+## Snapshots
+
+`snapshot_artboard` exports the artboard as JSON with the `export` op and reduces it to one record per layer, keyed by layer id: its name, the names of the groups above it, its class, parent, stacking index, frame in artboard coordinates, rotation, flips, visibility, lock, opacity, fills, borders, mask flag, text, and a hash of its points. Embedded images are dropped. The server writes the snapshot to `~/.sketch-agent-bridge/snapshots/<name>.json` with mode 0600, replacing any snapshot with that name, and never deletes it. A name is lowercase letters, digits, and dashes, so it cannot point outside that folder.
+
+`diff_snapshots` matches layers by id, which stays the same when a layer is moved, renamed, or restyled, and lists added and deleted layers, renames, moves into another group, moves and resizes, point edits, rotation, flips, visibility, lock, opacity, fills, borders, masks, text, and stacking order changes inside each group. A layer that moved by the same amount as its parent is reported only on the parent. Duplicating a layer in Sketch gives the copy a new id, so a duplicate shows up as an added layer. `from`, `to`, and `snapshot_artboard`'s `compareTo` take a snapshot name or an absolute path to a `.json` file inside `~/.sketch-agent-bridge/` or a folder in `SKETCH_AGENT_BRIDGE_ASSET_DIRS`, so a project can keep its baseline in its own repo. The format matches the `sketch_sync.py` tool in the music-vizualizr repo, apart from the point hash, so the diff skips point edits between snapshots with different `version` values and says so.
 
 ## Fonts
 

@@ -15,6 +15,7 @@ An agent connected to the MCP server can do the things listed below in the open 
 - read the lines a text layer wraps into, and whether the text overflows its frame
 - find text layers that another layer crosses, such as a shape drawn over a heading
 - see which layers no longer match their shared style
+- snapshot an artboard and list what someone changed by hand since an earlier snapshot
 
 ### Create layers
 

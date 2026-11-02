@@ -6,6 +6,7 @@ import { registerFontTools } from './font-tools.ts'
 import { registerImageTools } from './image-tools.ts'
 import { registerReadTools } from './read-tools.ts'
 import { SketchBridge } from './sketch.ts'
+import { registerSnapshotTools } from './snapshot-tools.ts'
 import { registerWriteTools } from './write-tools.ts'
 
 const server = new McpServer({ name: 'sketch-agent-bridge', version: packageJson.version })
@@ -15,5 +16,6 @@ registerReadTools(server, bridge)
 registerWriteTools(server, bridge, new Backups(bridge.bridgeDir))
 registerImageTools(server, bridge)
 registerFontTools(server, bridge)
+registerSnapshotTools(server, bridge)
 
 await server.connect(new StdioServerTransport())

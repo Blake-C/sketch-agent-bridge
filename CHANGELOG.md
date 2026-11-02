@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Added `snapshot_artboard` and `diff_snapshots`, which record every layer of an artboard and list what changed between two snapshots, so an agent can see what someone edited by hand. Snapshots are kept in `~/.sketch-agent-bridge/snapshots/`, and a diff can also read a baseline kept in a folder from `SKETCH_AGENT_BRIDGE_ASSET_DIRS`.
 - Added `inline: false` to `export_layers`, which returns only the file paths.
 - Added a `fit_groups` tool, which refits groups and compound shapes to their children without moving anything, for files whose group bounds were left wrong by an earlier version. It keeps ids and layer order, and with `recursive` it repairs every group in an artboard or page in one call.
 - Added `image` to `update_layers`, which replaces the picture of an image layer and keeps its frame and Color Adjust.
