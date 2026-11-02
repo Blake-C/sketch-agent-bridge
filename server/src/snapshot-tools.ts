@@ -54,7 +54,7 @@ export function registerSnapshotTools(server: McpServer, bridge: SketchBridge) {
 		{
 			title: 'Snapshot artboard',
 			description:
-				'Records every layer of an artboard (name, group, stacking index, frame, rotation, flips, visibility, lock, opacity, fills, borders, mask, text, and a hash of its points) to ~/.sketch-agent-bridge/snapshots/<name>.json, replacing a snapshot with that name. Take one before someone edits the artboard by hand and one after, then diff them to list the edits. With compareTo it also returns the diff from that snapshot. Snapshots are kept until deleted.',
+				'Saves a snapshot of every layer of an artboard to ~/.sketch-agent-bridge/snapshots/<name>.json, replacing one with that name. Take one before a hand edit and one after, then diff them. compareTo also returns the diff.',
 			inputSchema: {
 				documentId,
 				id: z.string().describe('Artboard id.'),
