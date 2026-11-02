@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Added a pre-commit hook in `.githooks/` that runs gitleaks on the staged changes.
+
 ### Changed
 
 - Changed the Dockerfile to install the pnpm binary from a tarball checked against its SHA-512, in place of `npm install --global pnpm`.
