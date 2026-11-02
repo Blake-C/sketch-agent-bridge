@@ -32,9 +32,13 @@ These commands all run through Docker. Only `pnpm install` uses the `dev` servic
 - `docker compose run --rm offline pnpm format`
 - `docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f git /repo`
 
-GitHub Actions runs `pnpm check`, `pnpm build`, and gitleaks on each push to `main` or `dev` and each pull request, from `.github/workflows/ci.yml`. Dependabot opens weekly pull requests against `dev` for npm packages, Actions, and the Docker base image, and waits 7 days after a release, which matches `minimumReleaseAge` in `pnpm-workspace.yaml`. Dependabot skips major versions of TypeScript, because typescript-eslint 8.72.0 refuses to load with TypeScript 7, and of the Node image, because the Node major is also set in `engines`, the esbuild target, and CI. Actions and images are pinned to a commit SHA or digest, with the version in a comment or tag.
+`.githooks/pre-commit` runs gitleaks on the staged changes and blocks the commit if it finds a secret or if Docker is not running. Git uses it after `git config core.hooksPath .githooks`, which each clone has to run once.
 
-Docker's socket is blocked by the Claude Code sandbox, so Docker commands need the sandbox turned off for that one command.
+The Dockerfile installs pnpm from the `@pnpm/exe.linux-*-musl` package for the build's architecture and refuses a tarball whose SHA-512 differs from the one in its `ARG` lines. Those sums match the lockfile, so a pnpm upgrade changes `packageManager` in `package.json`, the lockfile, and the version and both sums in the Dockerfile.
+
+GitHub Actions runs `pnpm audit signatures`, `pnpm audit --audit-level=high`, `pnpm check`, `pnpm build`, and gitleaks on each push to `main` or `dev` and each pull request, from `.github/workflows/ci.yml`. It also runs them on `main` every day at 06:17 UTC, so a new advisory fails a run without a push. Dependabot alerts cannot do this, because GitHub's dependency graph reads only the first YAML document in `pnpm-lock.yaml`, which pins pnpm itself. GitHub turns that schedule off after 60 days with no activity in the repository. Dependabot opens weekly pull requests against `dev` for npm packages, Actions, and the Docker base image, and waits 7 days after a release, which matches `minimumReleaseAge` in `pnpm-workspace.yaml`. Dependabot skips major versions of TypeScript, because typescript-eslint 8.72.0 refuses to load with TypeScript 7, and of the Node image, because the Node major is also set in `engines`, the esbuild target, and CI. Actions and images are pinned to a commit SHA or digest, with the version in a comment or tag.
+
+Docker's socket is blocked by the Claude Code sandbox, so Docker commands need the sandbox turned off for that one command. That includes `git commit`, because the pre-commit hook runs gitleaks in Docker.
 
 ## Branches
 

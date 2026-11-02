@@ -4,6 +4,8 @@ on:
     push:
         branches: [main, dev]
     pull_request:
+    schedule:
+        - cron: '17 6 * * *'
 
 permissions:
     contents: read
@@ -21,6 +23,8 @@ jobs:
                   node-version: 24
                   cache: pnpm
             - run: pnpm install --frozen-lockfile
+            - run: pnpm audit signatures
+            - run: pnpm audit --audit-level=high
             - run: pnpm check
             - run: pnpm build
 

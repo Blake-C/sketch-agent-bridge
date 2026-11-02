@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-11-01
+
+### Added
+
+- Added `SECURITY.md`, which asks for vulnerability reports through GitHub's private reporting and lists what counts as a security problem.
+- Added a pre-commit hook in `.githooks/` that runs gitleaks on the staged changes.
+- Added `pnpm audit signatures` and `pnpm audit --audit-level=high` to CI.
+- Added a daily CI run on `main`, so `pnpm audit` catches a new advisory without a push. GitHub's dependency graph reads only the part of `pnpm-lock.yaml` that pins pnpm itself, so Dependabot alerts do not cover the project's packages.
+- Added `.npmrc` with the npm registry, and `saveExact` and `engineStrict` to `pnpm-workspace.yaml`.
+- Added `"pnpm": ">=12"` to `engines` in `package.json`.
+- Added `minimumReleaseAgeIgnoreMissingTime: false`, so pnpm refuses a package whose registry metadata has no publish times instead of skipping the release age check for it.
+
+### Changed
+
+- Changed the Dockerfile to install the pnpm binary from a tarball checked against its SHA-512, in place of `npm install --global pnpm`.
+- Changed `allowBuilds` to block esbuild's install script, so no dependency runs one. esbuild still installs its binary from its platform package, and its command runs through a JavaScript wrapper.
+- Changed pnpm to stop with an error when `node_modules` is out of date before a script runs. pnpm used to start an install first, which hung in the `offline` Docker service because it has no network.
+
+### Fixed
+
+- Fixed `pnpm audit` reporting a high severity advisory in `body-parser` below 2.4.0, which `@modelcontextprotocol/sdk` pulls in through `express`. An override in `pnpm-workspace.yaml` now requires 2.4.0 or later.
+
 ## [0.5.0] - 2026-11-01
 
 ### Added
