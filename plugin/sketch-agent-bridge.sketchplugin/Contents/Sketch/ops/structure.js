@@ -74,7 +74,12 @@ function ungroupLayer(args, request) {
 	const parent = group.parent
 	const origin = group.frame
 	const children = group.layers.slice()
-	children.forEach(child => moveInto(child, parent, -origin.x, -origin.y))
+	// Sketch puts a layer that changes parent at the front, so each child goes back to the group's place in the stack.
+	const index = group.index
+	children.forEach((child, k) => {
+		moveInto(child, parent, -origin.x, -origin.y)
+		child.index = index + k
+	})
 	group.remove()
 	return {
 		result: { ungrouped: children.map(summary) },

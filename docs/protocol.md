@@ -251,6 +251,8 @@ Sketch 88.1 writes text alignment with the raw values AppKit uses on Intel Macs.
 
 ### Layout and order
 
+`ungroupLayer` moves a group's children into the group's parent at the group's place in the stack, in the same order, and removes the group. Sketch puts a layer that changes parent at the front of its new parent, so the plugin sets each child's index after the move.
+
 `smartLayout` is one of `LeftToRight`, `HorizontallyCenter`, `RightToLeft`, `TopToBottom`, `VerticallyCenter`, or `BottomToTop`, and `null` turns it off. It applies to groups and symbol masters. After `setOverrides` changes an instance whose master has a smart layout, the plugin calls `resizeWithSmartLayout()` on the instance, so the instance grows or shrinks to fit its new override text.
 
 `mask: true` makes a shape path, shape, or image a clipping mask by calling `setHasClippingMask` on the native layer, and `mask: false` turns it off. Sketch clips every layer above the mask in the same group or artboard to the mask's outline, so a mask normally sits at the back of a group, below the layers it clips. Sketch also draws the mask layer's fill, so a rectangle mask with a white fill shows as a white block under the layers it clips. A mask that should only clip needs `fills: []`. A group holding a mask is sized to the mask instead of the full size of the layers it clips. Sketch only recalculates the group's size when the group is refit, so `updateLayers` refits the parent group after an entry changes `mask` or `breaksMask`. `breaksMask: true` calls `setShouldBreakMaskChain`, which stops the mask from clipping that layer and the layers above it. The plugin refuses `mask: true` on any layer that is not a shape path, shape, or image.
