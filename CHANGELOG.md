@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-01
+
 ### Added
 
 - Added `snapshot_artboard` and `diff_snapshots`, which record every layer of an artboard and list what changed between two snapshots, so an agent can see what someone edited by hand. Snapshots are kept in `~/.sketch-agent-bridge/snapshots/`, and a diff can also read a baseline kept in a folder from `SKETCH_AGENT_BRIDGE_ASSET_DIRS`.
