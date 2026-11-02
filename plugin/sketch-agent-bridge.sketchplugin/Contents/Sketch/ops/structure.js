@@ -11,6 +11,10 @@ const {
 	bounds,
 	moveInto,
 	fillGroup,
+	fitAbove,
+	groupsAbove,
+	refitGroups,
+	GROUP_TYPES,
 	summary,
 	renderFiles,
 	result,
@@ -33,6 +37,7 @@ function groupLayers(args, request) {
 	const group = new sketch.Group({ name: args.name || 'Group', parent, frame: bounds(layers) })
 	group.index = layers[layers.length - 1].index
 	fillGroup(group, layers)
+	fitAbove([group])
 	tagCreated(group)
 	return result(document, group, args, request)
 }
@@ -57,6 +62,7 @@ function combineShapes(args, request) {
 	fillGroup(shape, layers)
 	layers.forEach(layer => layer.sketchObject.setBooleanOperation(operation))
 	shape.adjustToFit()
+	fitAbove([shape])
 	tagCreated(shape)
 	return result(document, shape, args, request)
 }
@@ -68,11 +74,48 @@ function ungroupLayer(args, request) {
 	const parent = group.parent
 	const origin = group.frame
 	const children = group.layers.slice()
-	children.forEach(child => moveInto(child, parent, -origin.x, -origin.y))
+	// Sketch puts a layer that changes parent at the front, so each child goes back to the group's place in the stack.
+	const index = group.index
+	children.forEach((child, k) => {
+		moveInto(child, parent, -origin.x, -origin.y)
+		child.index = index + k
+	})
 	group.remove()
 	return {
 		result: { ungrouped: children.map(summary) },
 		files: renderFiles(children[0] || parent, args, request),
+	}
+}
+
+function groupsInside(layer) {
+	return (layer.layers || []).reduce((groups, child) => {
+		const inside = groupsInside(child)
+		return GROUP_TYPES.includes(child.type) ? groups.concat([child], inside) : groups.concat(inside)
+	}, [])
+}
+
+// Repairs group bounds left wrong by an earlier edit, keeping ids, layer order, and every layer's place on the canvas.
+function fitGroups(args, request) {
+	const document = editableDocument(args)
+	const ids = args.ids || []
+	if (ids.length === 0) throw new Error('Pass at least one layer id')
+	const recursive = args.recursive !== false
+	const targets = ids.map(id => findLayer(document, id))
+	const refused = targets.filter(target => !GROUP_TYPES.includes(target.type) && !(recursive && target.layers))
+	if (refused.length > 0) {
+		throw new Error(
+			'Only groups and shapes can be fit, or with recursive an artboard, symbol master, or page: ' +
+				refused.map(layer => layer.name).join(', ')
+		)
+	}
+	const groups = targets.reduce(
+		(all, target) => all.concat(recursive ? groupsInside(target) : [], [target], groupsAbove(target)),
+		[]
+	)
+	const fitted = refitGroups(groups)
+	return {
+		result: { fitted: fitted.map(summary) },
+		files: targets[0].type === 'Page' ? [] : renderFiles(targets[0], args, request),
 	}
 }
 
@@ -133,10 +176,11 @@ function duplicateLayers(args, request) {
 		tagCreated(copy)
 		return copy
 	})
+	fitAbove(copies)
 	return {
 		result: { duplicated: copies.map(summary) },
 		files: renderFiles(copies[0], args, request),
 	}
 }
 
-module.exports = { groupLayers, combineShapes, ungroupLayer, createSymbol, duplicate: duplicateLayers }
+module.exports = { groupLayers, combineShapes, ungroupLayer, fitGroups, createSymbol, duplicate: duplicateLayers }

@@ -21,7 +21,7 @@ export async function callOp(
 	bridge: SketchBridge,
 	op: string,
 	args: Record<string, unknown>,
-	options: { inlineSvg?: boolean } = {}
+	options: { inlineSvg?: boolean; inline?: boolean } = {}
 ) {
 	try {
 		const { reply } = await bridge.call(op, args)
@@ -273,10 +273,15 @@ export function registerReadTools(server: McpServer, bridge: SketchBridge) {
 					.describe(
 						"Crops each PNG to this rectangle, measured from the layer's top-left corner, so one section of a tall artboard can be checked at full scale. It turns trimmed off."
 					),
+				inline: z
+					.boolean()
+					.optional()
+					.describe('false returns file paths only. Replies inline at most about 200 KB of text.'),
 			},
 			annotations: readOnly,
 		},
-		async args => callOp(bridge, 'export', args, { inlineSvg: args.formats?.includes('svg') })
+		async ({ inline, ...args }) =>
+			callOp(bridge, 'export', args, { inlineSvg: args.formats?.includes('svg'), inline })
 	)
 
 	server.registerTool(

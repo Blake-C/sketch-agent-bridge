@@ -86,6 +86,23 @@ test('callWrite reports when the requested document is not open', async () => {
 	assert.match(firstText(result), /No matching document/)
 })
 
+test('callWrite refuses a write without documentId when several documents are open', async () => {
+	const { bridge, backups, calls } = await setup([
+		{ id: 'D1', name: 'System', path: '/tmp/System.sketch' },
+		{ id: 'D2', name: 'Copy', path: '/tmp/Copy.sketch' },
+	])
+
+	const result = await callWrite(bridge, backups, 'updateLayers', { updates: [{ id: 'X' }] })
+
+	assert.equal(result.isError, true)
+	assert.match(firstText(result), /2 documents are open/)
+	assert.match(firstText(result), /"Copy" \(documentId D2, \/tmp\/Copy\.sketch\)/)
+	assert.deepEqual(
+		calls.map(call => call.op),
+		['status']
+	)
+})
+
 test('Backups refuses paths that are not .sketch files', async () => {
 	const backups = new Backups(await mkdtemp(path.join(tmpdir(), 'backup-test-')))
 	await assert.rejects(backups.ensure('/etc/passwd'), /not a .sketch file/)

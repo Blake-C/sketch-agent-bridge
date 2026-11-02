@@ -9,9 +9,10 @@ import { registerImageTools } from '../src/image-tools.ts'
 import { registerReadTools } from '../src/read-tools.ts'
 import { SketchBridge } from '../src/sketch.ts'
 import { registerWriteTools } from '../src/write-tools.ts'
+import { registerSnapshotTools } from '../src/snapshot-tools.ts'
 
 // Every session loads these definitions, so growth here costs tokens in every session. Raise the limit only on purpose.
-const MAX_TOOLS_LIST_CHARS = 80_000
+const MAX_TOOLS_LIST_CHARS = 82_000
 
 test('tools/list stays under its size limit', async () => {
 	const server = new McpServer({ name: 'test', version: '0' })
@@ -20,6 +21,7 @@ test('tools/list stays under its size limit', async () => {
 	registerWriteTools(server, bridge, new Backups(bridge.bridgeDir))
 	registerImageTools(server, bridge)
 	registerFontTools(server, bridge)
+	registerSnapshotTools(server, bridge)
 	const [serverSide, clientSide] = InMemoryTransport.createLinkedPair()
 	await server.connect(serverSide)
 	const client = new Client({ name: 'test', version: '0' })

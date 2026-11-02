@@ -4,9 +4,30 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-01
+
+### Added
+
+- Added `snapshot_artboard` and `diff_snapshots`, which record every layer of an artboard and list what changed between two snapshots, so an agent can see what someone edited by hand. Snapshots are kept in `~/.sketch-agent-bridge/snapshots/`, and a diff can also read a baseline kept in a folder from `SKETCH_AGENT_BRIDGE_ASSET_DIRS`.
+- Added `inline: false` to `export_layers`, which returns only the file paths.
+- Added a `fit_groups` tool, which refits groups and compound shapes to their children without moving anything, for files whose group bounds were left wrong by an earlier version. It keeps ids and layer order, and with `recursive` it repairs every group in an artboard or page in one call.
+- Added `image` to `update_layers`, which replaces the picture of an image layer and keeps its frame and Color Adjust.
+- Added `fixedHeight` to text nodes in `build_layers` and to `update_layers`, which keeps a text layer's frame height so `verticalAlignment` can center or bottom-align the text. A text node with a frame height in `build_layers` now gets a fixed height.
+
 ### Changed
 
+- Changed write tools to refuse a call without `documentId` while more than one document is open in Sketch, because a copy of a file keeps the original's layer ids and a write could change the wrong file. The error lists the open documents with their ids and paths.
+- Changed `style` to refuse image fills on image layers, because the fill draws over the layer's picture and Color Adjust does not apply to it.
+- Changed the `rotation` description to say that rotation is clockwise.
 - Changed CI to run on pushes to `dev` as well as `main`, and Dependabot to open its pull requests against `dev`, where development now happens before it is merged into `main`.
+
+### Fixed
+
+- Fixed `ungroup_layer` moving the group's children to the front of the parent. They now take the group's place in the stack, in the same order.
+- Fixed SVG imports in `build_layers` and `update_layers` showing elements that have `visibility="hidden"` or `display="none"`. Those elements now become hidden layers.
+- Fixed `export_layers` replies going over the host's size limit when many SVG or JSON exports were each under 100 KB. A reply now stops inlining after 200 KB of text or 8 MB of PNGs and lists the remaining files by path.
+- Fixed groups and compound shapes keeping their old bounds after `update_layers`, `duplicate_layer`, `delete_layer`, `build_layers`, `group_layers`, or `combine_shapes` changed the layers inside them. Every group and compound shape above a changed layer now refits, deepest first, the way Sketch does after a manual edit.
+- Fixed the document path in `sketch_status`, `save_document`, and Send Selection to Agent, which kept URL escapes such as `%20` for spaces, so the backup before each write could not find a file whose name has spaces.
 
 ## [0.4.0] - 2026-10-29
 

@@ -6,7 +6,7 @@ const ASSET_PATH_RULE =
 export const documentId = z
 	.string()
 	.optional()
-	.describe('Document id from sketch_status. Defaults to the front document.')
+	.describe('Document id from sketch_status. Needed if several documents are open.')
 
 export const hex = z.string().regex(/^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/, 'Use #rrggbb or #rrggbbaa')
 
@@ -267,7 +267,10 @@ export const layout = {
 		.describe(
 			'Smart layout for a group or symbol master, so it resizes around its content. null turns it off. A symbol instance resizes when its overrides change.'
 		),
-	rotation: z.number().optional().describe('Rotation in degrees.'),
+	rotation: z
+		.number()
+		.optional()
+		.describe('Rotation in degrees, clockwise. -90 turns text to read from bottom to top.'),
 	flipHorizontal: z.boolean().optional(),
 	flipVertical: z.boolean().optional(),
 	mask: z
@@ -409,6 +412,12 @@ export const fixedWidth = z
 	.boolean()
 	.describe('For text. true wraps text at the frame width, false makes the layer grow with its text.')
 
+export const fixedHeight = z
+	.boolean()
+	.describe(
+		'For text. true keeps the frame height and wraps at the frame width, so verticalAlignment has room to work. false makes the height follow the text again.'
+	)
+
 const layerKinds = [
 	'artboard',
 	'rectangle',
@@ -436,9 +445,10 @@ const layerFields = {
 	frame: frame
 		.optional()
 		.describe(
-			'Relative to the parent. Text with a width gets a fixed width. For kind "path", only the given keys move or resize the path.'
+			'Relative to the parent. Text with a width gets a fixed width, and text with a height gets a fixed height. For kind "path", only the given keys move or resize the path.'
 		),
 	fixedWidth: fixedWidth.optional(),
+	fixedHeight: fixedHeight.optional(),
 	lineSpacing: lineSpacing.optional(),
 	path: svgPath
 		.optional()
@@ -497,8 +507,15 @@ export const updateFields = {
 	text: z.string().optional(),
 	textRuns: textRuns.optional(),
 	fixedWidth: fixedWidth.optional(),
+	fixedHeight: fixedHeight.optional(),
 	lineSpacing: lineSpacing.optional(),
 	cornerRadius: z.number().min(0).optional(),
+	image: z
+		.string()
+		.optional()
+		.describe(
+			`Replaces the picture of an image layer, keeping its frame and Color Adjust. Absolute or ~/ path to an image file. ${ASSET_PATH_RULE}`
+		),
 	path: svgPath
 		.optional()
 		.describe(

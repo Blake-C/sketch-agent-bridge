@@ -15,6 +15,7 @@ An agent connected to the MCP server can do the things listed below in the open 
 - read the lines a text layer wraps into, and whether the text overflows its frame
 - find text layers that another layer crosses, such as a shape drawn over a heading
 - see which layers no longer match their shared style
+- snapshot an artboard and list what someone changed by hand since an earlier snapshot
 
 ### Create layers
 
@@ -28,7 +29,7 @@ An agent connected to the MCP server can do the things listed below in the open 
 
 ### Edit layers
 
-- edit layers, move them into other artboards, groups, or pages, lock them, group and ungroup them, and apply shared styles
+- edit layers, move them into other artboards, groups, or pages, lock them, group and ungroup them, refit groups to their children, and apply shared styles
 - change several layers in one call, and replace the drawing in an SVG layer
 - duplicate layers, change their stacking order, rotate and flip them, and set Smart Layout on groups and symbols
 - fill layers with colors, gradients, or images, add inner shadows, blurs, blend modes, dashed borders, and arrowheads, and set Sketch's Color Adjust on image layers

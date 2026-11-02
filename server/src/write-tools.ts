@@ -52,6 +52,16 @@ export async function waitForSave(file: string, before: number, wait: SaveWait =
 	}
 }
 
+// Copies of a .sketch file keep the same layer ids, so a layer id alone can match a layer in the wrong open document.
+function ambiguousDocument(documents: { id: string; name: string; path: string | null }[]): BridgeError {
+	const list = documents
+		.map(document => `"${document.name}" (documentId ${document.id}${document.path ? `, ${document.path}` : ''})`)
+		.join('; ')
+	return new BridgeError(
+		`${documents.length} documents are open in Sketch, so a write needs documentId to say which one to change. Open documents: ${list}.`
+	)
+}
+
 export async function callWrite(
 	bridge: SketchBridge,
 	backups: Backups,
@@ -63,6 +73,7 @@ export async function callWrite(
 		const { reply: statusReply } = await bridge.call('status', {})
 		if (!statusReply.ok) return errorResult(statusReply.error)
 		const status = statusSchema.parse(statusReply.result)
+		if (args.documentId === undefined && status.documents.length > 1) throw ambiguousDocument(status.documents)
 		const targetId = (args.documentId as string | undefined) ?? status.selectedDocumentId ?? status.documents[0]?.id
 		const document = status.documents.find(candidate => candidate.id === targetId)
 		if (!document) throw new BridgeError('No matching document is open in Sketch')
@@ -157,7 +168,7 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 		{
 			title: 'Update layers',
 			description:
-				'Changes one or more existing layers and renders once at the end. Each entry can change the parent, name, visibility, lock, frame, text, styled runs of text, line spacing, corner radius, path, SVG drawing, which symbol an instance uses, symbol overrides, style, text style, smart layout, resizing, rotation, flips, masks, boolean operations, stacking order, prototype links, export presets, and which overrides a symbol master lets instances change. The layers are all looked up before any change, and if a change fails, the reply names its index and the changes before it stay applied.',
+				'Changes one or more existing layers and renders once at the end. Each entry can change the parent, name, visibility, lock, frame, text, styled runs of text, line spacing, corner radius, the picture of an image layer, path, SVG drawing, which symbol an instance uses, symbol overrides, style, text style, smart layout, resizing, rotation, flips, masks, boolean operations, stacking order, prototype links, export presets, and which overrides a symbol master lets instances change. The layers are all looked up before any change, and if a change fails, the reply names its index and the changes before it stay applied.',
 			inputSchema: {
 				documentId,
 				updates: z.array(z.object(updateFields)).min(1).max(MAX_UPDATES),
@@ -212,6 +223,28 @@ export function registerWriteTools(server: McpServer, bridge: SketchBridge, back
 			annotations: destructive,
 		},
 		write('ungroupLayer')
+	)
+
+	server.registerTool(
+		'fit_groups',
+		{
+			title: 'Fit groups',
+			description:
+				'Refits groups and combined shapes to their children without moving anything on the canvas, for a file whose group bounds no longer match their layers. Keeps ids and layer order. Groups above each target refit too.',
+			inputSchema: {
+				documentId,
+				ids: z.array(z.string()).min(1).max(50),
+				recursive: z
+					.boolean()
+					.optional()
+					.describe(
+						'Also refit every group inside each target, deepest first, and accept artboards, symbol masters, and pages as targets. Default true.'
+					),
+				...render,
+			},
+			annotations: additive,
+		},
+		write('fitGroups')
 	)
 
 	server.registerTool(

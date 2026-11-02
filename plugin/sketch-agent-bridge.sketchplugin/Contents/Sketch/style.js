@@ -238,6 +238,13 @@ function warnOnFontSubstitution(layer, textStyle) {
 	}
 }
 
+// An image fill on an image layer draws over its picture and ignores Color Adjust.
+function assertNoImageFillOnImage(layer, fills) {
+	if (layer.type === 'Image' && fills.some(fill => fill && fill.image !== undefined)) {
+		throw new Error(layer.name + ' is an image layer, so its picture is changed with image, not with an image fill')
+	}
+}
+
 function assertHasStyle(layer) {
 	if (!layer.style) throw new Error('A ' + layer.type + ' layer has no style')
 }
@@ -248,6 +255,7 @@ function applyStyle(document, layer, style, textStyle) {
 		if (style.fills && layer.type === 'Artboard') {
 			setArtboardBackground(document, layer, style.fills)
 		} else if (style.fills) {
+			assertNoImageFillOnImage(layer, style.fills)
 			layer.style.fills = style.fills.map(fill => fillFromInput(document, fill))
 		}
 		if (style.borders) {

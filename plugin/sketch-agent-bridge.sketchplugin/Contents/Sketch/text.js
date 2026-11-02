@@ -173,4 +173,10 @@ function applyTextRuns(document, layer, runs) {
 	layer.sketchObject.setAttributedStringValue(attributed)
 }
 
-module.exports = { textLinesSpec, textRunsSpec, applyTextRuns }
+const TEXT_BEHAVIOUR_FIXED_SIZE = 2
+
+function hasFixedHeight(layer) {
+	return layer.type === 'Text' && Number(layer.sketchObject.textBehaviour()) === TEXT_BEHAVIOUR_FIXED_SIZE
+}
+
+module.exports = { textLinesSpec, textRunsSpec, applyTextRuns, hasFixedHeight, TEXT_BEHAVIOUR_FIXED_SIZE }

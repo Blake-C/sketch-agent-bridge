@@ -7,7 +7,7 @@ const { applyStyle, assertHasStyle, loadImage, nativeColor, isColorValue } = req
 const { findLocalOrImport } = require('./libraries.js')
 const { splitSubpaths } = require('./path.js')
 const { setLayoutGrid, setGrid } = require('./grids.js')
-const { applyTextRuns } = require('./text.js')
+const { applyTextRuns, TEXT_BEHAVIOUR_FIXED_SIZE } = require('./text.js')
 const { assertAllowedAsset, expandHome } = require('./files.js')
 
 const DRAFTS_PAGE = 'Agent Drafts'
@@ -24,6 +24,10 @@ const SHAPE_KINDS = { rectangle: 'Rectangle', oval: 'Oval', triangle: 'Triangle'
 const LINE_SPACINGS = ['natural', 'system', 'variable', 'constantBaseline']
 const ORDER_MOVES = { front: 'moveToFront', back: 'moveToBack', forward: 'moveForward', backward: 'moveBackward' }
 const SVG_BOUNDS_NAME = 'sketch-agent-bridge-svg-bounds'
+// Sketch imports elements with visibility="hidden" or display="none" as visible layers, so they are tagged with
+// this suffix on their id before import and hidden by name afterward.
+const SVG_HIDDEN_MARK = ' [sketch-agent-bridge-hidden]'
+const SVG_HIDDEN_ATTRIBUTE = /\s(?:visibility\s*=\s*["']hidden["']|display\s*=\s*["']none["'])/
 const NO_BOOLEAN_OPERATION = -1
 const NONZERO_WINDING = 0
 
@@ -72,12 +76,36 @@ function setParent(document, layer, parentId) {
 		if (node.id === layer.id) throw new Error('A layer cannot move into itself or one of its children')
 	}
 	const previous = layer.parent
+	const left = groupsAbove(layer)
 	const frame = layer.frame.changeBasis({ from: previous, to: parent })
 	layer.parent = parent
 	layer.frame = frame
-	;[previous, parent].forEach(group => {
-		if (group.type === 'Group' && group.layers.length > 0) group.adjustToFit()
+	refitGroups(left.concat(groupsAbove(layer)))
+}
+
+function groupsAbove(layer) {
+	const groups = []
+	for (let node = layer.parent; node && GROUP_TYPES.includes(node.type); node = node.parent) groups.push(node)
+	return groups
+}
+
+// A group's bounds come from its children's bounds, so the deepest groups refit first. Sketch removes a group when its last child goes, so removed groups are skipped.
+function refitGroups(groups) {
+	const unique = {}
+	groups.forEach(group => {
+		if (GROUP_TYPES.includes(group.type) && group.parent) unique[group.id] = group
 	})
+	const fitted = Object.keys(unique)
+		.map(id => ({ group: unique[id], depth: groupsAbove(unique[id]).length }))
+		.sort((a, b) => b.depth - a.depth)
+		.map(entry => entry.group)
+		.filter(group => group.layers.length > 0)
+	fitted.forEach(group => group.adjustToFit())
+	return fitted
+}
+
+function fitAbove(layers) {
+	refitGroups(layers.reduce((groups, layer) => groups.concat(groupsAbove(layer)), []))
 }
 
 function setFrame(layer, frame) {
@@ -105,6 +133,18 @@ function setSmartLayout(layer, name) {
 function setFixedWidth(layer, fixed) {
 	if (layer.type !== 'Text') throw new Error('Only text layers have a fixed width')
 	layer.fixedWidth = fixed
+}
+
+// The JS API has no fixed-size text, so the native text behaviour is set. Auto-height text shrinks to its lines, which leaves verticalAlignment nothing to align in.
+function setFixedHeight(layer, fixed, height) {
+	if (layer.type !== 'Text') throw new Error('Only text layers have a fixed height')
+	if (!fixed) {
+		layer.fixedWidth = true
+		return
+	}
+	const target = height === undefined ? layer.frame.height : height
+	layer.sketchObject.setTextBehaviour(TEXT_BEHAVIOUR_FIXED_SIZE)
+	setFrame(layer, { height: target })
 }
 
 function setLineSpacing(layer, lineSpacing) {
@@ -445,6 +485,31 @@ function svgWithSize(svg, givenWidth, givenHeight) {
 	})
 }
 
+function markHiddenElements(svg) {
+	return svg.replace(/<([A-Za-z][\w:-]*)(\s[^>]*?)?(\/?)>/g, (tag, name, attributes, close) => {
+		if (!attributes || !SVG_HIDDEN_ATTRIBUTE.test(attributes)) return tag
+		let next = attributes.replace(new RegExp(SVG_HIDDEN_ATTRIBUTE.source, 'g'), '')
+		if (/\sid\s*=\s*["']/.test(next)) {
+			next = next.replace(
+				/(\sid\s*=\s*)(["'])(.*?)\2/,
+				(match, prefix, quote, id) => prefix + quote + id + SVG_HIDDEN_MARK + quote
+			)
+		} else {
+			next = ' id="' + SVG_HIDDEN_MARK.trim() + '"' + next
+		}
+		return '<' + name + next + close + '>'
+	})
+}
+
+function hideMarkedLayers(layer) {
+	if (layer.name && layer.name.indexOf(SVG_HIDDEN_MARK.trim()) !== -1) {
+		const name = layer.name.replace(SVG_HIDDEN_MARK, '').replace(SVG_HIDDEN_MARK.trim(), '').trim()
+		layer.name = name || (layer.type === 'Group' ? 'Group' : 'Shape')
+		layer.hidden = true
+	}
+	;(layer.layers || []).forEach(hideMarkedLayers)
+}
+
 function findByName(layer, name) {
 	if (layer.name === name) return layer
 	const children = layer.layers || []
@@ -457,7 +522,8 @@ function findByName(layer, name) {
 
 // Sketch trims the empty space around imported SVG content, so a marker rect the size of the viewBox shows where the content sat in the frame.
 function createSvgLayer(parent, svg, frame) {
-	const layer = sketch.createLayerFromData(svgWithSize(svg, frame.width, frame.height), 'svg')
+	const layer = sketch.createLayerFromData(svgWithSize(markHiddenElements(svg), frame.width, frame.height), 'svg')
+	hideMarkedLayers(layer)
 	layer.parent = parent
 	setFrame(layer, { x: frame.x || 0, y: frame.y || 0 })
 	const marker = findByName(layer, SVG_BOUNDS_NAME)
@@ -530,6 +596,7 @@ function createNode(document, parent, node) {
 		applyLayout(layer, node)
 		applyPrototypeAndExport(document, layer, node)
 		if (node.fixedWidth !== undefined) setFixedWidth(layer, node.fixedWidth)
+		if (node.kind === 'text' && fixedHeightOf(node)) setFixedHeight(layer, true, frame.height)
 		if (node.lineSpacing !== undefined) setLineSpacing(layer, node.lineSpacing)
 		if (node.textRuns) applyTextRuns(document, layer, node.textRuns)
 		if (node.overrides) setOverrides(document, layer, node.overrides)
@@ -540,6 +607,11 @@ function createNode(document, parent, node) {
 	}
 	tagCreated(layer)
 	return layer
+}
+
+function fixedHeightOf(node) {
+	if (node.fixedHeight !== undefined) return node.fixedHeight
+	return node.frame !== undefined && node.frame.height !== undefined && node.fixedWidth !== false
 }
 
 // The nearest container whose children are not refit around them: an artboard, symbol master, or page.
@@ -620,7 +692,11 @@ module.exports = {
 	tagCreated,
 	wasCreatedByAgent,
 	SHAPE_PART_TYPES,
+	GROUP_TYPES,
 	setParent,
+	groupsAbove,
+	refitGroups,
+	fitAbove,
 	setFrame,
 	setCornerRadius,
 	setOrder,
@@ -628,6 +704,7 @@ module.exports = {
 	moveInto,
 	fillGroup,
 	setFixedWidth,
+	setFixedHeight,
 	setLineSpacing,
 	applyTextRuns,
 	setPath,

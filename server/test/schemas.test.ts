@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { z } from 'zod'
-import { buildNode, buildOrder, findInput, layerInput, order, relativeTo } from '../src/schemas.ts'
+import { buildNode, buildOrder, findInput, layerInput, order, relativeTo, updateFields } from '../src/schemas.ts'
 
 const node = (fields: Record<string, unknown>) => layerInput.safeParse({ kind: 'group', ...fields })
 
@@ -23,6 +23,21 @@ test('layer nodes accept the six smart layouts and null', () => {
 test('layer nodes take rotation and flips', () => {
 	assert.ok(node({ rotation: 15, flipHorizontal: true, flipVertical: false }).success)
 	assert.equal(node({ rotation: '15' }).success, false)
+})
+
+test('text nodes and updates take fixedHeight as a boolean', () => {
+	assert.ok(node({ kind: 'text', fixedHeight: true }).success)
+	assert.equal(node({ kind: 'text', fixedHeight: 'yes' }).success, false)
+	const update = z.object(updateFields)
+	assert.ok(update.safeParse({ id: 'a', fixedHeight: false }).success)
+})
+
+test('updates take an image path for an image layer', () => {
+	const update = z.object(updateFields)
+	const parsed = update.safeParse({ id: 'a', image: '~/.sketch-agent-bridge/images/x/1.jpg' })
+	assert.ok(parsed.success)
+	assert.equal(parsed.data.image, '~/.sketch-agent-bridge/images/x/1.jpg')
+	assert.equal(update.safeParse({ id: 'a', image: 5 }).success, false)
 })
 
 test('layer nodes take mask and breaksMask as booleans', () => {

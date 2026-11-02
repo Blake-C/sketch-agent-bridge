@@ -1,15 +1,19 @@
 const sketch = require('sketch')
 const { findLayer, findPage } = require('../document.js')
-const { applyStyle, hexToMSColor } = require('../style.js')
+const { applyStyle, hexToMSColor, loadImage } = require('../style.js')
 const {
 	editableDocument,
 	draftsPage,
 	wasCreatedByAgent,
 	setParent,
+	groupsAbove,
+	refitGroups,
+	fitAbove,
 	setFrame,
 	setCornerRadius,
 	setOrder,
 	setFixedWidth,
+	setFixedHeight,
 	setLineSpacing,
 	applyTextRuns,
 	setPath,
@@ -81,7 +85,7 @@ function replaceSvg(document, layer, args) {
 	next.locked = layer.locked
 	tagCreated(next)
 	layer.remove()
-	if (parent.type === 'Group') parent.adjustToFit()
+	fitAbove([next])
 	return next
 }
 
@@ -104,6 +108,10 @@ function applyUpdate(document, found, args) {
 	}
 	if (args.name !== undefined) layer.name = args.name
 	if (args.cornerRadius !== undefined) setCornerRadius(layer, args.cornerRadius)
+	if (args.image !== undefined) {
+		if (layer.type !== 'Image') throw new Error('Only image layers have an image to replace')
+		layer.image = loadImage(args.image)
+	}
 	if (args.symbol !== undefined) {
 		if (layer.type !== 'SymbolInstance') throw new Error('Only symbol instances can swap symbols')
 		const master = findSymbolMaster(document, args.symbol)
@@ -118,6 +126,7 @@ function applyUpdate(document, found, args) {
 	if (args.booleanOperation !== undefined) setBooleanOperation(layer, args.booleanOperation)
 	applyPrototypeAndExport(document, layer, args)
 	if (args.fixedWidth !== undefined) setFixedWidth(layer, args.fixedWidth)
+	if (args.fixedHeight !== undefined) setFixedHeight(layer, args.fixedHeight, args.frame && args.frame.height)
 	if (args.lineSpacing !== undefined) setLineSpacing(layer, args.lineSpacing)
 	if (args.textRuns) applyTextRuns(document, layer, args.textRuns)
 	if (args.order !== undefined) setOrder(document, layer, args.order)
@@ -125,31 +134,36 @@ function applyUpdate(document, found, args) {
 }
 
 // Updates that ran before a failed one are not rolled back, so every id is checked before the first change.
+// Groups refit after the last update, so every update's parent coordinates match the frames the agent read before the call.
 function updateLayers(args, request) {
 	const document = editableDocument(args)
 	const updates = args.updates || []
 	updates.forEach(update => findLayer(document, update.id))
 	const updated = []
 	let deferRender = false
-	updates.forEach((update, index) => {
-		try {
-			const outcome = applyUpdate(document, findLayer(document, update.id), update)
-			updated.push(outcome.layer)
-			deferRender = deferRender || outcome.deferRender
-		} catch (error) {
-			throw new Error(
-				'Update ' +
-					index +
-					' for ' +
-					update.id +
-					' failed, and the ' +
-					index +
-					' updates before it stay applied: ' +
-					String(error.message || error),
-				{ cause: error }
-			)
-		}
-	})
+	try {
+		updates.forEach((update, index) => {
+			try {
+				const outcome = applyUpdate(document, findLayer(document, update.id), update)
+				updated.push(outcome.layer)
+				deferRender = deferRender || outcome.deferRender
+			} catch (error) {
+				throw new Error(
+					'Update ' +
+						index +
+						' for ' +
+						update.id +
+						' failed, and the ' +
+						index +
+						' updates before it stay applied: ' +
+						String(error.message || error),
+					{ cause: error }
+				)
+			}
+		})
+	} finally {
+		fitAbove(updated)
+	}
 	const options = Object.assign({ render: 'artboard' }, args)
 	const reply = { result: { updated: updated.map(summary) } }
 	if (deferRender) return Object.assign(reply, { files: [], render: renderRequest(updated[0], options) })
@@ -213,7 +227,9 @@ function deleteLayer(args) {
 		)
 	}
 	const removed = layers.map(layer => ({ id: layer.id, name: layer.name, type: layer.type }))
+	const above = layers.reduce((groups, layer) => groups.concat(groupsAbove(layer)), [])
 	layers.forEach(layer => layer.remove())
+	refitGroups(above)
 	return { result: { removed } }
 }
 
