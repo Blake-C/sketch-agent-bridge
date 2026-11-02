@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 
 - Added a pre-commit hook in `.githooks/` that runs gitleaks on the staged changes.
 - Added `pnpm audit signatures` and `pnpm audit --audit-level=high` to CI.
+- Added `.npmrc` with the npm registry, and `saveExact` and `engineStrict` to `pnpm-workspace.yaml`.
+- Added `"pnpm": ">=12"` to `engines` in `package.json`.
 
 ### Changed
 

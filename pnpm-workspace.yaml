@@ -5,5 +5,7 @@ blockExoticSubdeps: true
 allowBuilds:
     esbuild: true
 verifyDepsBeforeRun: error
+saveExact: true
+engineStrict: true
 overrides:
     body-parser: ^2.4.0

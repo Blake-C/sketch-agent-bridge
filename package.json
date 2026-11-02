@@ -6,7 +6,8 @@
 	"license": "GPL-3.0-only",
 	"packageManager": "pnpm@12.15.0",
 	"engines": {
-		"node": ">=24"
+		"node": ">=24",
+		"pnpm": ">=12"
 	},
 	"scripts": {
 		"build": "esbuild server/src/index.ts --bundle --platform=node --format=esm --target=node24 --outfile=server/dist/server.js",
