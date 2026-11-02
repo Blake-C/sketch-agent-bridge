@@ -10,10 +10,12 @@ All notable changes to this project will be documented in this file.
 - Added `pnpm audit signatures` and `pnpm audit --audit-level=high` to CI.
 - Added `.npmrc` with the npm registry, and `saveExact` and `engineStrict` to `pnpm-workspace.yaml`.
 - Added `"pnpm": ">=12"` to `engines` in `package.json`.
+- Added `minimumReleaseAgeIgnoreMissingTime: false`, so pnpm refuses a package whose registry metadata has no publish times instead of skipping the release age check for it.
 
 ### Changed
 
 - Changed the Dockerfile to install the pnpm binary from a tarball checked against its SHA-512, in place of `npm install --global pnpm`.
+- Changed `allowBuilds` to block esbuild's install script, so no dependency runs one. esbuild still installs its binary from its platform package, and its command runs through a JavaScript wrapper.
 - Changed pnpm to stop with an error when `node_modules` is out of date before a script runs. pnpm used to start an install first, which hung in the `offline` Docker service because it has no network.
 
 ### Fixed
