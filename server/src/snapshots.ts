@@ -52,8 +52,19 @@ function point(text: string): [number, number] {
 	return [x ?? 0, y ?? 0]
 }
 
+// Python's round() sends halves to the even number, and sketch_sync.py snapshots were made with it, so an alpha of 0.7
+// (178.5) has to round to 178 here too.
+function roundHalfEven(value: number): number {
+	const floor = Math.floor(value)
+	const fraction = value - floor
+	if (Math.abs(fraction - 0.5) > 1e-9) return Math.round(value)
+	return floor % 2 === 0 ? floor : floor + 1
+}
+
 function hexColor(color: Json): string {
-	const [r, g, b, a] = (['red', 'green', 'blue', 'alpha'] as const).map(k => Math.round(Number(color[k] ?? 0) * 255))
+	const [r, g, b, a] = (['red', 'green', 'blue', 'alpha'] as const).map(k =>
+		roundHalfEven(Number(color[k] ?? 0) * 255)
+	)
 	const hex = (v: number) => v.toString(16).toUpperCase().padStart(2, '0')
 	return '#' + hex(r) + hex(g) + hex(b) + (a === 255 ? '' : hex(a))
 }

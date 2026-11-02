@@ -104,3 +104,10 @@ test('diffSnapshots skips point edits between snapshots of different versions', 
 	assert.equal(lines.length, 1)
 	assert.match(lines[0], /different versions/)
 })
+
+test('snapshotFromExport rounds color halves to even, like sketch_sync.py', () => {
+	const board = artboard({
+		star: { style: { fills: [{ fillType: 0, color: { red: 1, green: 0, blue: 0, alpha: 0.7 } }] } },
+	})
+	assert.deepEqual(snapshotFromExport(board).layers.S.fills, [{ opacity: 1, color: '#FF0000B2' }])
+})
